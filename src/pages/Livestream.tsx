@@ -75,8 +75,7 @@ export default function Livestream() {
         if (data?.twitch_channel) setChannel(data.twitch_channel);
         if (data?.titulo) setStreamTitle(data.titulo);
         if (typeof data?.online === 'boolean') setIsOnline(data.online);
-      })
-      .catch(() => {});
+      });
   }, []);
 
   // ── Fetch usernames (stable via namesCache ref) ──
@@ -105,8 +104,7 @@ export default function Livestream() {
           setMessages(data);
           fetchUsernames([...new Set(data.map((m) => m.user_id))]);
         }
-      })
-      .catch(() => {});
+      });
 
     const sub = supabase
       .channel('livestream_chat_rt')

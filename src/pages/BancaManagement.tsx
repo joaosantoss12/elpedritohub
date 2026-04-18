@@ -165,7 +165,7 @@ export default function BancaManagement() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [chartView, setChartView] = useState<'day' | 'month'>('day');
   const [apostas, setApostas] = useState<Aposta[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingAposta, setEditingAposta] = useState<Aposta | null>(null);
@@ -247,7 +247,7 @@ export default function BancaManagement() {
 
   // ── Monthly chart data ─────────────────────────────────────────────
   const monthChartData = useMemo((): MonthChartPoint[] => {
-    const prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const _prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
     const days = getDaysInMonth(currentYear, currentMonth);
     const points: MonthChartPoint[] = [];
     let cum = 0;
