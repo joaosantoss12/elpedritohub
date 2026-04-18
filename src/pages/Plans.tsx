@@ -18,33 +18,36 @@ interface PlanoDB {
   ordem: number;
 }
 
-const PLAN_BILLING: Record<number, { amountCents: number; interval: 'month' | 'year'; intervalCount: number }> = {
-  0: { amountCents: 1999,  interval: 'month', intervalCount: 1 },
-  1: { amountCents: 4999,  interval: 'month', intervalCount: 3 },
-  2: { amountCents: 18999, interval: 'year',  intervalCount: 1 },
-};
+interface Plan extends PlanoDB {
+  amountCents: number;
+  interval: 'month' | 'year';
+  intervalCount: number;
+}
 
-const PLANS_FALLBACK: PlanoDB[] = [
+const PLANS_FALLBACK: Plan[] = [
   {
     id: 'monthly', nome: 'Mensal', preco: '19,99', periodo: '/mês',
     destaque: false, badge: null, poupanca: null, ordem: 0,
+    amountCents: 1999, interval: 'month', intervalCount: 1,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tips Diárias', 'Análises Pré-Jogo', 'Gestão de Banca'],
   },
   {
     id: 'quarterly', nome: 'Trimestral', preco: '49,99', periodo: '/3 meses',
     destaque: false, badge: null, poupanca: 'Poupa 10€', ordem: 1,
+    amountCents: 4999, interval: 'month', intervalCount: 3,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto'],
   },
   {
     id: 'yearly', nome: 'Anual', preco: '189,99', periodo: '/ano',
     destaque: true, badge: '🔥 Melhor Preço', poupanca: 'Poupa 50€', ordem: 2,
+    amountCents: 18999, interval: 'year', intervalCount: 1,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto', 'Mentoria 1-on-1 (1x)'],
   },
 ];
 
 export default function Plans() {
   const [loadingStripe, setLoadingStripe] = useState<string | null>(null);
-  const [plans, setPlans] = useState<PlanoDB[]>(PLANS_FALLBACK);
+  const [plans, setPlans] = useState<Plan[]>(PLANS_FALLBACK);
   const { user, membro } = useAuth();
   const navigate = useNavigate();
 
@@ -54,19 +57,23 @@ export default function Plans() {
       .select('*')
       .order('ordem')
       .then(({ data }) => {
-        if (data && data.length > 0) setPlans(data as PlanoDB[]);
+        if (data && data.length > 0) {
+          // merge Supabase display data with hardcoded billing info by position
+          const merged: Plan[] = (data as PlanoDB[]).map((dbPlan, i) => ({
+            ...PLANS_FALLBACK[i % PLANS_FALLBACK.length],
+            ...dbPlan,
+            amountCents: PLANS_FALLBACK[i % PLANS_FALLBACK.length].amountCents,
+            interval: PLANS_FALLBACK[i % PLANS_FALLBACK.length].interval,
+            intervalCount: PLANS_FALLBACK[i % PLANS_FALLBACK.length].intervalCount,
+          }));
+          setPlans(merged);
+        }
       });
   }, []);
 
-  const handleCheckout = async (plan: PlanoDB) => {
+  const handleCheckout = async (plan: Plan) => {
     if (!user || !membro) {
       navigate('/login');
-      return;
-    }
-
-    const billing = PLAN_BILLING[plan.ordem];
-    if (!billing) {
-      alert('Plano inválido. Contacta o suporte.');
       return;
     }
 
@@ -78,10 +85,10 @@ export default function Plans() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amountCents: billing.amountCents,
+          amountCents: plan.amountCents,
           planName: plan.nome,
-          interval: billing.interval,
-          intervalCount: billing.intervalCount,
+          interval: plan.interval,
+          intervalCount: plan.intervalCount,
           userId: user.id,
           userEmail: membro.email,
           successUrl: `${origin}/profile?checkout=success`,
