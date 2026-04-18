@@ -8,22 +8,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { priceId, userId, userEmail, successUrl, cancelUrl } = req.body as {
-    priceId: string;
+  const { amountCents, planName, interval, intervalCount, userId, userEmail, successUrl, cancelUrl } = req.body as {
+    amountCents: number;
+    planName: string;
+    interval: 'month' | 'year';
+    intervalCount: number;
     userId: string;
     userEmail: string;
     successUrl: string;
     cancelUrl: string;
   };
 
-  if (!priceId || !successUrl || !cancelUrl) {
-    return res.status(400).json({ error: 'Campos obrigatórios em falta: priceId, successUrl, cancelUrl' });
+  if (!amountCents || !planName || !interval || !intervalCount || !successUrl || !cancelUrl) {
+    return res.status(400).json({ error: 'Campos obrigatórios em falta' });
   }
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'eur',
+            product_data: { name: `El Pedrito VIP – ${planName}` },
+            recurring: { interval, interval_count: intervalCount },
+            unit_amount: amountCents,
+          },
+        },
+      ],
       customer_email: userEmail || undefined,
       client_reference_id: userId || undefined,
       success_url: successUrl,

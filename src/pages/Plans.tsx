@@ -16,26 +16,28 @@ interface PlanoDB {
   poupanca: string | null;
   funcionalidades: string[];
   ordem: number;
-  stripe_price_id: string | null;
 }
+
+const PLAN_BILLING: Record<string, { amountCents: number; interval: 'month' | 'year'; intervalCount: number }> = {
+  monthly:   { amountCents: 1999,  interval: 'month', intervalCount: 1 },
+  quarterly: { amountCents: 4999,  interval: 'month', intervalCount: 3 },
+  yearly:    { amountCents: 18999, interval: 'year',  intervalCount: 1 },
+};
 
 const PLANS_FALLBACK: PlanoDB[] = [
   {
-    id: 'monthly', nome: 'Mensal', preco: '19,99€', periodo: '/mês',
+    id: 'monthly', nome: 'Mensal', preco: '19,99', periodo: '/mês',
     destaque: false, badge: null, poupanca: null, ordem: 0,
-    stripe_price_id: null,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tips Diárias', 'Análises Pré-Jogo', 'Gestão de Banca'],
   },
   {
-    id: 'quarterly', nome: 'Trimestral', preco: '49,99€', periodo: '/3 meses',
+    id: 'quarterly', nome: 'Trimestral', preco: '49,99', periodo: '/3 meses',
     destaque: false, badge: null, poupanca: 'Poupa 10€', ordem: 1,
-    stripe_price_id: null,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto'],
   },
   {
-    id: 'yearly', nome: 'Anual', preco: '189,99€', periodo: '/ano',
+    id: 'yearly', nome: 'Anual', preco: '189,99', periodo: '/ano',
     destaque: true, badge: '🔥 Melhor Preço', poupanca: 'Poupa 50€', ordem: 2,
-    stripe_price_id: null,
     funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto', 'Mentoria 1-on-1 (1x)'],
   },
 ];
@@ -62,8 +64,9 @@ export default function Plans() {
       return;
     }
 
-    if (!plan.stripe_price_id) {
-      alert('Este plano ainda não está configurado para pagamento. Contacta o suporte.');
+    const billing = PLAN_BILLING[plan.id];
+    if (!billing) {
+      alert('Plano inválido. Contacta o suporte.');
       return;
     }
 
@@ -75,7 +78,10 @@ export default function Plans() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: plan.stripe_price_id,
+          amountCents: billing.amountCents,
+          planName: plan.nome,
+          interval: billing.interval,
+          intervalCount: billing.intervalCount,
           userId: user.id,
           userEmail: membro.email,
           successUrl: `${origin}/profile?checkout=success`,
