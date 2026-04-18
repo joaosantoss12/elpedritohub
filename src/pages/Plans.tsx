@@ -18,10 +18,10 @@ interface PlanoDB {
   ordem: number;
 }
 
-const PLAN_BILLING: Record<string, { amountCents: number; interval: 'month' | 'year'; intervalCount: number }> = {
-  monthly:   { amountCents: 1999,  interval: 'month', intervalCount: 1 },
-  quarterly: { amountCents: 4999,  interval: 'month', intervalCount: 3 },
-  yearly:    { amountCents: 18999, interval: 'year',  intervalCount: 1 },
+const PLAN_BILLING: Record<number, { amountCents: number; interval: 'month' | 'year'; intervalCount: number }> = {
+  0: { amountCents: 1999,  interval: 'month', intervalCount: 1 },
+  1: { amountCents: 4999,  interval: 'month', intervalCount: 3 },
+  2: { amountCents: 18999, interval: 'year',  intervalCount: 1 },
 };
 
 const PLANS_FALLBACK: PlanoDB[] = [
@@ -64,7 +64,7 @@ export default function Plans() {
       return;
     }
 
-    const billing = PLAN_BILLING[plan.id];
+    const billing = PLAN_BILLING[plan.ordem];
     if (!billing) {
       alert('Plano inválido. Contacta o suporte.');
       return;
