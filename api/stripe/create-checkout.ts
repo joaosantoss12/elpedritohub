@@ -26,6 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      payment_method_types: ['card', 'link', 'klarna', 'paypal'],
       line_items: [
         {
           quantity: 1,
