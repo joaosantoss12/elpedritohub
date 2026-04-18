@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+  --bg-main: #0a0a0a;
+  --bg-card: #141414;
+  --bg-card-hover: #1a1a1a;
+  --gold-primary: #e6b95c;
+  --gold-hover: #d4a74a;
+  --gold-light: #fbe6a2;
+  --text-white: #ffffff;
+  --text-gray: #a3a3a3;
+  --green-success: #22c55e;
+  --border-color: #262626;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Aplicar o fundo escuro a toda a hierarquia principal */
+html, body, #root {
+  background-color: var(--bg-main);
+  color: var(--text-white);
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-gutter: stable;
+}
+
+/* Utilitários Tipográficos */
+.font-signature {
+  font-family: 'Great Vibes', cursive;
+}
+
+/* Utilitários Botões */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  color: #000;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-gold:hover {
+  opacity: 0.9;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-white);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+/* Efeito de Gradiente para Cards Premium */
+.card-premium {
+  background: linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(10,10,10,1) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* Efeitos Hover - Menu do Topo */
+.nav-item {
+  transition: color 0.2s ease;
+}
+.nav-item:hover {
+  color: var(--text-white);
+}
+.nav-item.active {
+  color: var(--gold-primary);
+}
+
+/* Efeitos Hover - Cartões Flutuantes da Hero Section */
+.hero-card {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
+  transform: translateY(var(--base-translate-y, 0)) rotate(var(--base-rotate, 0));
+}
+.hero-card:hover {
+  /* Levanta o cartão, anula a rotação para ficar direito e aumenta ligeiramente */
+  transform: translateY(calc(var(--base-translate-y, 0px) - 15px)) rotate(0deg) scale(1.05);
+  z-index: 50 !important;
+  box-shadow: 0 40px 70px -10px rgba(0,0,0,1), 0 0 30px rgba(230,185,92,0.3), inset 0 1px 1px rgba(255,255,255,0.4) !important;
+  border-color: rgba(230,185,92,0.8) !important;
+}
+
+/* Efeitos Hover - Cartões Resultados */
+.hover-scale {
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-scale:hover {
+  transform: translateY(-8px);
+  border-color: var(--gold-primary);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(230,185,92,0.1);
+}

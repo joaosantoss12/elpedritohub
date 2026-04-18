@@ -1,0 +1,723 @@
+/* ═══════════════════════════════════════════════════════
+   MUNDIAL 2026 PAGE STYLES
+   ═══════════════════════════════════════════════════════ */
+
+.mundial-container {
+  min-height: 100vh;
+  background: var(--bg-main);
+}
+
+/* ─── Hero Banner ─────────────────────────────────────── */
+
+.mundial-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 5%;
+  text-align: center;
+  border-bottom: 1px solid rgba(230, 185, 92, 0.15);
+  background: linear-gradient(180deg, rgba(230, 185, 92, 0.05) 0%, transparent 100%);
+}
+
+.mundial-hero::before,
+.mundial-hero::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  height: 220px;
+  background: url('/mundial2026.png') center / contain no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Default (660px – 1549px): extremidades */
+.mundial-hero::before {
+  right: 20%;
+}
+
+.mundial-hero::after {
+  left: 20%;
+}
+
+/* ≥ 1550px: meio caminho entre centro e extremidade */
+@media (min-width: 1550px) {
+  .mundial-hero::before {
+    right: 25%;
+  }
+  .mundial-hero::after {
+    left: 25%;
+  }
+}
+
+/* ≤ 660px: apenas 1 imagem no centro */
+@media (max-width: 660px) {
+  .mundial-hero::before {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    opacity: 0.15;
+  }
+  .mundial-hero::after {
+    display: none;
+  }
+}
+
+.mundial-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.mundial-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(230, 185, 92, 0.1);
+  border: 1px solid rgba(230, 185, 92, 0.3);
+  color: var(--gold-primary);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+.mundial-hero-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.mundial-hero-title .gold {
+  color: var(--gold-primary);
+}
+
+.mundial-hero-subtitle {
+  color: var(--text-gray);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  letter-spacing: 3px;
+  font-weight: 500;
+}
+
+.mundial-hero-glow {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(230, 185, 92, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ─── Tabs ────────────────────────────────────────────── */
+
+.mundial-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1.5rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.mundial-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mundial-tab:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.mundial-tab.active {
+  background: rgba(230, 185, 92, 0.1);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+/* ─── Content ─────────────────────────────────────────── */
+
+.mundial-content {
+  padding: 0 5% 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── Cards ───────────────────────────────────────────── */
+
+.mundial-card {
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mundial-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  margin: 0 0 1.2rem;
+}
+
+/* ─── Loading & Empty ─────────────────────────────────── */
+
+.mundial-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+  color: var(--text-gray);
+}
+
+.mundial-empty {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  padding: 1.5rem;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.mundial-api-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.mundial-api-error code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CALENDAR
+   ═══════════════════════════════════════════════════════ */
+
+.mundial-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.calendar-month-year {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.calendar-month {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.calendar-year {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  letter-spacing: 2px;
+}
+
+.calendar-nav-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.calendar-today-btn {
+  display: block;
+  margin: 0 auto 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+  padding: 0.3rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-today-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.calendar-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  padding: 0.4rem 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.calendar-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.calendar-cell.empty {
+  cursor: default;
+}
+
+.calendar-cell:not(.empty):hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+}
+
+.calendar-cell.today {
+  border-color: var(--gold-primary);
+}
+
+.calendar-cell.selected {
+  background: rgba(230, 185, 92, 0.15);
+  border-color: var(--gold-primary);
+}
+
+.calendar-cell.selected .calendar-day-number {
+  color: var(--gold-primary);
+  font-weight: 700;
+}
+
+.calendar-day-number {
+  font-size: 0.85rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.calendar-match-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  position: absolute;
+  bottom: 4px;
+}
+
+/* ─── Day Details ─────────────────────────────────────── */
+
+.mundial-day-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ─── Match Cards ─────────────────────────────────────── */
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.match-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.match-card:hover {
+  border-color: rgba(230, 185, 92, 0.15);
+}
+
+.match-stage {
+  font-size: 0.7rem;
+  color: var(--text-gray);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.match-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+}
+
+.match-team.home {
+  justify-content: flex-end;
+}
+
+.match-team.away {
+  justify-content: flex-start;
+}
+
+.match-crest {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.match-score-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: 60px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.match-score-box.finished {
+  background: rgba(230, 185, 92, 0.1);
+  border: 1px solid rgba(230, 185, 92, 0.2);
+  color: var(--gold-primary);
+}
+
+.match-score-box.live {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+.match-time {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-gray);
+}
+
+.match-status {
+  font-size: 0.7rem;
+  color: var(--text-gray);
+  text-align: center;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
+/* ─── Bet Cards ───────────────────────────────────────── */
+
+.bets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.bet-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.bet-card.won {
+  border-left: 3px solid var(--green-success);
+}
+
+.bet-card.lost {
+  border-left: 3px solid #ef4444;
+}
+
+.bet-card.pending {
+  border-left: 3px solid #f59e0b;
+}
+
+.bet-card.void {
+  border-left: 3px solid var(--text-gray);
+}
+
+.bet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.bet-match {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.bet-result-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+}
+
+.bet-result-badge.won {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--green-success);
+}
+
+.bet-result-badge.lost {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.bet-result-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.bet-result-badge.void {
+  background: rgba(163, 163, 163, 0.1);
+  color: var(--text-gray);
+}
+
+.bet-details {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-gray);
+}
+
+.bet-details strong {
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════
+   STANDINGS
+   ═══════════════════════════════════════════════════════ */
+
+.standings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 1.5rem;
+}
+
+.group-card {
+  overflow: hidden;
+}
+
+.group-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  margin: 0 0 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(230, 185, 92, 0.15);
+  letter-spacing: 1px;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.standings-table th {
+  color: var(--text-gray);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  padding: 0.5rem 0.3rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.standings-table td {
+  padding: 0.6rem 0.3rem;
+  text-align: center;
+  color: var(--text-gray);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.standings-table tr.qualified td {
+  color: #fff;
+}
+
+.standings-table tr.qualified .standings-pos {
+  color: var(--green-success);
+}
+
+.standings-table th.standings-pos,
+.standings-table td.standings-pos {
+  text-align: center;
+  width: 28px;
+}
+
+.standings-table th.standings-team,
+.standings-table td.standings-team {
+  text-align: left;
+}
+
+.standings-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.standings-crest {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.standings-table th.standings-pts,
+.standings-table td.standings-pts {
+  font-weight: 700;
+  color: var(--gold-primary);
+}
+
+/* ─── Animations ──────────────────────────────────────── */
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .mundial-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .standings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mundial-hero-title {
+    font-size: 2rem;
+  }
+
+  .mundial-tabs {
+    flex-wrap: wrap;
+  }
+
+  .match-teams {
+    gap: 0.5rem;
+  }
+
+  .match-team {
+    font-size: 0.8rem;
+  }
+
+  .match-crest {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 500px) {
+  .mundial-hero {
+    padding: 2rem 5%;
+  }
+
+  .mundial-hero-title {
+    font-size: 1.8rem;
+  }
+
+  .mundial-content {
+    padding: 0 3% 2rem;
+  }
+
+  .mundial-tabs {
+    padding: 1rem 3%;
+  }
+
+  .calendar-day-number {
+    font-size: 0.75rem;
+  }
+
+  .standings-table {
+    font-size: 0.7rem;
+  }
+}
