@@ -247,7 +247,6 @@ export default function BancaManagement() {
 
   // ── Monthly chart data ─────────────────────────────────────────────
   const monthChartData = useMemo((): MonthChartPoint[] => {
-    const _prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
     const days = getDaysInMonth(currentYear, currentMonth);
     const points: MonthChartPoint[] = [];
     let cum = 0;
