@@ -51,27 +51,32 @@ function Profile() {
   // Handle returning from Stripe checkout
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('checkout') === 'success') {
-      // Clean URL
+    const sessionId = params.get('session_id');
+    if (params.get('checkout') === 'success' && sessionId) {
       window.history.replaceState({}, '', '/profile');
-      // Refresh membro data and poll until active
-      const poll = async (attempts: number) => {
-        await refreshMembro();
-        const { data } = await supabase
-          .from('membros')
-          .select('subscription_status')
-          .eq('id', user?.id ?? '')
-          .single();
-        if (data?.subscription_status === 'active') {
-          setShowSuccessModal(true);
-        } else if (attempts > 0) {
-          setTimeout(() => poll(attempts - 1), 2000);
-        } else {
-          // Show modal anyway after timeout
-          setShowSuccessModal(true);
+      const verify = async (attempts: number) => {
+        try {
+          const res = await fetch('/api/stripe/verify-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            await refreshMembro();
+            setShowSuccessModal(true);
+          } else if (attempts > 0) {
+            setTimeout(() => verify(attempts - 1), 2000);
+          } else {
+            await refreshMembro();
+            setShowSuccessModal(true);
+          }
+        } catch {
+          if (attempts > 0) setTimeout(() => verify(attempts - 1), 2000);
+          else setShowSuccessModal(true);
         }
       };
-      poll(8);
+      verify(5);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);

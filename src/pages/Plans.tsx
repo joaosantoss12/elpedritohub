@@ -91,7 +91,7 @@ export default function Plans() {
           intervalCount: plan.intervalCount,
           userId: user.id,
           userEmail: membro.email,
-          successUrl: `${origin}/profile?checkout=success`,
+          successUrl: `${origin}/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${origin}/plans`,
         }),
       });
