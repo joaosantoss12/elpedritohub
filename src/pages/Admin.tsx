@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
   Users, Radio, Gift, CreditCard, Calendar, TrendingUp, Star, Globe,
-  Plus, Pencil, Trash2, Save, X, Search, ShieldAlert, Trophy,
+  Plus, Pencil, Trash2, Save, X, Search, ShieldAlert, ShieldOff, Trophy,
   CheckCircle, AlertCircle, ChevronRight, Loader2, ToggleLeft, ToggleRight,
   MessageSquare, Send, Paperclip, ChevronLeft,
 } from 'lucide-react';
@@ -299,6 +299,25 @@ function SectionMembros({ showToast }: { showToast: (msg: string, type?: 'succes
     setNewBadge('');
   };
 
+  const removeVip = async (m: AdminMembro) => {
+    if (!confirm(`Remover VIP de ${m.username}? As colunas VIP ficarão a NULL.`)) return;
+    const updatedBadges = m.badges.filter(b => b.toLowerCase() !== 'vip');
+    const { error } = await supabase
+      .from('membros')
+      .update({
+        subscription_status: null,
+        stripe_customer_id: null,
+        stripe_subscription_id: null,
+        subscription_cancel_at: null,
+        vip_telegram_link: null,
+        badges: updatedBadges,
+      })
+      .eq('id', m.id);
+    if (error) { showToast('Erro ao remover VIP: ' + error.message, 'error'); return; }
+    showToast('VIP removido com sucesso');
+    load();
+  };
+
   return (
     <div className="admin-section-content">
       <div className="admin-toolbar">
@@ -340,9 +359,21 @@ function SectionMembros({ showToast }: { showToast: (msg: string, type?: 'succes
                     </div>
                   </td>
                   <td>
-                    <button className="admin-btn-icon" onClick={() => setEditing({ ...m })}>
-                      <Pencil size={14} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <button className="admin-btn-icon" onClick={() => setEditing({ ...m })}>
+                        <Pencil size={14} />
+                      </button>
+                      {m.badges?.some(b => b.toLowerCase() === 'vip') && (
+                        <button
+                          className="admin-btn-icon"
+                          title="Remover VIP"
+                          style={{ color: '#ef4444' }}
+                          onClick={() => removeVip(m)}
+                        >
+                          <ShieldOff size={14} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
