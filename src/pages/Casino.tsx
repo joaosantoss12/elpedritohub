@@ -604,11 +604,8 @@ export default function Casino() {
       // Flying rocket with flame
       ctx.save();
       ctx.translate(rocketX, rocketY);
-      // Rocket angle (pointing up-right)
-      const angle = points.length > 1 ? Math.atan2(
-        toY(points[points.length - 2][1]) - rocketY,
-        toX(points[points.length - 2][0]) - rocketX
-      ) - Math.PI / 2 : -Math.PI / 4;
+      // Rocket angle: always diagonal up-right
+      const angle = -Math.PI / 4;
       ctx.rotate(angle);
       
       // Rocket flame (animated)
