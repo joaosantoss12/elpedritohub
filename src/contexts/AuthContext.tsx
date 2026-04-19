@@ -94,13 +94,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         let requiresUpdate = false;
 
         if (lastLogin !== today) {
-          newStreak += 1;
+          const todayMs = new Date(today).getTime();
+          const lastMs = lastLogin ? new Date(lastLogin).getTime() : 0;
+          const daysDiff = Math.round((todayMs - lastMs) / (1000 * 60 * 60 * 24));
+
+          if (daysDiff === 1) {
+            newStreak += 1; // continua streak
+          } else {
+            newStreak = 1; // perdeu streak, recomeça
+          }
           requiresUpdate = true;
         }
 
         if (requiresUpdate) {
-          const isVip = (data.badges ?? []).includes('VIP') || (data.badges ?? []).includes('Administrador');
-          const epcBonus = isVip ? 50 : 10;
+          const isVip = (data.badges ?? []).some((b: string) =>
+            b.toLowerCase() === 'vip' || b.toLowerCase() === 'administrador'
+          );
+          const epcBonus = isVip ? newStreak * 5 : newStreak;
           const { data: updatedData, error: updateError } = await supabase
             .from('membros')
             .update({
