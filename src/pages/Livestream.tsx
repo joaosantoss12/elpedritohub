@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { MessageCircle, X, Minus, Send, Radio, Maximize2, Award } from 'lucide-react';
+import { MessageCircle, X, Minus, Send, Radio, Maximize2, Award, ShieldBan, Clock } from 'lucide-react';
 import '../styles/Livestream.css';
 
 // ─── HELPERS ──────────────────────────────────────────────────
@@ -53,7 +53,8 @@ const CHAT_H_MIN = 44;
 // ─── COMPONENT ────────────────────────────────────────────────
 
 export default function Livestream() {
-  const { user } = useAuth();
+  const { user, membro } = useAuth();
+  const isAdmin = membro?.badges?.includes('Administrador') ?? false;
 
   // ── Stream config ──
   const [channel, setChannel] = useState('elpedrito');
@@ -74,6 +75,9 @@ export default function Livestream() {
   const [displayNames, setDisplayNames] = useState<Record<string, LiveMemberInfo>>({});
   const [profileModal, setProfileModal] = useState<LiveMemberInfo & { id: string } | null>(null);
   const [avatarErrors, setAvatarErrors] = useState<Set<string>>(new Set());
+  const [timeoutModal, setTimeoutModal] = useState<{ userId: string; nome: string } | null>(null);
+  const [myBanned, setMyBanned] = useState(false);
+  const [myTimeout, setMyTimeout] = useState<Date | null>(null);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -85,6 +89,45 @@ export default function Livestream() {
   const namesCache = useRef<Record<string, LiveMemberInfo>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── Check own ban/timeout + realtime ──
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('membros')
+      .select('is_banned, chat_timeout_until')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setMyBanned(data.is_banned ?? false);
+          setMyTimeout(data.chat_timeout_until ? new Date(data.chat_timeout_until) : null);
+        }
+      });
+    const sub = supabase
+      .channel(`live_status_${user.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'membros', filter: `id=eq.${user.id}` }, (payload) => {
+        const row = payload.new as { is_banned?: boolean; chat_timeout_until?: string | null };
+        setMyBanned(row.is_banned ?? false);
+        setMyTimeout(row.chat_timeout_until ? new Date(row.chat_timeout_until) : null);
+      })
+      .subscribe();
+    return () => { sub.unsubscribe(); };
+  }, [user]);
+
+  // ── Admin actions ──
+  const handleBanUser = async (userId: string, nome: string) => {
+    if (!confirm(`Banir ${nome}? Perderá acesso ao chat.`)) return;
+    await supabase.from('membros').update({ is_banned: true }).eq('id', userId);
+    setProfileModal(null);
+  };
+
+  const handleTimeoutUser = async (userId: string, seconds: number) => {
+    const until = new Date(Date.now() + seconds * 1000);
+    await supabase.from('membros').update({ chat_timeout_until: until.toISOString() }).eq('id', userId);
+    setTimeoutModal(null);
+    setProfileModal(null);
+  };
 
   // ── Set initial chat position (bottom-right) ──
   useEffect(() => {
@@ -257,6 +300,13 @@ export default function Livestream() {
   // ── Send message ──
   const sendMessage = async () => {
     if (!user || !input.trim() || sending) return;
+    if (myBanned) { alert('A tua conta está suspensa.'); return; }
+    if (myTimeout && myTimeout > new Date()) {
+      const remaining = Math.ceil((myTimeout.getTime() - Date.now()) / 1000);
+      const mins = Math.floor(remaining / 60); const secs = remaining % 60;
+      alert(`Estás em silêncio por mais ${mins > 0 ? `${mins}m ` : ''}${secs}s.`);
+      return;
+    }
     const content = input.trim().slice(0, 300);
     setInput('');
     setSending(true);
@@ -484,6 +534,48 @@ export default function Livestream() {
                 <span className="chat-profile-stat__lbl">Mensagens</span>
               </div>
             </div>
+            {isAdmin && profileModal.id !== user?.id && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'center' }}>
+                <button
+                  onClick={() => { setTimeoutModal({ userId: profileModal.id, nome: profileModal.nome }); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24', padding: '0.45rem 0.9rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  <Clock size={13} /> Silenciar
+                </button>
+                <button
+                  onClick={() => handleBanUser(profileModal.id, profileModal.nome)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#ef4444', padding: '0.45rem 0.9rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  <ShieldBan size={13} /> Banir
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TIMEOUT MODAL ── */}
+      {timeoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setTimeoutModal(null)}>
+          <div className="admin-timeout-modal" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem' }}>
+              <Clock size={20} color="var(--gold-primary)" />
+              <h4 style={{ margin: 0, fontSize: '1rem' }}>Silenciar: <span style={{ color: 'var(--gold-primary)' }}>{timeoutModal.nome}</span></h4>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[
+                { label: '30 segundos', seconds: 30 },
+                { label: '5 minutos', seconds: 300 },
+                { label: '30 minutos', seconds: 1800 },
+                { label: '1 hora', seconds: 3600 },
+                { label: '24 horas', seconds: 86400 },
+              ].map(opt => (
+                <button key={opt.seconds} className="admin-timeout-btn" onClick={() => handleTimeoutUser(timeoutModal.userId, opt.seconds)}>
+                  <Clock size={14} /> {opt.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setTimeoutModal(null)} style={{ marginTop: '1rem', width: '100%', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-gray)', padding: '0.6rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>Cancelar</button>
           </div>
         </div>
       )}

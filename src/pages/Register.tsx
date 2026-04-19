@@ -102,6 +102,7 @@ function Register() {
             email: formData.email,
             nome: formData.name,
             username: usernameClean,
+            badges: ['Membro'],
           });
 
         if (membroError) {
