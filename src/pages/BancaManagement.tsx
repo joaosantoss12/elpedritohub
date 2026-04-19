@@ -9,8 +9,16 @@ import {
 } from 'recharts';
 import {
   Plus, ChevronLeft, ChevronRight,
-  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil,
+  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2,
 } from 'lucide-react';
+  // Apagar aposta
+  const handleDeleteAposta = async (a: Aposta) => {
+    if (!window.confirm('Apagar esta aposta?')) return;
+    const { error } = await supabase.from('banca_apostas').delete().eq('id', a.id);
+    if (!error) {
+      setApostas(prev => prev.filter(x => x.id !== a.id));
+    }
+  };
 import '../styles/Banca.css';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -746,13 +754,23 @@ export default function BancaManagement() {
                             <div className={`banca-bet-item__profit ${profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'neutral'}`}>
                               {profit > 0 ? '+' : ''}€{profit.toFixed(2)}
                             </div>
-                            <button
-                              className="banca-bet-item__edit"
-                              onClick={() => openEdit(a)}
-                              title="Editar aposta"
-                            >
-                              <Pencil size={13} />
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.3rem' }}>
+                              <button
+                                className="banca-bet-item__edit"
+                                onClick={() => openEdit(a)}
+                                title="Editar aposta"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                className="banca-bet-item__edit"
+                                onClick={() => handleDeleteAposta(a)}
+                                title="Apagar aposta"
+                                style={{ color: '#ef4444' }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
