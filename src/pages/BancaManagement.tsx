@@ -376,19 +376,36 @@ export default function BancaManagement() {
       estado: a.estado,
       data_aposta: a.data_aposta,
     });
+    setEditSelecoes(
+      a.selecoes ? a.selecoes.map(s => ({ ...s })) : []
+    );
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAposta) return;
-    const odd = parseFloat(editForm.odd);
-    const valor = parseFloat(editForm.valor_apostado);
-    if (isNaN(odd) || isNaN(valor) || odd <= 1 || valor <= 0) return;
 
-    setSaving(true);
-    const { data, error } = await supabase
-      .from('banca_apostas')
-      .update({
+    let updatePayload: Record<string, unknown>;
+
+    if (editingAposta.tipo === 'multipla' && editSelecoes.length > 0) {
+      const parsedSels = editSelecoes.map(s => ({ ...s, oddNum: parseFloat(s.odd) }));
+      if (parsedSels.some(s => isNaN(s.oddNum) || s.oddNum <= 1)) return;
+      const totalOdd = parseFloat(parsedSels.reduce((acc, s) => acc * s.oddNum, 1).toFixed(2));
+      const valor = parseFloat(editForm.valor_apostado);
+      if (isNaN(valor) || valor <= 0) return;
+      updatePayload = {
+        odd: totalOdd,
+        valor_apostado: valor,
+        estado: editForm.estado,
+        data_aposta: editForm.data_aposta,
+        selecoes: parsedSels.map(({ oddNum: _n, ...s }) => s),
+        mercado: `Múltipla (${parsedSels.length} seleções)`,
+      };
+    } else {
+      const odd = parseFloat(editForm.odd);
+      const valor = parseFloat(editForm.valor_apostado);
+      if (isNaN(odd) || isNaN(valor) || odd <= 1 || valor <= 0) return;
+      updatePayload = {
         desporto: editForm.desporto,
         equipa_casa: editForm.equipa_casa.trim(),
         equipa_fora: editForm.equipa_fora.trim(),
@@ -397,7 +414,13 @@ export default function BancaManagement() {
         valor_apostado: valor,
         estado: editForm.estado,
         data_aposta: editForm.data_aposta,
-      })
+      };
+    }
+
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('banca_apostas')
+      .update(updatePayload)
       .eq('id', editingAposta.id)
       .select()
       .single();
@@ -977,6 +1000,18 @@ export default function BancaManagement() {
                             </button>
                           )}
                         </div>
+                        <div className="banca-selecao-row__sport">
+                          {SPORTS.map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              className={`banca-selecao-sport-btn ${sel.desporto === s ? 'active' : ''}`}
+                              onClick={() => setSelecoes(prev => prev.map((sl, i) => i === idx ? { ...sl, desporto: s } : sl))}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
                         <div className="banca-teams" style={{ marginBottom: '0.4rem' }}>
                           <input
                             type="text"
@@ -1140,6 +1175,18 @@ export default function BancaManagement() {
                               <X size={13} />
                             </button>
                           )}
+                        </div>
+                        <div className="banca-selecao-row__sport">
+                          {SPORTS.map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              className={`banca-selecao-sport-btn ${sel.desporto === s ? 'active' : ''}`}
+                              onClick={() => setEditSelecoes(prev => prev.map((sl, i) => i === idx ? { ...sl, desporto: s } : sl))}
+                            >
+                              {s}
+                            </button>
+                          ))}
                         </div>
                         <div className="banca-teams" style={{ marginBottom: '0.4rem' }}>
                           <input

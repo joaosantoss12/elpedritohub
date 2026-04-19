@@ -937,6 +937,32 @@
   background: rgba(248, 113, 113, 0.12);
 }
 
+.banca-selecao-row__sport {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.banca-selecao-sport-btn {
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-gray);
+  transition: all 0.15s;
+}
+
+.banca-selecao-sport-btn.active,
+.banca-selecao-sport-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  background: rgba(230, 185, 92, 0.08);
+}
+
 
 .banca-estado-btns {
   display: grid;
