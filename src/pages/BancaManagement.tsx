@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import {
   Plus, ChevronLeft, ChevronRight,
-  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2,
+  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2, Lock as LockIcon,
 } from 'lucide-react';
 import '../styles/Banca.css';
 
@@ -447,10 +447,16 @@ export default function BancaManagement() {
             <h1 className="banca-title">Gestão de <span>Banca</span></h1>
             <p className="banca-subtitle">Regista e acompanha as tuas apostas</p>
           </div>
-          <button className="banca-btn-add" onClick={() => setShowModal(true)}>
-            <Plus size={18} />
-            Nova Aposta
-          </button>
+          {user ? (
+            <button className="banca-btn-add" onClick={() => setShowModal(true)}>
+              <Plus size={18} />
+              Nova Aposta
+            </button>
+          ) : (
+            <button className="banca-btn-add" style={{ opacity: 0.5, cursor: 'not-allowed' }} disabled>
+              <LockIcon size={16} /> Inicia sessão
+            </button>
+          )}
         </div>
 
         {/* ── Monthly Stats ── */}
@@ -682,12 +688,14 @@ export default function BancaManagement() {
                   <div className="banca-detail__empty">
                     <Target size={44} opacity={0.2} />
                     <p>Sem apostas neste dia</p>
-                    <button className="banca-btn-add-small" onClick={() => {
-                      setForm(f => ({ ...f, data_aposta: selectedDate! }));
-                      setShowModal(true);
-                    }}>
-                      <Plus size={14} /> Adicionar
-                    </button>
+                    {user && (
+                      <button className="banca-btn-add-small" onClick={() => {
+                        setForm(f => ({ ...f, data_aposta: selectedDate! }));
+                        setShowModal(true);
+                      }}>
+                        <Plus size={14} /> Adicionar
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -755,23 +763,25 @@ export default function BancaManagement() {
                             <div className={`banca-bet-item__profit ${profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'neutral'}`}>
                               {profit > 0 ? '+' : ''}€{profit.toFixed(2)}
                             </div>
-                            <div style={{ display: 'flex', gap: '0.3rem' }}>
-                              <button
-                                className="banca-bet-item__edit"
-                                onClick={() => openEdit(a)}
-                                title="Editar aposta"
-                              >
-                                <Pencil size={13} />
-                              </button>
-                              <button
-                                className="banca-bet-item__edit"
-                                onClick={() => handleDeleteAposta(a)}
-                                title="Apagar aposta"
-                                style={{ color: '#ef4444' }}
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
+                            {user && (
+                              <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                <button
+                                  className="banca-bet-item__edit"
+                                  onClick={() => openEdit(a)}
+                                  title="Editar aposta"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                                <button
+                                  className="banca-bet-item__edit"
+                                  onClick={() => handleDeleteAposta(a)}
+                                  title="Apagar aposta"
+                                  style={{ color: '#ef4444' }}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

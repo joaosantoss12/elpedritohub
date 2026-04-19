@@ -111,8 +111,8 @@ const HORSES = [
 
 // ─── COMPONENT ────────────────────────────────────────────────
 export default function Casino() {
-  const { membro } = useAuth();
-  const epcoins = membro?.epcoins ?? 1000; // fallback for testing
+  const { user, membro } = useAuth();
+  const epcoins = membro?.epcoins ?? 0;
 
   const [activeGame, setActiveGame] = useState<'blackjack' | 'horse' | 'crash'>('blackjack');
 
@@ -945,8 +945,8 @@ export default function Casino() {
                   </button>
                 </div>
                 <div className="bj-action-row">
-                  <button className="bj-btn bj-btn-deal" onClick={handleDeal} disabled={betInput <= 0 || betInput > epcoins}>
-                    🃏 DEAL
+                  <button className="bj-btn bj-btn-deal" onClick={handleDeal} disabled={!user || betInput <= 0 || betInput > epcoins}>
+                    {user ? '🃏 DEAL' : '🔒 Inicia sessão'}
                   </button>
                 </div>
               </>
@@ -1073,10 +1073,10 @@ export default function Casino() {
                     <button
                       className="bj-btn bj-btn-deal"
                       onClick={startRace}
-                      disabled={hrSelectedHorse === null || hrBet <= 0}
+                      disabled={!user || hrSelectedHorse === null || hrBet <= 0}
                       style={{ flex: 'none', width: 'auto', padding: '0.8rem 2.2rem' }}
                     >
-                      🏇 INICIAR CORRIDA
+                      {user ? '🏇 INICIAR CORRIDA' : '🔒 Inicia sessão'}
                     </button>
                     {hrSelectedHorse !== null && (
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-gray)' }}>
@@ -1259,10 +1259,10 @@ export default function Casino() {
                     <button
                       className="bj-btn bj-btn-deal"
                       onClick={startCrashGame}
-                      disabled={crBet <= 0 || crBet > epcoins}
+                      disabled={!user || crBet <= 0 || crBet > epcoins}
                       style={{ flex: 'none', width: 'auto', padding: '0.85rem 3rem', fontSize: '0.85rem' }}
                     >
-                      🚀 VOAR
+                      {user ? '🚀 VOAR' : '🔒 Inicia sessão'}
                     </button>
                   </div>
                 </>
