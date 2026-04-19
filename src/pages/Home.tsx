@@ -57,40 +57,70 @@ function Home() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     const mesPrefix = today.slice(0, 7) + '-01';
-    Promise.all([
-      supabase
-        .from('home_lucro_mes')
-        .select('lucro')
-        .eq('mes', mesPrefix)
-        .maybeSingle(),
-      supabase
-        .from('home_lucro_semana')
-        .select('lucro')
-        .lte('semana', today)
-        .order('semana', { ascending: false })
-        .limit(1),
-      supabase
-        .from('home_bilhete_dia')
-        .select('acertos, possiveis, odd, ganhos')
-        .eq('data', today)
-        .maybeSingle(),
-      supabase
-        .from('home_top_aposta')
-        .select('mercado, jogo, odd, valor_apostado, valor_ganho, imagem_url')
-        .eq('data', today)
-        .maybeSingle(),
-      supabase
-        .from('home_palpites_dia')
-        .select('id, team, league, odd, time, color')
-        .eq('data', today)
-        .order('ordem'),
-    ]).then(([lucroRes, semanaRes, bilheteRes, topRes, palpitesRes]) => {
-      if (lucroRes.data)   setLucroMes(lucroRes.data);
+
+    const fetchWithFallback = async () => {
+      const [lucroRes, semanaRes, bilheteRes, topRes, palpitesRes] = await Promise.all([
+        supabase.from('home_lucro_mes').select('lucro').eq('mes', mesPrefix).maybeSingle(),
+        supabase.from('home_lucro_semana').select('lucro').lte('semana', today).order('semana', { ascending: false }).limit(1),
+        supabase.from('home_bilhete_dia').select('acertos, possiveis, odd, ganhos').eq('data', today).maybeSingle(),
+        supabase.from('home_top_aposta').select('mercado, jogo, odd, valor_apostado, valor_ganho, imagem_url').eq('data', today).maybeSingle(),
+        supabase.from('home_palpites_dia').select('id, team, league, odd, time, color').eq('data', today).order('ordem'),
+      ]);
+
+      if (lucroRes.data) setLucroMes(lucroRes.data);
       if (semanaRes.data && semanaRes.data.length > 0) setLucroSemana(semanaRes.data[0]);
-      if (bilheteRes.data) setBilheteDia(bilheteRes.data);
-      if (topRes.data)     setTopAposta(topRes.data);
-      if (palpitesRes.data) setPalpites(palpitesRes.data as PalpiteDia[]);
-    });
+
+      // Bilhete: fallback para o mais recente
+      if (bilheteRes.data) {
+        setBilheteDia(bilheteRes.data);
+      } else {
+        const { data } = await supabase
+          .from('home_bilhete_dia')
+          .select('acertos, possiveis, odd, ganhos')
+          .lt('data', today)
+          .order('data', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) setBilheteDia(data);
+      }
+
+      // Top Aposta: fallback para o mais recente
+      if (topRes.data) {
+        setTopAposta(topRes.data);
+      } else {
+        const { data } = await supabase
+          .from('home_top_aposta')
+          .select('mercado, jogo, odd, valor_apostado, valor_ganho, imagem_url')
+          .lt('data', today)
+          .order('data', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) setTopAposta(data);
+      }
+
+      // Palpites: fallback para o dia mais recente com palpites
+      if (palpitesRes.data && palpitesRes.data.length > 0) {
+        setPalpites(palpitesRes.data as PalpiteDia[]);
+      } else {
+        const { data: latestDate } = await supabase
+          .from('home_palpites_dia')
+          .select('data')
+          .lt('data', today)
+          .order('data', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestDate?.data) {
+          const { data } = await supabase
+            .from('home_palpites_dia')
+            .select('id, team, league, odd, time, color')
+            .eq('data', latestDate.data)
+            .order('ordem');
+          if (data) setPalpites(data as PalpiteDia[]);
+        }
+      }
+    };
+
+    fetchWithFallback();
   }, []);
   
   useEffect(() => {

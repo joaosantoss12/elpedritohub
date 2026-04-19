@@ -2,10 +2,38 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { MessageCircle, X, Minus, Send, Radio, Maximize2 } from 'lucide-react';
+import { MessageCircle, X, Minus, Send, Radio, Maximize2, Award } from 'lucide-react';
 import '../styles/Livestream.css';
 
+// ─── HELPERS ──────────────────────────────────────────────────
+
+const getAvatarUrl = (userId: string): string => {
+  const { data: { publicUrl } } = supabase.storage
+    .from('profile_images')
+    .getPublicUrl(userId);
+  return `${publicUrl}?t=${Date.now()}`;
+};
+
+const BADGE_LABELS: Record<string, string> = {
+  membro_fundador: '👑 Fundador',
+  top_apostador: '🏆 Top Apostador',
+  streak_7: '🔥 7 dias seguidos',
+  streak_30: '⚡ 30 dias seguidos',
+  primeiro_acerto: '🎯 Primeiro Acerto',
+  membro_vip: '💎 VIP',
+};
+
 // ─── TYPES ────────────────────────────────────────────────────
+
+interface LiveMemberInfo {
+  nome: string;
+  username: string;
+  avatar_url?: string | null;
+  epcoins?: number;
+  streak_login?: number;
+  chat_messages?: number;
+  badges?: string[];
+}
 
 interface LiveMsg {
   id: string;
@@ -43,7 +71,9 @@ export default function Livestream() {
   useEffect(() => { chatPosRef.current = chatPos; }, [chatPos]);
 
   const [messages, setMessages] = useState<LiveMsg[]>([]);
-  const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
+  const [displayNames, setDisplayNames] = useState<Record<string, LiveMemberInfo>>({});
+  const [profileModal, setProfileModal] = useState<LiveMemberInfo & { id: string } | null>(null);
+  const [avatarErrors, setAvatarErrors] = useState<Set<string>>(new Set());
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -52,7 +82,7 @@ export default function Livestream() {
   // ── Refs ──
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
-  const namesCache = useRef<Record<string, string>>({});
+  const namesCache = useRef<Record<string, LiveMemberInfo>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -84,13 +114,46 @@ export default function Livestream() {
     if (!unknown.length) return;
     const { data } = await supabase
       .from('membros')
-      .select('id, username')
+      .select('id, nome, username, epcoins, streak_login, chat_messages, badges')
       .in('id', unknown);
     if (data) {
-      data.forEach((m) => { namesCache.current[m.id] = m.username; });
+      data.forEach((m) => {
+        namesCache.current[m.id] = {
+          nome: m.nome || m.username,
+          username: m.username,
+          epcoins: m.epcoins,
+          streak_login: m.streak_login,
+          chat_messages: m.chat_messages,
+          badges: m.badges ?? [],
+        };
+      });
       setDisplayNames({ ...namesCache.current });
     }
   }, []);
+
+  const openProfile = async (userId: string) => {
+    const cached = namesCache.current[userId];
+    if (cached) setProfileModal({ id: userId, ...cached });
+    const { data } = await supabase
+      .from('membros')
+      .select('id, nome, username, epcoins, streak_login, chat_messages, badges')
+      .eq('id', userId)
+      .maybeSingle();
+    if (data) {
+      const info: LiveMemberInfo = {
+        nome: data.nome || data.username,
+        username: data.username,
+        avatar_url: getAvatarUrl(userId),
+        epcoins: data.epcoins,
+        streak_login: data.streak_login,
+        chat_messages: data.chat_messages,
+        badges: data.badges ?? [],
+      };
+      namesCache.current[userId] = info;
+      setDisplayNames(prev => ({ ...prev, [userId]: info }));
+      setProfileModal({ id: userId, ...info });
+    }
+  };
 
   // ── Load messages + realtime subscription ──
   useEffect(() => {
@@ -315,11 +378,26 @@ export default function Livestream() {
                 )}
                 {messages.map((msg) => {
                   const isMe = msg.user_id === user?.id;
-                  const username = displayNames[msg.user_id] ?? '…';
+                  const info = displayNames[msg.user_id];
+                  const nome = info?.nome ?? '…';
+                  const username = info?.username;
+                  const time = new Date(msg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
                   return (
                     <div key={msg.id} className="live-msg">
-                      <span className={`live-msg__user${isMe ? ' me' : ''}`}>{username}:</span>
+                      <span className="live-msg__time">{time}</span>
                       {' '}
+                      <span
+                        className={`live-msg__user${isMe ? ' me' : ''}`}
+                        onClick={() => openProfile(msg.user_id)}
+                        style={{ cursor: 'pointer' }}
+                        title="Ver perfil"
+                      >
+                        {nome}
+                        {username && (
+                          <span className="live-msg__username"> ({username})</span>
+                        )}
+                      </span>
+                      {': '}
                       <span className="live-msg__text">{msg.content}</span>
                     </div>
                   );
@@ -357,6 +435,56 @@ export default function Livestream() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ── PROFILE MODAL ── */}
+      {profileModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={() => setProfileModal(null)}
+        >
+          <div
+            className="chat-profile-modal"
+            onClick={e => e.stopPropagation()}
+          >
+            <button className="chat-profile-close" onClick={() => setProfileModal(null)}>
+              <X size={18} />
+            </button>
+            <div className="chat-profile-avatar">
+              {profileModal.avatar_url && !avatarErrors.has(profileModal.id)
+                ? <img src={profileModal.avatar_url} alt="avatar" onError={() => setAvatarErrors(prev => new Set(prev).add(profileModal.id))} />
+                : <span>{profileModal.nome?.[0]?.toUpperCase() ?? '?'}</span>
+              }
+            </div>
+            <h3 className="chat-profile-name">{profileModal.nome}</h3>
+            {profileModal.username && (
+              <p className="chat-profile-username">@{profileModal.username}</p>
+            )}
+            {(profileModal.badges?.length ?? 0) > 0 && (
+              <div className="chat-profile-badges">
+                {profileModal.badges!.map(b => (
+                  <span key={b} className="chat-profile-badge" style={{ display: 'flex', alignItems: 'center' }}>
+                    <Award size={16} />{BADGE_LABELS[b] ?? b}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="chat-profile-stats">
+              <div className="chat-profile-stat">
+                <span className="chat-profile-stat__val">{profileModal.epcoins ?? 0}</span>
+                <span className="chat-profile-stat__lbl">EP Coins</span>
+              </div>
+              <div className="chat-profile-stat">
+                <span className="chat-profile-stat__val">{profileModal.streak_login ?? 0}</span>
+                <span className="chat-profile-stat__lbl">Streak</span>
+              </div>
+              <div className="chat-profile-stat">
+                <span className="chat-profile-stat__val">{profileModal.chat_messages ?? 0}</span>
+                <span className="chat-profile-stat__lbl">Mensagens</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

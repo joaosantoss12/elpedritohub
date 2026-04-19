@@ -345,10 +345,27 @@
   font-weight: 700;
   color: var(--text-gray);
   margin-right: 0.2rem;
+  transition: color 0.15s;
+}
+
+.live-msg__user:hover {
+  color: var(--gold-primary);
 }
 
 .live-msg__user.me {
   color: var(--gold-primary);
+}
+
+.live-msg__username {
+  font-weight: 400;
+  opacity: 0.6;
+  font-size: 0.78rem;
+}
+
+.live-msg__time {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
 }
 
 .live-msg__text {
