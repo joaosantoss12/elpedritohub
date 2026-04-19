@@ -185,7 +185,6 @@ function Profile() {
   };
 
   if (authLoading) {
-    console.log('Profile: Still loading auth...');
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navbar />

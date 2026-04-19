@@ -109,7 +109,6 @@ function Register() {
         }
       }
 
-      console.log('Registo bem-sucedido:', data);
       navigate('/login'); // Redirect after registration
     } catch (err: any) {
       console.error('Error during registration:', err);

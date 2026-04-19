@@ -69,14 +69,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchMembroData = async (currentUser: User) => {
     try {
-      console.log('fetchMembroData: Iniciando para user:', currentUser.id);
       const { data, error } = await supabase
         .from('membros')
         .select('*')
         .eq('id', currentUser.id)
         .single();
-      
-      console.log('fetchMembroData: Resposta recebida', { data, error });
       
       if (error) {
         console.warn('Erro ao procurar dados do membro:', error.code, error.message);
@@ -85,7 +82,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       if (data) {
-        console.log('Dados do membro encontrados:', data);
         // LÓGICA DE STREAK DE LOGIN
         const today = formatLocalDate(new Date());
         const lastLogin = normalizeStoredDate(data.last_login_date);
@@ -99,7 +95,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (requiresUpdate) {
-          console.log('Atualizando streak de login para:', newStreak);
           const isVip = (data.badges ?? []).includes('VIP') || (data.badges ?? []).includes('Administrador');
           const epcBonus = isVip ? 50 : 10;
           const { data: updatedData, error: updateError } = await supabase
@@ -114,7 +109,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .single();
 
           if (!updateError && updatedData) {
-            console.log('Dados atualizados com sucesso');
             setMembro(normalizeMembroData(updatedData as MembroData));
             return;
           }
@@ -133,18 +127,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initSession = async () => {
       try {
-        console.log('AuthContext: Starting session init...');
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error("Error fetching session:", error);
         }
         const currentUser = session?.user ?? null;
-        console.log('AuthContext: Current user:', currentUser?.id ?? 'None');
         if (mounted) setUser(currentUser);
         
         if (currentUser) {
           // Não espera pela fetchMembroData - deixa correr em background
-          console.log('AuthContext: Iniciando fetchMembroData em background');
           fetchMembroData(currentUser).catch(err => console.error('Background fetch error:', err));
         }
       } catch (err) {
@@ -152,7 +143,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } finally {
         // FORÇA loading a false aqui, independentemente do resultado
         if (mounted) {
-          console.log('AuthContext: Antecipadamente marcando loading como false');
           setLoading(false);
         }
       }
@@ -170,7 +160,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Escutar mudanças no estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('AuthContext: Auth state changed:', _event);
       const currentUser = session?.user ?? null;
       if (mounted) setUser(currentUser);
       

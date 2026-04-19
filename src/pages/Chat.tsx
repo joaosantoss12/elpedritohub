@@ -236,8 +236,7 @@ export default function Chat() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
+      .subscribe((_status) => {
       });
 
     return () => {
@@ -581,7 +580,7 @@ export default function Chat() {
     setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
-  const renderContent = (content: string, _isUserMsg: boolean) => {
+  const renderContent = (content: string, isUserMsg: boolean) => {
     const parts = content.split(/(@\w+)/g);
     return parts.map((part, i) => {
       if (/^@\w+$/.test(part)) {

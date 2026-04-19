@@ -40,7 +40,6 @@ function Login() {
         throw error;
       }
 
-      console.log('Login successful:', data);
       navigate('/profile'); // Redirect after login
     } catch (err: any) {
       console.error('Error during login:', err);
