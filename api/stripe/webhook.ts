@@ -50,12 +50,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.client_reference_id || session.metadata?.userId;
         if (userId) {
+          const { data: membroData } = await supabase
+            .from('membros')
+            .select('badges')
+            .eq('id', userId)
+            .single();
+          const currentBadges: string[] = membroData?.badges || [];
+          const updatedBadges = currentBadges.includes('VIP') ? currentBadges : [...currentBadges, 'VIP'];
           await supabase
             .from('membros')
             .update({
               subscription_status: 'active',
               stripe_customer_id: session.customer as string,
               stripe_subscription_id: session.subscription as string,
+              badges: updatedBadges,
             })
             .eq('id', userId);
         }
@@ -74,9 +82,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
+        const { data: membroData } = await supabase
+          .from('membros')
+          .select('badges')
+          .eq('stripe_subscription_id', subscription.id)
+          .single();
+        const currentBadges: string[] = membroData?.badges || [];
+        const updatedBadges = currentBadges.filter((b: string) => b !== 'VIP');
         await supabase
           .from('membros')
-          .update({ subscription_status: 'inactive', stripe_subscription_id: null })
+          .update({ subscription_status: 'inactive', stripe_subscription_id: null, badges: updatedBadges })
           .eq('stripe_subscription_id', subscription.id);
         break;
       }

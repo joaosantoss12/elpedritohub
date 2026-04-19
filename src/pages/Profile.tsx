@@ -1,20 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Toast } from '../components/Toast';
-import { User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2, Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2, Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import '../index.css';
 
 function Profile() {
   const navigate = useNavigate();
-  const { user, membro, loading: authLoading, signOut } = useAuth();
+  const location = useLocation();
+  const { user, membro, loading: authLoading, signOut, refreshMembro } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
-  
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [pendingEmailChange, setPendingEmailChange] = useState(false);
@@ -45,6 +47,34 @@ function Profile() {
       }
     }
   }, [user, authLoading, navigate, pendingEmailChange, pendingNewEmail]);
+
+  // Handle returning from Stripe checkout
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('checkout') === 'success') {
+      // Clean URL
+      window.history.replaceState({}, '', '/profile');
+      // Refresh membro data and poll until active
+      const poll = async (attempts: number) => {
+        await refreshMembro();
+        const { data } = await supabase
+          .from('membros')
+          .select('subscription_status')
+          .eq('id', user?.id ?? '')
+          .single();
+        if (data?.subscription_status === 'active') {
+          setShowSuccessModal(true);
+        } else if (attempts > 0) {
+          setTimeout(() => poll(attempts - 1), 2000);
+        } else {
+          // Show modal anyway after timeout
+          setShowSuccessModal(true);
+        }
+      };
+      poll(8);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(7);
@@ -160,6 +190,29 @@ function Profile() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    if (!membro?.stripe_subscription_id || !user) return;
+    const confirmed = window.confirm('Tens a certeza que queres cancelar a subscrição? Perderás o acesso VIP imediatamente.');
+    if (!confirmed) return;
+    setCancellingSubscription(true);
+    try {
+      const res = await fetch('/api/stripe/cancel-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriptionId: membro.stripe_subscription_id, userId: user.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao cancelar subscrição');
+      await refreshMembro();
+      addToast('Subscrição cancelada com sucesso.', 'info');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      addToast(message, 'error');
+    } finally {
+      setCancellingSubscription(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     const isConfirmed = window.confirm('Tem a certeza absoluta de que pretende eliminar a sua conta? Esta ação é irreversível.');
     
@@ -204,6 +257,37 @@ function Profile() {
   return (
     <div style={{ minHeight: '100vh' }}>
       <Navbar />
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(22,22,22,0.98) 0%, rgba(8,8,8,1) 100%)',
+            border: '1px solid rgba(230,185,92,0.4)',
+            borderRadius: '20px', padding: '3rem 2.5rem', maxWidth: '420px', width: '100%',
+            textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+          }}>
+            <CheckCircle size={64} color="#10b981" style={{ marginBottom: '1.5rem' }} />
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff', marginBottom: '0.75rem' }}>
+              Pagamento Confirmado!
+            </h2>
+            <p style={{ color: 'var(--text-gray)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+              A tua subscrição <strong style={{ color: 'var(--gold-primary)' }}>VIP</strong> foi ativada com sucesso.
+              Bem-vindo ao clube! 🎉
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="btn-gold"
+              style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', fontWeight: 'bold' }}
+            >
+              CONTINUAR
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ padding: '2rem 5%', display: 'flex', flexDirection: 'column', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       <div style={{ width: '100%', alignSelf: 'center' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', marginBottom: '2rem', textAlign: 'center' }}>
@@ -592,19 +676,75 @@ function Profile() {
               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CreditCard size={20} color="var(--gold-primary)" /> As Minhas Subscrições
               </h2>
-              <div style={{
-                background: 'rgba(0,0,0,0.5)',
-                border: '1px dashed #333',
-                borderRadius: '8px',
-                padding: '2rem',
-                textAlign: 'center',
-                color: 'var(--text-gray)'
-              }}>
-                <p>Atualmente não tem subscrições ativas.</p>
-                <button className="btn-outline" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }} onClick={() => navigate('/plans')}>
-                  VER PLANOS
-                </button>
-              </div>
+              {membro?.subscription_status === 'active' ? (
+                <div style={{
+                  background: 'rgba(139,92,246,0.08)',
+                  border: '1px solid rgba(139,92,246,0.4)',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Shield size={24} color="#8b5cf6" />
+                      <div>
+                        <p style={{ fontWeight: 'bold', color: '#fff', fontSize: '1rem' }}>VIP Ativo</p>
+                        <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>Subscrição recorrente</p>
+                      </div>
+                    </div>
+                    <span style={{
+                      background: 'rgba(16,185,129,0.15)',
+                      border: '1px solid #10b981',
+                      color: '#10b981',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '20px'
+                    }}>ATIVO</span>
+                  </div>
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={cancellingSubscription}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(239,68,68,0.4)',
+                      color: '#ef4444',
+                      padding: '0.6rem 1.2rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      cursor: cancellingSubscription ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      alignSelf: 'flex-start',
+                      opacity: cancellingSubscription ? 0.6 : 1,
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => { if (!cancellingSubscription) { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    {cancellingSubscription ? <Loader2 size={14} className="spin" /> : <XCircle size={14} />}
+                    {cancellingSubscription ? 'A cancelar...' : 'Cancelar Subscrição'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px dashed #333',
+                  borderRadius: '8px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  color: 'var(--text-gray)'
+                }}>
+                  <p>Atualmente não tem subscrições ativas.</p>
+                  <button className="btn-outline" style={{ marginTop: '1rem', fontSize: '0.8rem', padding: '0.5rem 1rem' }} onClick={() => navigate('/plans')}>
+                    VER PLANOS
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* SECÇÃO: CARGOS / BADGES */}

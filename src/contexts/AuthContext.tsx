@@ -13,6 +13,8 @@ export interface MembroData {
   chat_messages: number;
   prizes_claimed: number;
   badges: string[];
+  subscription_status: string | null;
+  stripe_subscription_id: string | null;
 }
 
 interface AuthContextType {

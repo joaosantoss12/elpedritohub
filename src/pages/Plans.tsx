@@ -110,6 +110,8 @@ export default function Plans() {
     }
   };
 
+  const isActive = membro?.subscription_status === 'active';
+
   return (
     <div className="plans-page">
       <Navbar />
@@ -118,6 +120,23 @@ export default function Plans() {
         <div className="plans-header">
           <h1 className="plans-title">Escolhe o teu Plano VIP</h1>
           <p className="plans-subtitle">Acesso a ferramentas e conhecimento exclusivo</p>
+          {isActive && (
+            <div style={{
+              marginTop: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'rgba(139,92,246,0.12)',
+              border: '1px solid rgba(139,92,246,0.5)',
+              borderRadius: '20px',
+              padding: '0.5rem 1.25rem',
+              color: '#8b5cf6',
+              fontWeight: 'bold',
+              fontSize: '0.9rem'
+            }}>
+              ✓ Já tens uma subscrição VIP ativa
+            </div>
+          )}
         </div>
 
         <div className="plans-grid">
@@ -157,10 +176,12 @@ export default function Plans() {
 
               <button
                 onClick={() => handleCheckout(plan)}
-                disabled={loadingStripe !== null}
+                disabled={loadingStripe !== null || isActive}
                 className={`plan-btn ${plan.destaque ? 'featured-btn' : ''} ${loadingStripe === plan.id ? 'loading' : ''}`}
               >
-                {loadingStripe === plan.id ? (
+                {isActive ? (
+                  'Plano Ativo'
+                ) : loadingStripe === plan.id ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
                   `Escolher ${plan.nome}`
