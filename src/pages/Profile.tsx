@@ -280,7 +280,7 @@ function Profile() {
               Pagamento Confirmado!
             </h2>
             <p style={{ color: 'var(--text-gray)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-              A tua subscrição <strong style={{ color: 'var(--gold-primary)' }}>VIP</strong> foi ativada com sucesso.
+              A tua subscrição <strong style={{ color: 'var(--gold-primary)' }}>VIP</strong> foi ativada com sucesso. [Dá refresh à página para ativar]
               Bem-vindo ao clube! 🎉
             </p>
             <button

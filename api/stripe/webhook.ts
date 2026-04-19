@@ -91,7 +91,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const updatedBadges = currentBadges.filter((b: string) => b !== 'VIP');
         await supabase
           .from('membros')
-          .update({ subscription_status: 'inactive', stripe_subscription_id: null, badges: updatedBadges })
+          .update({
+            subscription_status: 'inactive',
+            stripe_subscription_id: null,
+            stripe_customer_id: null,
+            subscription_cancel_at: null,
+            badges: updatedBadges,
+          })
           .eq('stripe_subscription_id', subscription.id);
         break;
       }
