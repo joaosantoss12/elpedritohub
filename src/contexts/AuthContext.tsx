@@ -16,6 +16,7 @@ export interface MembroData {
   subscription_status: string | null;
   stripe_subscription_id: string | null;
   subscription_cancel_at: string | null;
+  vip_telegram_link: string | null;
 }
 
 interface AuthContextType {

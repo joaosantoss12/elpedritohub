@@ -47,13 +47,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const currentBadges: string[] = membroData?.badges || [];
     const updatedBadges = currentBadges.includes('VIP') ? currentBadges : [...currentBadges, 'VIP'];
 
+    const telegramLink = session.metadata?.telegramLink ?? null;
+
     const { error } = await supabase
       .from('membros')
       .update({
         subscription_status: 'active',
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: session.subscription as string,
+        stripe_customer_id: session.customer as string | null,
         badges: updatedBadges,
+        ...(telegramLink ? { vip_telegram_link: telegramLink } : {}),
       })
       .eq('id', userId);
 

@@ -10,6 +10,7 @@ interface PlanoDB {
   id: string;
   nome: string;
   preco: string;
+  precoOriginal?: string;
   periodo: string;
   destaque: boolean;
   badge: string | null;
@@ -20,28 +21,26 @@ interface PlanoDB {
 
 interface Plan extends PlanoDB {
   amountCents: number;
-  interval: 'month' | 'year';
-  intervalCount: number;
 }
 
 const PLANS_FALLBACK: Plan[] = [
   {
-    id: 'monthly', nome: 'Mensal', preco: '19,99', periodo: '/mês',
+    id: 'monthly', nome: '1 Mês', preco: '29,99', precoOriginal: '39,99', periodo: 'pagamento único',
     destaque: false, badge: null, poupanca: null, ordem: 0,
-    amountCents: 1999, interval: 'month', intervalCount: 1,
-    funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tips Diárias', 'Análises Pré-Jogo', 'Gestão de Banca'],
+    amountCents: 2999,
+    funcionalidades: ['Acesso total ao grupo VIP', 'Palpites diários premium', 'Análises pré-jogo', 'Suporte por mensagem', 'Gestão de banca básica'],
   },
   {
-    id: 'quarterly', nome: 'Trimestral', preco: '49,99', periodo: '/3 meses',
-    destaque: false, badge: null, poupanca: 'Poupa 10€', ordem: 1,
-    amountCents: 4999, interval: 'month', intervalCount: 3,
-    funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto'],
+    id: 'quarterly', nome: '3 Meses', preco: '69,99', precoOriginal: '109,99', periodo: 'pagamento único',
+    destaque: false, badge: '⚡ MAIS POPULAR', poupanca: 'Poupa 20€', ordem: 1,
+    amountCents: 6999,
+    funcionalidades: ['Tudo do plano 1 Mês', 'Palpites live em tempo real', 'Análises ao vivo', 'Suporte prioritário 24/7', 'Estratégias avançadas', 'Grupo de discussão exclusivo'],
   },
   {
-    id: 'yearly', nome: 'Anual', preco: '189,99', periodo: '/ano',
-    destaque: true, badge: '🔥 Melhor Preço', poupanca: 'Poupa 50€', ordem: 2,
-    amountCents: 18999, interval: 'year', intervalCount: 1,
-    funcionalidades: ['Acesso ao grupo VIP Telegram', 'Tudo do Mensal', 'Acesso Prioritário', 'Live Exclusiva Mensal', 'Suporte VIP Direto', 'Mentoria 1-on-1 (1x)'],
+    id: 'yearly', nome: '1 Ano', preco: '149,99', precoOriginal: '249,99', periodo: 'pagamento único',
+    destaque: true, badge: '👑 MELHOR VALOR', poupanca: 'Poupa 100€', ordem: 2,
+    amountCents: 14999,
+    funcionalidades: ['Tudo do plano 3 Meses', 'Acesso durante 1 ano completo', 'Mentoria personalizada', 'Acesso antecipado a novidades', 'Badge exclusiva de fundador', 'Canal VIP dentro do VIP', 'Bónus: curso de apostas'],
   },
 ];
 
@@ -63,8 +62,6 @@ export default function Plans() {
             ...PLANS_FALLBACK[i % PLANS_FALLBACK.length],
             ...dbPlan,
             amountCents: PLANS_FALLBACK[i % PLANS_FALLBACK.length].amountCents,
-            interval: PLANS_FALLBACK[i % PLANS_FALLBACK.length].interval,
-            intervalCount: PLANS_FALLBACK[i % PLANS_FALLBACK.length].intervalCount,
           }));
           setPlans(merged);
         }
@@ -85,10 +82,7 @@ export default function Plans() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amountCents: plan.amountCents,
-          planName: plan.nome,
-          interval: plan.interval,
-          intervalCount: plan.intervalCount,
+          planId: plan.id,
           userId: user.id,
           userEmail: membro.email,
           successUrl: `${origin}/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -154,8 +148,13 @@ export default function Plans() {
               <div className="price-section">
                 <div className="price">
                   {plan.preco}€
-                  <span className="period">{plan.periodo}</span>
+                  <span className="period"> {plan.periodo}</span>
                 </div>
+                {plan.precoOriginal && (
+                  <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', textDecoration: 'line-through', marginTop: '0.2rem' }}>
+                    {plan.precoOriginal}€
+                  </p>
+                )}
                 {plan.poupanca && (
                   <p className="savings">{plan.poupanca}</p>
                 )}

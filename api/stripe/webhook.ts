@@ -49,6 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.client_reference_id || session.metadata?.userId;
+        const telegramLink = session.metadata?.telegramLink ?? null;
         if (userId) {
           const { data: membroData } = await supabase
             .from('membros')
@@ -61,9 +62,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .from('membros')
             .update({
               subscription_status: 'active',
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
+              stripe_customer_id: session.customer as string | null,
               badges: updatedBadges,
+              ...(telegramLink ? { vip_telegram_link: telegramLink } : {}),
             })
             .eq('id', userId);
         }

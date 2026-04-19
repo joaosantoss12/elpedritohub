@@ -541,6 +541,13 @@ export default function Chat() {
     }
   };
 
+  const handleClearAllChat = async () => {
+    if (!confirm('Tens a certeza que queres apagar TODAS as mensagens do chat? Esta ação é irreversível!')) return;
+    await supabase.from('chat_messages').delete().not('id', 'is', null);
+    setMessages([]);
+    setPinnedMessage(null);
+  };
+
   const handleBanUser = async (userId: string, nome: string) => {
     if (!confirm(`Banir ${nome}? Perderá acesso a todas as páginas exceto o início.`)) return;
     await supabase.from('membros').update({ is_banned: true }).eq('id', userId);
@@ -613,6 +620,24 @@ export default function Chat() {
       <Navbar />
       {/* Notifications toggle bar */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '0.4rem 5%', gap: '0.5rem'}}>
+        {isAdmin && (
+          <button
+            onClick={handleClearAllChat}
+            title="Apagar todo o chat"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.35)',
+              color: '#ef4444',
+              borderRadius: '20px', padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+          >
+            <Trash2 size={14} /> Limpar chat
+          </button>
+        )}
         <span style={{ fontSize: '0.72rem', color: 'var(--text-gray)' }}>Notificações</span>
         <button
           onClick={toggleNotifications}

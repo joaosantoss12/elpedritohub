@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Toast } from '../components/Toast';
-import { User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2, Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2, Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import '../index.css';
 
 function Profile() {
@@ -279,14 +279,27 @@ function Profile() {
             <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff', marginBottom: '0.75rem' }}>
               Pagamento Confirmado!
             </h2>
-            <p style={{ color: 'var(--text-gray)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-              A tua subscrição <strong style={{ color: 'var(--gold-primary)' }}>VIP</strong> foi ativada com sucesso. [Dá refresh à página para ativar]
-              Bem-vindo ao clube! 🎉
+            <p style={{ color: 'var(--text-gray)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+              O teu acesso ao grupo <strong style={{ color: 'var(--gold-primary)' }}>Footmillion VIP</strong> foi ativado com sucesso. Bem-vindo ao clube! 🎉
+            </p>
+            {membro?.vip_telegram_link && (
+              <a
+                href={membro.vip_telegram_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-gold"
+                style={{ padding: '0.9rem 2rem', fontSize: '1rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', textDecoration: 'none' }}
+              >
+                <ExternalLink size={18} /> Entrar no Grupo VIP
+              </a>
+            )}
+            <p style={{ color: 'var(--text-gray)', fontSize: '0.75rem', marginBottom: '1.5rem' }}>
+              Guarda este link — encontra-o sempre no teu perfil.
             </p>
             <button
               onClick={() => setShowSuccessModal(false)}
-              className="btn-gold"
-              style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', fontWeight: 'bold', display: 'block', margin: '0 auto' }}
+              className="btn-outline"
+              style={{ padding: '0.7rem 2rem', fontSize: '0.9rem', display: 'block', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)' }}
             >
               CONTINUAR
             </button>
@@ -695,8 +708,8 @@ function Profile() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <Shield size={24} color="#8b5cf6" />
                       <div>
-                        <p style={{ fontWeight: 'bold', color: '#fff', fontSize: '1rem' }}>VIP Ativo</p>
-                        <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>Subscrição recorrente</p>
+                        <p style={{ fontWeight: 'bold', color: '#fff', fontSize: '1rem' }}>Footmillion VIP</p>
+                        <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>Acesso VIP ativo</p>
                       </div>
                     </div>
                     <span style={{
@@ -709,35 +722,61 @@ function Profile() {
                       borderRadius: '20px'
                     }}>ATIVO</span>
                   </div>
-                  <button
-                    onClick={handleCancelSubscription}
-                    disabled={cancellingSubscription || !!membro?.subscription_cancel_at}
-                    style={{
-                      background: 'transparent',
-                      border: `1px solid ${membro?.subscription_cancel_at ? 'rgba(107,114,128,0.4)' : 'rgba(239,68,68,0.4)'}`,
-                      color: membro?.subscription_cancel_at ? 'var(--text-gray)' : '#ef4444',
-                      padding: '0.6rem 1.2rem',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 'bold',
-                      cursor: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      alignSelf: 'flex-start',
-                      opacity: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 0.6 : 1,
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => { if (!cancellingSubscription && !membro?.subscription_cancel_at) { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    {cancellingSubscription ? <Loader2 size={14} className="spin" /> : <XCircle size={14} />}
-                    {cancellingSubscription
-                      ? 'A cancelar...'
-                      : membro?.subscription_cancel_at
-                        ? `Cancela em ${new Date(membro.subscription_cancel_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                        : 'Cancelar Subscrição'}
-                  </button>
+                  {membro?.vip_telegram_link && (
+                    <a
+                      href={membro.vip_telegram_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                        background: 'rgba(230,185,92,0.1)',
+                        border: '1px solid rgba(230,185,92,0.4)',
+                        color: 'var(--gold-primary)',
+                        padding: '0.6rem 1.2rem',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                        textDecoration: 'none',
+                        alignSelf: 'flex-start',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(230,185,92,0.2)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(230,185,92,0.1)'; }}
+                    >
+                      <ExternalLink size={14} /> Entrar no Grupo VIP Telegram
+                    </a>
+                  )}
+                  {membro?.stripe_subscription_id && (
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={cancellingSubscription || !!membro?.subscription_cancel_at}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${membro?.subscription_cancel_at ? 'rgba(107,114,128,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                        color: membro?.subscription_cancel_at ? 'var(--text-gray)' : '#ef4444',
+                        padding: '0.6rem 1.2rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        cursor: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        alignSelf: 'flex-start',
+                        opacity: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 0.6 : 1,
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => { if (!cancellingSubscription && !membro?.subscription_cancel_at) { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {cancellingSubscription ? <Loader2 size={14} className="spin" /> : <XCircle size={14} />}
+                      {cancellingSubscription
+                        ? 'A cancelar...'
+                        : membro?.subscription_cancel_at
+                          ? `Cancela em ${new Date(membro.subscription_cancel_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                          : 'Cancelar Subscrição'}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div style={{
