@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { MessageCircle, X, Minus, Send, Radio, Maximize2, Award, ShieldBan, Clock } from 'lucide-react';
+import { MessageCircle, X, Minus, Send, Radio, Maximize2, Award, ShieldBan, Clock, Trash2 } from 'lucide-react';
 import '../styles/Livestream.css';
 
 // ─── HELPERS ──────────────────────────────────────────────────
@@ -54,7 +54,7 @@ const CHAT_H_MIN = 44;
 
 export default function Livestream() {
   const { user, membro } = useAuth();
-  const isAdmin = membro?.badges?.includes('Administrador') ?? false;
+  const isAdmin = membro?.badges?.some(b => b.toLowerCase() === 'administrador') ?? false;
 
   // ── Stream config ──
   const [channel, setChannel] = useState('elpedrito');
@@ -317,6 +317,12 @@ export default function Livestream() {
     inputRef.current?.focus();
   };
 
+  const handleClearLiveChat = async () => {
+    if (!confirm('Tens a certeza que queres apagar TODAS as mensagens do chat da live? Esta ação é irreversível!')) return;
+    await supabase.from('livestream_messages').delete().not('id', 'is', null);
+    setMessages([]);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -402,6 +408,16 @@ export default function Livestream() {
               )}
             </div>
             <div className="live-chat__controls">
+              {isAdmin && chatState === 'open' && (
+                <button
+                  className="live-chat__ctrl-btn"
+                  title="Limpar chat"
+                  onClick={handleClearLiveChat}
+                  style={{ color: '#ef4444' }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
               <button
                 className="live-chat__ctrl-btn"
                 title={chatState === 'minimized' ? 'Expandir' : 'Minimizar'}
