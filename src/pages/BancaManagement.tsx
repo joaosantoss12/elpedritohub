@@ -15,9 +15,18 @@ import '../styles/Banca.css';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
+interface Selecao {
+  desporto: string;
+  equipa_casa: string;
+  equipa_fora: string;
+  mercado: string;
+  odd: string;
+}
+
 interface Aposta {
   id: string;
   user_id: string;
+  tipo: 'simples' | 'multipla';
   desporto: string;
   equipa_casa: string;
   equipa_fora: string;
@@ -27,6 +36,7 @@ interface Aposta {
   estado: 'pendente' | 'ganha' | 'perdida';
   data_aposta: string;
   created_at: string;
+  selecoes?: Selecao[] | null;
 }
 
 interface DayData {
@@ -179,9 +189,11 @@ export default function BancaManagement() {
     estado: 'pendente' as 'pendente' | 'ganha' | 'perdida',
     data_aposta: todayKey,
   });
+  const [editSelecoes, setEditSelecoes] = useState<Selecao[]>([]);
 
   // Form state
   const [form, setForm] = useState({
+    tipo: 'simples' as 'simples' | 'multipla',
     desporto: 'Futebol',
     equipa_casa: '',
     equipa_fora: '',
@@ -191,6 +203,8 @@ export default function BancaManagement() {
     estado: 'pendente' as 'pendente' | 'ganha' | 'perdida',
     data_aposta: todayKey,
   });
+  const emptySelecao = (): Selecao => ({ desporto: 'Futebol', equipa_casa: '', equipa_fora: '', mercado: '', odd: '' });
+  const [selecoes, setSelecoes] = useState<Selecao[]>([emptySelecao(), emptySelecao()]);
 
   // ── Fetch all user bets ──────────────────────────────────────────────
   useEffect(() => {
@@ -331,6 +345,7 @@ export default function BancaManagement() {
       );
       setShowModal(false);
       setForm({
+        tipo: 'simples',
         desporto: 'Futebol',
         equipa_casa: '',
         equipa_fora: '',
@@ -410,11 +425,20 @@ export default function BancaManagement() {
   };
 
   const potentialWin = useMemo(() => {
-    const odd = parseFloat(form.odd);
     const valor = parseFloat(form.valor_apostado);
-    if (isNaN(odd) || isNaN(valor) || odd <= 0 || valor <= 0) return null;
+    if (isNaN(valor) || valor <= 0) return null;
+    if (form.tipo === 'multipla') {
+      const totalOdd = selecoes.reduce((acc, s) => {
+        const o = parseFloat(s.odd);
+        return isNaN(o) || o <= 0 ? acc : acc * o;
+      }, 1);
+      if (totalOdd <= 1) return null;
+      return (totalOdd * valor).toFixed(2);
+    }
+    const odd = parseFloat(form.odd);
+    if (isNaN(odd) || odd <= 0) return null;
     return (odd * valor).toFixed(2);
-  }, [form.odd, form.valor_apostado]);
+  }, [form.odd, form.valor_apostado, form.tipo, selecoes]);
 
   const selectedDayBets = useMemo(() =>
     selectedDate ? apostas.filter(a => a.data_aposta === selectedDate) : []
@@ -747,10 +771,22 @@ export default function BancaManagement() {
                           <div key={a.id} className="banca-bet-item">
                             <div className="banca-bet-item__num">{i + 1}</div>
                             <div className="banca-bet-item__info">
-                              <span className="banca-bet-item__sport">{a.desporto}</span>
-                              <span className="banca-bet-item__match">
-                                {a.equipa_casa} <em>vs</em> {a.equipa_fora}
+                              <span className="banca-bet-item__sport">
+                                {a.tipo === 'multipla' ? '🔗 Múltipla' : a.desporto}
                               </span>
+                              {a.tipo === 'multipla' && a.selecoes ? (
+                                <span className="banca-bet-item__match" style={{ fontSize: '0.7rem', opacity: 0.7 }}>
+                                  {a.selecoes.map((s, si) => (
+                                    <span key={si} style={{ display: 'block' }}>
+                                      {s.equipa_casa} vs {s.equipa_fora}{s.mercado ? ` · ${s.mercado}` : ''} <em>@{parseFloat(s.odd).toFixed(2)}</em>
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className="banca-bet-item__match">
+                                  {a.equipa_casa} <em>vs</em> {a.equipa_fora}
+                                </span>
+                              )}
                             </div>
                             <div className="banca-bet-item__odd">@{a.odd.toFixed(2)}</div>
                             <div className="banca-bet-item__stake">€{a.valor_apostado.toFixed(2)}</div>
@@ -824,83 +860,201 @@ export default function BancaManagement() {
             </div>
 
             <form onSubmit={handleSubmit} className="banca-form">
-              {/* Sport */}
+              {/* Tipo toggle */}
               <div className="banca-form__group">
-                <label>Desporto</label>
-                <div className="banca-sport-grid">
-                  {SPORTS.map(s => (
+                <label>Tipo de Aposta</label>
+                <div className="banca-estado-btns">
+                  {(['simples', 'multipla'] as const).map(t => (
                     <button
-                      key={s}
+                      key={t}
                       type="button"
-                      className={`banca-sport-btn ${form.desporto === s ? 'active' : ''}`}
-                      onClick={() => setForm(f => ({ ...f, desporto: s }))}
+                      className={`banca-estado-btn ${form.tipo === t ? 'active' : ''}`}
+                      style={form.tipo === t ? { borderColor: 'var(--gold-primary)', color: 'var(--gold-primary)' } : {}}
+                      onClick={() => setForm(f => ({ ...f, tipo: t }))}
                     >
-                      {s}
+                      {t === 'simples' ? '🎯 Simples' : '🔗 Múltipla'}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Teams */}
-              <div className="banca-form__group">
-                <label>Confronto</label>
-                <div className="banca-teams">
-                  <input
-                    type="text"
-                    placeholder="Equipa Casa"
-                    value={form.equipa_casa}
-                    onChange={e => setForm(f => ({ ...f, equipa_casa: e.target.value }))}
-                    required
-                  />
-                  <span className="banca-teams__vs">VS</span>
-                  <input
-                    type="text"
-                    placeholder="Equipa Fora"
-                    value={form.equipa_fora}
-                    onChange={e => setForm(f => ({ ...f, equipa_fora: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
+              {form.tipo === 'simples' ? (
+                <>
+                  {/* Sport */}
+                  <div className="banca-form__group">
+                    <label>Desporto</label>
+                    <div className="banca-sport-grid">
+                      {SPORTS.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`banca-sport-btn ${form.desporto === s ? 'active' : ''}`}
+                          onClick={() => setForm(f => ({ ...f, desporto: s }))}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Market */}
-              <div className="banca-form__group">
-                <label>Mercado</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Vitória Casa, Over 2.5, Ambas marcam..."
-                  value={form.mercado}
-                  onChange={e => setForm(f => ({ ...f, mercado: e.target.value }))}
-                />
-              </div>
+                  {/* Teams */}
+                  <div className="banca-form__group">
+                    <label>Confronto</label>
+                    <div className="banca-teams">
+                      <input
+                        type="text"
+                        placeholder="Equipa Casa"
+                        value={form.equipa_casa}
+                        onChange={e => setForm(f => ({ ...f, equipa_casa: e.target.value }))}
+                        required
+                      />
+                      <span className="banca-teams__vs">VS</span>
+                      <input
+                        type="text"
+                        placeholder="Equipa Fora"
+                        value={form.equipa_fora}
+                        onChange={e => setForm(f => ({ ...f, equipa_fora: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Odd + Value */}
-              <div className="banca-form__row">
-                <div className="banca-form__group">
-                  <label>Odd</label>
-                  <input
-                    type="number"
-                    placeholder="1.85"
-                    step="0.01"
-                    min="1.01"
-                    value={form.odd}
-                    onChange={e => setForm(f => ({ ...f, odd: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="banca-form__group">
-                  <label>Valor Apostado (€)</label>
-                  <input
-                    type="number"
-                    placeholder="10.00"
-                    step="0.01"
-                    min="0.01"
-                    value={form.valor_apostado}
-                    onChange={e => setForm(f => ({ ...f, valor_apostado: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
+                  {/* Market */}
+                  <div className="banca-form__group">
+                    <label>Mercado</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Vitória Casa, Over 2.5, Ambas marcam..."
+                      value={form.mercado}
+                      onChange={e => setForm(f => ({ ...f, mercado: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Odd */}
+                  <div className="banca-form__row">
+                    <div className="banca-form__group">
+                      <label>Odd</label>
+                      <input
+                        type="number"
+                        placeholder="1.85"
+                        step="0.01"
+                        min="1.01"
+                        value={form.odd}
+                        onChange={e => setForm(f => ({ ...f, odd: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="banca-form__group">
+                      <label>Valor Apostado (€)</label>
+                      <input
+                        type="number"
+                        placeholder="10.00"
+                        step="0.01"
+                        min="0.01"
+                        value={form.valor_apostado}
+                        onChange={e => setForm(f => ({ ...f, valor_apostado: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Multiple selections */}
+                  <div className="banca-form__group">
+                    <label>Seleções ({selecoes.length})</label>
+                    {selecoes.map((sel, idx) => (
+                      <div key={idx} className="banca-selecao-row">
+                        <div className="banca-selecao-row__header">
+                          <span className="banca-selecao-row__num">#{idx + 1}</span>
+                          {selecoes.length > 2 && (
+                            <button
+                              type="button"
+                              className="banca-selecao-row__remove"
+                              onClick={() => setSelecoes(prev => prev.filter((_, i) => i !== idx))}
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="banca-teams" style={{ marginBottom: '0.4rem' }}>
+                          <input
+                            type="text"
+                            placeholder="Equipa Casa"
+                            value={sel.equipa_casa}
+                            onChange={e => setSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, equipa_casa: e.target.value } : s))}
+                            required
+                          />
+                          <span className="banca-teams__vs">VS</span>
+                          <input
+                            type="text"
+                            placeholder="Equipa Fora"
+                            value={sel.equipa_fora}
+                            onChange={e => setSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, equipa_fora: e.target.value } : s))}
+                            required
+                          />
+                        </div>
+                        <div className="banca-form__row">
+                          <div className="banca-form__group" style={{ flex: 2 }}>
+                            <input
+                              type="text"
+                              placeholder="Mercado (ex: Vitória Casa)"
+                              value={sel.mercado}
+                              onChange={e => setSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, mercado: e.target.value } : s))}
+                            />
+                          </div>
+                          <div className="banca-form__group" style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              placeholder="Odd"
+                              step="0.01"
+                              min="1.01"
+                              value={sel.odd}
+                              onChange={e => setSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, odd: e.target.value } : s))}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="banca-btn-add-small"
+                      style={{ marginTop: '0.5rem' }}
+                      onClick={() => setSelecoes(prev => [...prev, emptySelecao()])}
+                    >
+                      <Plus size={13} /> Adicionar seleção
+                    </button>
+                  </div>
+
+                  {/* Odds summary */}
+                  {selecoes.some(s => parseFloat(s.odd) > 1) && (
+                    <div className="banca-potential" style={{ marginBottom: '0.5rem' }}>
+                      <span>Odd Total</span>
+                      <strong>
+                        @{selecoes.reduce((acc, s) => {
+                          const o = parseFloat(s.odd);
+                          return isNaN(o) || o <= 1 ? acc : acc * o;
+                        }, 1).toFixed(2)}
+                      </strong>
+                    </div>
+                  )}
+
+                  {/* Stake */}
+                  <div className="banca-form__group">
+                    <label>Valor Apostado (€)</label>
+                    <input
+                      type="number"
+                      placeholder="10.00"
+                      step="0.01"
+                      min="0.01"
+                      value={form.valor_apostado}
+                      onChange={e => setForm(f => ({ ...f, valor_apostado: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Potential winnings */}
               {potentialWin && (
@@ -969,83 +1123,178 @@ export default function BancaManagement() {
             </div>
 
             <form onSubmit={handleEditSubmit} className="banca-form">
-              {/* Sport */}
-              <div className="banca-form__group">
-                <label>Desporto</label>
-                <div className="banca-sport-grid">
-                  {SPORTS.map(s => (
+              {editingAposta.tipo === 'multipla' && editSelecoes.length > 0 ? (
+                <>
+                  <div className="banca-form__group">
+                    <label>Seleções ({editSelecoes.length}) — Múltipla</label>
+                    {editSelecoes.map((sel, idx) => (
+                      <div key={idx} className="banca-selecao-row">
+                        <div className="banca-selecao-row__header">
+                          <span className="banca-selecao-row__num">#{idx + 1}</span>
+                          {editSelecoes.length > 2 && (
+                            <button
+                              type="button"
+                              className="banca-selecao-row__remove"
+                              onClick={() => setEditSelecoes(prev => prev.filter((_, i) => i !== idx))}
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="banca-teams" style={{ marginBottom: '0.4rem' }}>
+                          <input
+                            type="text"
+                            placeholder="Equipa Casa"
+                            value={sel.equipa_casa}
+                            onChange={e => setEditSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, equipa_casa: e.target.value } : s))}
+                            required
+                          />
+                          <span className="banca-teams__vs">VS</span>
+                          <input
+                            type="text"
+                            placeholder="Equipa Fora"
+                            value={sel.equipa_fora}
+                            onChange={e => setEditSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, equipa_fora: e.target.value } : s))}
+                            required
+                          />
+                        </div>
+                        <div className="banca-form__row">
+                          <div className="banca-form__group" style={{ flex: 2 }}>
+                            <input
+                              type="text"
+                              placeholder="Mercado"
+                              value={sel.mercado}
+                              onChange={e => setEditSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, mercado: e.target.value } : s))}
+                            />
+                          </div>
+                          <div className="banca-form__group" style={{ flex: 1 }}>
+                            <input
+                              type="number"
+                              placeholder="Odd"
+                              step="0.01"
+                              min="1.01"
+                              value={sel.odd}
+                              onChange={e => setEditSelecoes(prev => prev.map((s, i) => i === idx ? { ...s, odd: e.target.value } : s))}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                     <button
-                      key={s}
                       type="button"
-                      className={`banca-sport-btn ${editForm.desporto === s ? 'active' : ''}`}
-                      onClick={() => setEditForm(f => ({ ...f, desporto: s }))}
+                      className="banca-btn-add-small"
+                      style={{ marginTop: '0.5rem' }}
+                      onClick={() => setEditSelecoes(prev => [...prev, emptySelecao()])}
                     >
-                      {s}
+                      <Plus size={13} /> Adicionar seleção
                     </button>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                  {editSelecoes.some(s => parseFloat(s.odd) > 1) && (
+                    <div className="banca-potential" style={{ marginBottom: '0.5rem' }}>
+                      <span>Odd Total</span>
+                      <strong>
+                        @{editSelecoes.reduce((acc, s) => {
+                          const o = parseFloat(s.odd);
+                          return isNaN(o) || o <= 1 ? acc : acc * o;
+                        }, 1).toFixed(2)}
+                      </strong>
+                    </div>
+                  )}
+                  <div className="banca-form__group">
+                    <label>Valor Apostado (€)</label>
+                    <input
+                      type="number"
+                      placeholder="10.00"
+                      step="0.01"
+                      min="0.01"
+                      value={editForm.valor_apostado}
+                      onChange={e => setEditForm(f => ({ ...f, valor_apostado: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Sport */}
+                  <div className="banca-form__group">
+                    <label>Desporto</label>
+                    <div className="banca-sport-grid">
+                      {SPORTS.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`banca-sport-btn ${editForm.desporto === s ? 'active' : ''}`}
+                          onClick={() => setEditForm(f => ({ ...f, desporto: s }))}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Teams */}
-              <div className="banca-form__group">
-                <label>Confronto</label>
-                <div className="banca-teams">
-                  <input
-                    type="text"
-                    placeholder="Equipa Casa"
-                    value={editForm.equipa_casa}
-                    onChange={e => setEditForm(f => ({ ...f, equipa_casa: e.target.value }))}
-                    required
-                  />
-                  <span className="banca-teams__vs">VS</span>
-                  <input
-                    type="text"
-                    placeholder="Equipa Fora"
-                    value={editForm.equipa_fora}
-                    onChange={e => setEditForm(f => ({ ...f, equipa_fora: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
+                  {/* Teams */}
+                  <div className="banca-form__group">
+                    <label>Confronto</label>
+                    <div className="banca-teams">
+                      <input
+                        type="text"
+                        placeholder="Equipa Casa"
+                        value={editForm.equipa_casa}
+                        onChange={e => setEditForm(f => ({ ...f, equipa_casa: e.target.value }))}
+                        required
+                      />
+                      <span className="banca-teams__vs">VS</span>
+                      <input
+                        type="text"
+                        placeholder="Equipa Fora"
+                        value={editForm.equipa_fora}
+                        onChange={e => setEditForm(f => ({ ...f, equipa_fora: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Market */}
-              <div className="banca-form__group">
-                <label>Mercado</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Vitória Casa, Over 2.5, Ambas marcam..."
-                  value={editForm.mercado}
-                  onChange={e => setEditForm(f => ({ ...f, mercado: e.target.value }))}
-                />
-              </div>
+                  {/* Market */}
+                  <div className="banca-form__group">
+                    <label>Mercado</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Vitória Casa, Over 2.5, Ambas marcam..."
+                      value={editForm.mercado}
+                      onChange={e => setEditForm(f => ({ ...f, mercado: e.target.value }))}
+                    />
+                  </div>
 
-              {/* Odd + Value */}
-              <div className="banca-form__row">
-                <div className="banca-form__group">
-                  <label>Odd</label>
-                  <input
-                    type="number"
-                    placeholder="1.85"
-                    step="0.01"
-                    min="1.01"
-                    value={editForm.odd}
-                    onChange={e => setEditForm(f => ({ ...f, odd: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="banca-form__group">
-                  <label>Valor Apostado (€)</label>
-                  <input
-                    type="number"
-                    placeholder="10.00"
-                    step="0.01"
-                    min="0.01"
-                    value={editForm.valor_apostado}
-                    onChange={e => setEditForm(f => ({ ...f, valor_apostado: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
+                  {/* Odd + Value */}
+                  <div className="banca-form__row">
+                    <div className="banca-form__group">
+                      <label>Odd</label>
+                      <input
+                        type="number"
+                        placeholder="1.85"
+                        step="0.01"
+                        min="1.01"
+                        value={editForm.odd}
+                        onChange={e => setEditForm(f => ({ ...f, odd: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="banca-form__group">
+                      <label>Valor Apostado (€)</label>
+                      <input
+                        type="number"
+                        placeholder="10.00"
+                        step="0.01"
+                        min="0.01"
+                        value={editForm.valor_apostado}
+                        onChange={e => setEditForm(f => ({ ...f, valor_apostado: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Date */}
               <div className="banca-form__group">

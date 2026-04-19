@@ -896,7 +896,48 @@
   margin-left: auto;
 }
 
-/* Status buttons */
+/* ── Multiple bet selection rows ─────────────────────────────────────── */
+
+.banca-selecao-row {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.banca-selecao-row__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.banca-selecao-row__num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.banca-selecao-row__remove {
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.banca-selecao-row__remove:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+
 .banca-estado-btns {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
