@@ -197,7 +197,7 @@ function Profile() {
 
   const handleCancelSubscription = async () => {
     if (!membro?.stripe_subscription_id || !user) return;
-    const confirmed = window.confirm('Tens a certeza que queres cancelar a subscrição? Perderás o acesso VIP imediatamente.');
+    const confirmed = window.confirm('Tens a certeza que queres cancelar a subscrição? Continuarás com acesso VIP até ao fim do período pago.');
     if (!confirmed) return;
     setCancellingSubscription(true);
     try {
@@ -209,7 +209,7 @@ function Profile() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao cancelar subscrição');
       await refreshMembro();
-      addToast('Subscrição cancelada com sucesso.', 'info');
+      addToast('Subscrição agendada para cancelamento no fim do período.', 'info');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       addToast(message, 'error');
@@ -286,7 +286,7 @@ function Profile() {
             <button
               onClick={() => setShowSuccessModal(false)}
               className="btn-gold"
-              style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', fontWeight: 'bold' }}
+              style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', fontWeight: 'bold', display: 'block', margin: '0 auto' }}
             >
               CONTINUAR
             </button>
@@ -711,28 +711,32 @@ function Profile() {
                   </div>
                   <button
                     onClick={handleCancelSubscription}
-                    disabled={cancellingSubscription}
+                    disabled={cancellingSubscription || !!membro?.subscription_cancel_at}
                     style={{
                       background: 'transparent',
-                      border: '1px solid rgba(239,68,68,0.4)',
-                      color: '#ef4444',
+                      border: `1px solid ${membro?.subscription_cancel_at ? 'rgba(107,114,128,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                      color: membro?.subscription_cancel_at ? 'var(--text-gray)' : '#ef4444',
                       padding: '0.6rem 1.2rem',
                       borderRadius: '8px',
                       fontSize: '0.8rem',
                       fontWeight: 'bold',
-                      cursor: cancellingSubscription ? 'not-allowed' : 'pointer',
+                      cursor: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
                       alignSelf: 'flex-start',
-                      opacity: cancellingSubscription ? 0.6 : 1,
+                      opacity: (cancellingSubscription || !!membro?.subscription_cancel_at) ? 0.6 : 1,
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => { if (!cancellingSubscription) { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}}
+                    onMouseEnter={(e) => { if (!cancellingSubscription && !membro?.subscription_cancel_at) { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                   >
                     {cancellingSubscription ? <Loader2 size={14} className="spin" /> : <XCircle size={14} />}
-                    {cancellingSubscription ? 'A cancelar...' : 'Cancelar Subscrição'}
+                    {cancellingSubscription
+                      ? 'A cancelar...'
+                      : membro?.subscription_cancel_at
+                        ? `Cancela em ${new Date(membro.subscription_cancel_at).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                        : 'Cancelar Subscrição'}
                   </button>
                 </div>
               ) : (

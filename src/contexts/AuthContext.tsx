@@ -15,6 +15,7 @@ export interface MembroData {
   badges: string[];
   subscription_status: string | null;
   stripe_subscription_id: string | null;
+  subscription_cancel_at: string | null;
 }
 
 interface AuthContextType {

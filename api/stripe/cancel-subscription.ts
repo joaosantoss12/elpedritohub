@@ -32,8 +32,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    await stripe.subscriptions.cancel(subscriptionId);
-    return res.status(200).json({ success: true });
+    const subscription = await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
+    const cancelAt = new Date(subscription.current_period_end * 1000).toISOString();
+    await supabase
+      .from('membros')
+      .update({ subscription_cancel_at: cancelAt })
+      .eq('id', userId);
+    return res.status(200).json({ success: true, cancelAt });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Erro desconhecido';
     return res.status(500).json({ error: message });
