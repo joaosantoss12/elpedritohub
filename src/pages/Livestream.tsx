@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -53,8 +54,13 @@ const CHAT_H_MIN = 44;
 // ─── COMPONENT ────────────────────────────────────────────────
 
 export default function Livestream() {
-  const { user, membro } = useAuth();
+  const { user, membro, loading } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = membro?.badges?.some(b => b.toLowerCase() === 'administrador') ?? false;
+
+  useEffect(() => {
+    if (!loading && !user) navigate('/login');
+  }, [loading, user, navigate]);
 
   // ── Stream config ──
   const [channel, setChannel] = useState('elpedrito');
