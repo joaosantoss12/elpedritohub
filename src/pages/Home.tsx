@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
 import { CountingNumber } from '../components/CountingNumber';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router';
 
 interface LucroMes {
   lucro: number;
@@ -50,6 +51,8 @@ function Home() {
   const [bilheteDia, setBilheteDia] = useState<BilheteDia | null>(null);
   const [topAposta, setTopAposta] = useState<TopAposta | null>(null);
   const [palpites, setPalpites] = useState<PalpiteDia[]>([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -904,7 +907,7 @@ function Home() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
-          <button className="btn-gold" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem' }}>
+          <button className="btn-gold" style={{ padding: '1.2rem 2.5rem', fontSize: '1rem' }} onClick={() => navigate('/register')}>
             <Gift size={18} /> QUERO PARTICIPAR
           </button>
           <Trophy size={64} color="var(--gold-primary)" opacity={0.5} />
