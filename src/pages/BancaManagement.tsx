@@ -11,14 +11,6 @@ import {
   Plus, ChevronLeft, ChevronRight,
   X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2,
 } from 'lucide-react';
-  // Apagar aposta
-  const handleDeleteAposta = async (a: Aposta) => {
-    if (!window.confirm('Apagar esta aposta?')) return;
-    const { error } = await supabase.from('banca_apostas').delete().eq('id', a.id);
-    if (!error) {
-      setApostas(prev => prev.filter(x => x.id !== a.id));
-    }
-  };
 import '../styles/Banca.css';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -406,6 +398,15 @@ export default function BancaManagement() {
       setEditingAposta(null);
     }
     setSaving(false);
+  };
+
+  // ── Delete bet ──────────────────────────────────────────────────────
+  const handleDeleteAposta = async (a: Aposta) => {
+    if (!window.confirm('Apagar esta aposta?')) return;
+    const { error } = await supabase.from('banca_apostas').delete().eq('id', a.id);
+    if (!error) {
+      setApostas(prev => prev.filter(x => x.id !== a.id));
+    }
   };
 
   const potentialWin = useMemo(() => {
