@@ -58,11 +58,15 @@ export default function Plans() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           // merge Supabase display data with hardcoded billing info by position
-          const merged: Plan[] = (data as PlanoDB[]).map((dbPlan, i) => ({
-            ...PLANS_FALLBACK[i % PLANS_FALLBACK.length],
-            ...dbPlan,
-            amountCents: PLANS_FALLBACK[i % PLANS_FALLBACK.length].amountCents,
-          }));
+          const merged: Plan[] = (data as PlanoDB[]).map((dbPlan, i) => {
+            const fallback = PLANS_FALLBACK[i % PLANS_FALLBACK.length];
+            return {
+              ...fallback,
+              ...dbPlan,
+              id: fallback.id, // always keep the string key used by the API
+              amountCents: fallback.amountCents,
+            };
+          });
           setPlans(merged);
         }
       });
