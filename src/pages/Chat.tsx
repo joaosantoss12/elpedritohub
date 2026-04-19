@@ -65,7 +65,7 @@ export default function Chat() {
   const [mentionStart, setMentionStart] = useState<number>(-1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const isAdmin = membro?.badges?.includes('Administrador') ?? false;
+  const isAdmin = membro?.badges?.some(b => b.toLowerCase() === 'administrador') ?? false;
   const [pinnedMessage, setPinnedMessage] = useState<Message | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
     return localStorage.getItem('chat_notifications') === 'true';

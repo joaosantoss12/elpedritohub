@@ -195,6 +195,9 @@ function Profile() {
     }
   };
 
+  const toAbsoluteUrl = (url: string) =>
+    url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+
   const handleCancelSubscription = async () => {
     if (!membro?.stripe_subscription_id || !user) return;
     const confirmed = window.confirm('Tens a certeza que queres cancelar a subscrição? Continuarás com acesso VIP até ao fim do período pago.');
@@ -284,7 +287,7 @@ function Profile() {
             </p>
             {membro?.vip_telegram_link && (
               <a
-                href={membro.vip_telegram_link}
+                href={toAbsoluteUrl(membro.vip_telegram_link)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold"
@@ -724,7 +727,7 @@ function Profile() {
                   </div>
                   {membro?.vip_telegram_link && (
                     <a
-                      href={membro.vip_telegram_link}
+                      href={toAbsoluteUrl(membro.vip_telegram_link)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
