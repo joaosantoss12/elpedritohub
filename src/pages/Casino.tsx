@@ -783,13 +783,20 @@ export default function Casino() {
   const canSplitNow = phase === 'playing' && currentHand && canSplit(currentHand);
 
   return (
+
     <div className="casino-page">
       <Navbar />
       <div className="casino-wrapper">
-
-        {/* ─── TOP BAR: TABS + EPCOINS ───────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          <div className="casino-tabs" style={{ marginBottom: 0, flex: 1 }}>
+        {/* ─── MOBILE-FRIENDLY TOP BAR ───────────────────────── */}
+        <div className="casino-topbar">
+          <div className="casino-epcoins">
+            <span className="casino-epcoins__icon">🪙</span>
+            <div>
+              <div className="casino-epcoins__label">EPCOINS</div>
+              <div className="casino-epcoins__value">{epcoins.toLocaleString()}</div>
+            </div>
+          </div>
+          <div className="casino-tabs">
             <button
               className={`casino-tab ${activeGame === 'blackjack' ? 'active' : ''}`}
               onClick={() => setActiveGame('blackjack')}
@@ -808,14 +815,6 @@ export default function Casino() {
             >
               🚀 CRASH
             </button>
-          </div>
-
-          <div className="casino-epcoins" style={{ marginBottom: 0, flexShrink: 0 }}>
-            <span className="casino-epcoins__icon">🪙</span>
-            <div>
-              <div className="casino-epcoins__label">EPCOINS</div>
-              <div className="casino-epcoins__value">{epcoins.toLocaleString()}</div>
-            </div>
           </div>
         </div>
 

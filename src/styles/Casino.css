@@ -6,10 +6,35 @@
   padding-bottom: 4rem;
 }
 
+
 .casino-wrapper {
   max-width: 1100px;
   margin: 0 auto;
   padding: 2rem 5%;
+}
+
+/* Topbar for coins + tabs */
+.casino-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .casino-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7rem;
+    margin-bottom: 1.2rem;
+  }
+  .casino-epcoins {
+    margin-bottom: 0;
+    border-radius: 10px;
+  }
+  .casino-tabs {
+    margin-bottom: 0;
+  }
 }
 
 /* ─── EPCOINS BANNER ─────────────────────────────────────── */
