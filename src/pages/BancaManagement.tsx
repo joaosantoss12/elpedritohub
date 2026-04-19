@@ -315,15 +315,39 @@ export default function BancaManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const odd = parseFloat(form.odd);
     const valor = parseFloat(form.valor_apostado);
-    if (isNaN(odd) || isNaN(valor) || odd <= 1 || valor <= 0) return;
+    if (isNaN(valor) || valor <= 0) return;
 
     setSaving(true);
-    const { data, error } = await supabase
-      .from('banca_apostas')
-      .insert({
+
+    let insertPayload: Record<string, unknown>;
+
+    if (form.tipo === 'multipla') {
+      const totalOdd = selecoes.reduce((acc, s) => acc * parseFloat(s.odd || '1'), 1);
+      if (selecoes.length < 2 || selecoes.some(s => !s.equipa_casa.trim() || !s.equipa_fora.trim() || isNaN(parseFloat(s.odd)) || parseFloat(s.odd) <= 1)) {
+        setSaving(false);
+        return;
+      }
+      const firstSel = selecoes[0];
+      insertPayload = {
         user_id: user.id,
+        tipo: 'multipla',
+        desporto: firstSel.desporto,
+        equipa_casa: firstSel.equipa_casa.trim(),
+        equipa_fora: firstSel.equipa_fora.trim(),
+        mercado: firstSel.mercado.trim(),
+        odd: Math.round(totalOdd * 100) / 100,
+        valor_apostado: valor,
+        estado: form.estado,
+        data_aposta: form.data_aposta,
+        selecoes,
+      };
+    } else {
+      const odd = parseFloat(form.odd);
+      if (isNaN(odd) || odd <= 1) { setSaving(false); return; }
+      insertPayload = {
+        user_id: user.id,
+        tipo: 'simples',
         desporto: form.desporto,
         equipa_casa: form.equipa_casa.trim(),
         equipa_fora: form.equipa_fora.trim(),
@@ -332,7 +356,12 @@ export default function BancaManagement() {
         valor_apostado: valor,
         estado: form.estado,
         data_aposta: form.data_aposta,
-      })
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('banca_apostas')
+      .insert(insertPayload)
       .select()
       .single();
 
