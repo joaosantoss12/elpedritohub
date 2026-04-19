@@ -1069,6 +1069,21 @@ export default function BancaManagement() {
               </div>
 
               <div className="banca-form__actions">
+                <button
+                  type="button"
+                  className="banca-btn-cancel"
+                  style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}
+                  onClick={async () => {
+                    if (!window.confirm('Apagar esta aposta?')) return;
+                    const { error } = await supabase.from('banca_apostas').delete().eq('id', editingAposta!.id);
+                    if (!error) {
+                      setApostas(prev => prev.filter(x => x.id !== editingAposta!.id));
+                      setEditingAposta(null);
+                    }
+                  }}
+                >
+                  <Trash2 size={14} /> Apagar
+                </button>
                 <button type="button" className="banca-btn-cancel" onClick={() => setEditingAposta(null)}>
                   Cancelar
                 </button>
