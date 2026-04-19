@@ -1,6 +1,7 @@
 ﻿import { useState, useCallback, useRef, useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { Spade, RotateCcw } from 'lucide-react';
 import '../styles/Casino.css';
 
@@ -111,7 +112,7 @@ const HORSES = [
 
 // ─── COMPONENT ────────────────────────────────────────────────
 export default function Casino() {
-  const { user, membro } = useAuth();
+  const { user, membro, refreshMembro } = useAuth();
   const epcoins = membro?.epcoins ?? 0;
 
   const [activeGame, setActiveGame] = useState<'blackjack' | 'horse' | 'crash'>('blackjack');
@@ -152,6 +153,19 @@ export default function Casino() {
   const crStarsRef = useRef<Array<{x: number; y: number; size: number; speed: number}>>([]);
   const crParticlesRef = useRef<Array<{x: number; y: number; vx: number; vy: number; life: number; maxLife: number}>>([]);
 
+  // ─── EPCOIN SYNC REFS ──────────────────────────────────────
+  const epcoinsCurrent = useRef(epcoins);
+  const bjUpdateSentRef = useRef(false);
+  const crCashoutAtRef = useRef<number | null>(null);
+
+  // ─── UPDATE EPCOINS IN DB ──────────────────────────────────
+  const updateEpcoins = useCallback(async (delta: number) => {
+    if (!user || delta === 0) return;
+    const newAmount = Math.max(0, epcoinsCurrent.current + delta);
+    await supabase.from('membros').update({ epcoins: newAmount }).eq('id', user.id);
+    refreshMembro();
+  }, [user, refreshMembro]);
+
   // ─── DEALING UTILS ─────────────────────────────────────────
   const freshDeck = useCallback((): Card[] => {
     // 6 decks
@@ -172,6 +186,7 @@ export default function Casino() {
   // ─── START ROUND ───────────────────────────────────────────
   const handleDeal = useCallback(() => {
     if (betInput <= 0 || betInput > epcoins) return;
+    bjUpdateSentRef.current = false;
 
     let d = deck.length < 10 ? freshDeck() : [...deck];
 
@@ -380,6 +395,7 @@ export default function Casino() {
 
   // ─── NEW ROUND ─────────────────────────────────────────────
   const handleNewRound = useCallback(() => {
+    bjUpdateSentRef.current = false;
     setPhase('idle');
     setHands([]);
     setDealerCards([]);
@@ -418,10 +434,13 @@ export default function Casino() {
         clearInterval(hrIntervalRef.current!);
         hrIntervalRef.current = null;
         setHrWinnerId(w);
+        if (hrSelectedHorse !== null) {
+          updateEpcoins(hrSelectedHorse === w ? hrBet * 5 : -hrBet);
+        }
         setTimeout(() => setHrPhase('finished'), 1200);
       }
     }, 80);
-  }, [hrSelectedHorse, hrBet]);
+  }, [hrSelectedHorse, hrBet, updateEpcoins]);
 
   const resetRace = useCallback(() => {
     if (hrIntervalRef.current) {
@@ -440,6 +459,24 @@ export default function Casino() {
       if (crRAFRef.current) cancelAnimationFrame(crRAFRef.current);
     };
   }, []);
+
+  // Keep epcoinsCurrent ref in sync so async callbacks always read the latest value
+  useEffect(() => { epcoinsCurrent.current = epcoins; }, [epcoins]);
+
+  // Blackjack: deduct / award EPCoins once per round when phase reaches 'finished'
+  useEffect(() => {
+    if (phase !== 'finished' || bjUpdateSentRef.current) return;
+    const allSettled = hands.every(h => h.result !== null);
+    if (!allSettled) return;
+    bjUpdateSentRef.current = true;
+    let delta = 0;
+    for (const hand of hands) {
+      if (hand.result === 'blackjack') delta += Math.floor(hand.bet * 1.5);
+      else if (hand.result === 'win') delta += hand.bet;
+      else if (hand.result === 'lose' || hand.result === 'bust') delta -= hand.bet;
+    }
+    updateEpcoins(delta);
+  }, [phase, hands, updateEpcoins]);
 
   // Reset stars when switching away from crash game
   useEffect(() => {
@@ -663,6 +700,7 @@ export default function Casino() {
       const auto = crAutoCashoutRef.current;
       if (!crCashedOutRef.current && auto !== null && m >= auto) {
         crCashedOutRef.current = true;
+        crCashoutAtRef.current = auto;
         setCrCashedOut(true);
         setCrCashoutAt(auto);
       }
@@ -675,6 +713,11 @@ export default function Casino() {
         setCrMultiplier(crashPoint);
         setCrPhase('crashed');
         setCrHistory(prev => [crashPoint, ...prev].slice(0, 10));
+        if (crCashedOutRef.current && crCashoutAtRef.current !== null) {
+          updateEpcoins(Math.floor(crBet * crCashoutAtRef.current - crBet));
+        } else {
+          updateEpcoins(-crBet);
+        }
         crRAFRef.current = null;
         return;
       }
@@ -684,11 +727,12 @@ export default function Casino() {
       crRAFRef.current = requestAnimationFrame(tick);
     };
     crRAFRef.current = requestAnimationFrame(tick);
-  }, [crBet, crAutoCashout, drawCrash]);
+  }, [crBet, crAutoCashout, drawCrash, updateEpcoins]);
 
   const cashOut = useCallback(() => {
     if (crCashedOutRef.current) return;
     crCashedOutRef.current = true;
+    crCashoutAtRef.current = crCurrentMultRef.current;
     setCrCashedOut(true);
     setCrCashoutAt(crCurrentMultRef.current);
   }, []);
@@ -701,6 +745,7 @@ export default function Casino() {
     crPointsRef.current = [];
     crCashedOutRef.current = false;
     crCurrentMultRef.current = 1.00;
+    crCashoutAtRef.current = null;
     crParticlesRef.current = [];
     setCrPhase('idle');
     setCrMultiplier(1.00);
