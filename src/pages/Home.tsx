@@ -744,9 +744,9 @@ function Home() {
               <User size={20} color="#888" />
             </div>
             <div>
-              <p style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>João Santos</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.2rem', lineHeight: '1.4' }}>Acabei de fazer +€620 com o bilhete de hoje! 🔥</p>
-              <p style={{ fontSize: '0.65rem', color: '#666', textAlign: 'right', marginTop: '0.5rem' }}>há 5 min</p>
+              <p style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Nome Privado</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.2rem', lineHeight: '1.4' }}>Fiz +620€ com o VIP só ontem! 🔥</p>
+              <p style={{ fontSize: '0.65rem', color: '#666', textAlign: 'right', marginTop: '0.5rem' }}>há 3 horas</p>
             </div>
           </div>
 
