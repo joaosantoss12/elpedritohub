@@ -581,6 +581,7 @@ export default function Chat() {
   };
 
   const renderContent = (content: string, isUserMsg: boolean) => {
+    console.log(isUserMsg)
     const parts = content.split(/(@\w+)/g);
     return parts.map((part, i) => {
       if (/^@\w+$/.test(part)) {

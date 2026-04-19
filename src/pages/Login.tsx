@@ -37,6 +37,7 @@ function Login() {
       });
 
       if (error) {
+        console.error('ignore this error:', data);
         throw error;
       }
 
