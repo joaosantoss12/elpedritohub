@@ -201,12 +201,7 @@ export default function Chat() {
           const newMessage = payload.new as Message;
           fetchMemberInfo([newMessage.user_id]);
           setMessages(prev => {
-            const isDuplicate = prev.some(msg =>
-              msg.user_id === newMessage.user_id &&
-              msg.content === newMessage.content &&
-              Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 1000
-            );
-            if (isDuplicate) return prev;
+            if (prev.some(m => m.id === newMessage.id)) return prev;
             return [...prev, newMessage];
           });
           // Notification: all messages from others
@@ -473,16 +468,26 @@ export default function Chat() {
       setPreviewFile(null);
       setUploading(false);
 
-      // Insert message into database (realtime subscription will add it to UI)
-      const { error: insertError } = await supabase
+      // Insert message into database and optimistically add to UI
+      const { data: insertedMsg, error: insertError } = await supabase
         .from('chat_messages')
         .insert({
           user_id: user.id,
           content: messageText,
           image_url: imageUrl,
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      // Immediately show the message in the UI (realtime may be delayed)
+      if (insertedMsg) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === insertedMsg.id)) return prev;
+          return [...prev, insertedMsg];
+        });
+      }
 
       // Increment chat_messages counter and reward EPC every 10 messages (anti-spam: min 3 chars)
       if (membro && messageText.trim().length >= 3) {
