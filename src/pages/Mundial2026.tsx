@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { ChevronLeft, ChevronRight, Trophy, Calendar, TrendingUp, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
 import '../styles/Mundial2026.css';
 
-const API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY || '';
+const API_KEY = import.meta.env.FOOTBALL_API_KEY || '';
 const API_BASE = '/api/football'; // Proxy: Vite em dev, Vercel serverless em prod
 const WC_ID = 'WC'; // World Cup competition code
 
