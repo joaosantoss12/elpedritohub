@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import {
   Plus, ChevronLeft, ChevronRight,
-  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2, Lock as LockIcon,
+  X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2, Lock as LockIcon, Save,
 } from 'lucide-react';
 import '../styles/Banca.css';
 
@@ -191,6 +191,11 @@ export default function BancaManagement() {
   });
   const [editSelecoes, setEditSelecoes] = useState<Selecao[]>([]);
 
+  // Starting balance
+  const [startingBalance, setStartingBalance] = useState<number>(0);
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState('');
+
   // Form state
   const [form, setForm] = useState({
     tipo: 'simples' as 'simples' | 'multipla',
@@ -205,6 +210,21 @@ export default function BancaManagement() {
   });
   const emptySelecao = (): Selecao => ({ desporto: 'Futebol', equipa_casa: '', equipa_fora: '', mercado: '', odd: '' });
   const [selecoes, setSelecoes] = useState<Selecao[]>([emptySelecao(), emptySelecao()]);
+
+  // ── Load starting balance from localStorage ────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    const stored = localStorage.getItem(`banca_balance_${user.id}`);
+    if (stored !== null) setStartingBalance(parseFloat(stored) || 0);
+  }, [user]);
+
+  const saveStartingBalance = () => {
+    const val = parseFloat(balanceInput);
+    if (isNaN(val) || val < 0) return;
+    setStartingBalance(val);
+    if (user) localStorage.setItem(`banca_balance_${user.id}`, String(val));
+    setEditingBalance(false);
+  };
 
   // ── Fetch all user bets ──────────────────────────────────────────────
   useEffect(() => {
@@ -222,6 +242,13 @@ export default function BancaManagement() {
     };
     fetch();
   }, [user]);
+
+  // ── All-time profit & current balance ───────────────────────────────
+  const allTimeProfit = useMemo(() =>
+    apostas.reduce((s, a) => parseFloat((s + calculateProfit(a)).toFixed(2)), 0)
+  , [apostas]);
+
+  const currentBalance = parseFloat((startingBalance + allTimeProfit).toFixed(2));
 
   // ── Daily P&L map ────────────────────────────────────────────────────
   const dailyMap = useMemo(() => {
@@ -533,6 +560,64 @@ export default function BancaManagement() {
               <LockIcon size={16} /> Inicia sessão
             </button>
           )}
+        </div>
+
+        {/* ── Balance Banner ── */}
+        <div className="banca-balance-banner">
+          <div className="banca-balance-card banca-balance-card--starting">
+            <span className="banca-balance-card__label">Saldo Inicial</span>
+            {editingBalance ? (
+              <div className="banca-balance-card__edit">
+                <span className="banca-balance-card__currency">€</span>
+                <input
+                  type="number"
+                  className="banca-balance-card__input"
+                  value={balanceInput}
+                  onChange={e => setBalanceInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveStartingBalance(); if (e.key === 'Escape') setEditingBalance(false); }}
+                  autoFocus
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+                <button className="banca-balance-card__save" onClick={saveStartingBalance} title="Guardar">
+                  <Save size={14} />
+                </button>
+                <button className="banca-balance-card__cancel" onClick={() => setEditingBalance(false)} title="Cancelar">
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <div className="banca-balance-card__value-row">
+                <span className="banca-balance-card__value">€{startingBalance.toFixed(2)}</span>
+                {user && (
+                  <button
+                    className="banca-balance-card__edit-btn"
+                    onClick={() => { setBalanceInput(String(startingBalance)); setEditingBalance(true); }}
+                    title="Editar saldo inicial"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="banca-balance-card__arrow">→</div>
+
+          <div className={`banca-balance-card banca-balance-card--current ${currentBalance > startingBalance ? 'banca-balance-card--up' : currentBalance < startingBalance ? 'banca-balance-card--down' : ''}`}>
+            <span className="banca-balance-card__label">Saldo Atual</span>
+            <div className="banca-balance-card__value-row">
+              <span className={`banca-balance-card__value ${allTimeProfit > 0 ? 'pos' : allTimeProfit < 0 ? 'neg' : ''}`}>
+                €{currentBalance.toFixed(2)}
+              </span>
+              {allTimeProfit !== 0 && (
+                <span className={`banca-balance-card__delta ${allTimeProfit >= 0 ? 'pos' : 'neg'}`}>
+                  {fmtMoney(allTimeProfit, true)}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Monthly Stats ── */}

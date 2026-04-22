@@ -56,6 +56,158 @@
   box-shadow: 0 8px 24px rgba(230, 185, 92, 0.35);
 }
 
+/* ── Balance Banner ─────────────────────────────────────────────────── */
+
+.banca-balance-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.banca-balance-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.banca-balance-card--starting {
+  border-color: rgba(230, 185, 92, 0.2);
+}
+
+.banca-balance-card--up {
+  border-color: rgba(74, 222, 128, 0.25);
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.banca-balance-card--down {
+  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.04);
+}
+
+.banca-balance-card__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.banca-balance-card__value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.banca-balance-card__value {
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.banca-balance-card__delta {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.banca-balance-card__delta.pos { color: #4ade80; }
+.banca-balance-card__delta.neg { color: #f87171; }
+
+.banca-balance-card__edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-gray);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.banca-balance-card__edit-btn:hover {
+  color: var(--gold-primary);
+  background: rgba(230, 185, 92, 0.1);
+}
+
+.banca-balance-card__edit {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.banca-balance-card__currency {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-gray);
+}
+
+.banca-balance-card__input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(230, 185, 92, 0.4);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  padding: 0.3rem 0.6rem;
+  width: 130px;
+  outline: none;
+}
+
+.banca-balance-card__input:focus {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(230, 185, 92, 0.15);
+}
+
+.banca-balance-card__save {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+  border-radius: 7px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.banca-balance-card__save:hover {
+  background: rgba(74, 222, 128, 0.25);
+}
+
+.banca-balance-card__cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-gray);
+  border-radius: 7px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.banca-balance-card__cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.banca-balance-card__arrow {
+  color: var(--text-gray);
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
 /* ── Stats bar ──────────────────────────────────────────────────────── */
 
 .banca-stats {
