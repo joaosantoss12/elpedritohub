@@ -1,12 +1,19 @@
-import { 
+import {
   CheckCircle2, User,
-  Trophy, Clock, Gift, BarChart3, Navigation, Check, X, ArrowUp
+  Trophy, Clock, Gift, BarChart3, Navigation, Check, X, ArrowUp, ShieldCheck
 } from 'lucide-react';
 import '../index.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Navbar } from '../components/Navbar';
 import { CountingNumber } from '../components/CountingNumber';
+import { RaioXResumo } from '../components/RaioXResumo';
+import { AvisoPerfisFalsos } from '../components/AvisoPerfisFalsos';
+import SlotWinsSlider from '../components/SlotWinsSlider';
 import { supabase } from '../lib/supabase';
+import {
+  carregarTips, calcularStats, lucroDaTip, fmtUnidades, fmtPercent,
+  VERTICAL_LABELS, type RaioxTip,
+} from '../lib/raiox';
 import { useNavigate } from 'react-router';
 
 interface LucroMes {
@@ -51,8 +58,40 @@ function Home() {
   const [bilheteDia, setBilheteDia] = useState<BilheteDia | null>(null);
   const [topAposta, setTopAposta] = useState<TopAposta | null>(null);
   const [palpites, setPalpites] = useState<PalpiteDia[]>([]);
+  const [raioxTips, setRaioxTips] = useState<RaioxTip[]>([]);
 
   const navigate = useNavigate();
+
+  // Histórico auditado do canal público — serve de prova social enquanto os
+  // dados internos ainda são modestos (roadmap 5).
+  useEffect(() => {
+    carregarTips({ canal: 'publico', desdeDias: 90, limite: 400 }).then(setRaioxTips);
+  }, []);
+
+  const raioxStats = useMemo(() => calcularStats(raioxTips), [raioxTips]);
+
+  const raioxMes = useMemo(() => {
+    const inicioMes = new Date();
+    inicioMes.setDate(1);
+    inicioMes.setHours(0, 0, 0, 0);
+    return calcularStats(raioxTips.filter(t => new Date(t.publicado_em) >= inicioMes));
+  }, [raioxTips]);
+
+  /** Últimos greens do canal público — substituem os resultados fictícios. */
+  const ultimosGreens = useMemo(
+    () => raioxTips.filter(t => t.resultado === 'green').slice(0, 4),
+    [raioxTips]
+  );
+
+  /** Green mais recente, para o cartão do bilhete quando não há bilhete do dia. */
+  const ultimoGreen = ultimosGreens[0] ?? null;
+
+  /** Maior green do período — substitui a Top Aposta em falta. */
+  const melhorGreen = useMemo(() => {
+    const greens = raioxTips.filter(t => t.resultado === 'green');
+    if (!greens.length) return null;
+    return greens.reduce((a, b) => (lucroDaTip(b) > lucroDaTip(a) ? b : a));
+  }, [raioxTips]);
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -422,6 +461,13 @@ function Home() {
       {/* NAVBAR */}
       <Navbar />
 
+      {/* AVISO DE SEGURANÇA — roadmap 9, acima do hero de propósito.
+          É a primeira coisa que um visitante novo tem de saber, antes de
+          qualquer argumento de venda. Sem padding-top wrapper: o componente
+          devolve null quando não há perfis falsos registados, e um wrapper
+          com padding continuaria a ocupar espaço vazio por baixo da navbar. */}
+      <AvisoPerfisFalsos />
+
       {/* --------------------------------------------------- */}
       {/* HERO SECTION                                        */}
       {/* --------------------------------------------------- */}
@@ -528,10 +574,25 @@ function Home() {
             boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(230,185,92,0.15), inset 0 1px 1px rgba(255,255,255,0.15)', 
             minWidth: '220px'
           } as React.CSSProperties}>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.5rem', fontWeight: '600' }}>LUCRO DO MÊS</p>
-            <p style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--green-success)' }}>
-              +<CountingNumber value={lucroMes?.lucro ?? 0} duration={2500} decimals={2} suffix="€" />
-            </p>
+            {lucroMes && lucroMes.lucro > 0 ? (
+              <>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.5rem', fontWeight: '600' }}>LUCRO DO MÊS</p>
+                <p style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--green-success)' }}>
+                  +<CountingNumber value={lucroMes.lucro} duration={2500} decimals={2} suffix="€" />
+                </p>
+              </>
+            ) : (
+              /* Sem lucro interno registado, mostra o canal público em vez de 0,00€ */
+              <>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.5rem', fontWeight: '600' }}>LUCRO DO MÊS · CANAL PÚBLICO</p>
+                <p style={{ fontSize: '2.2rem', fontWeight: '900', color: raioxMes.lucroUnidades >= 0 ? 'var(--green-success)' : '#ef4444' }}>
+                  {raioxMes.resolvidas > 0 ? fmtUnidades(raioxMes.lucroUnidades) : '—'}
+                </p>
+                <p style={{ fontSize: '0.62rem', color: '#6b7280', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <ShieldCheck size={11} /> {raioxMes.resolvidas} tips auditadas
+                </p>
+              </>
+            )}
           </div>
 
           {/* CARTÃO 2: BILHETE DO DIA */}
@@ -550,28 +611,58 @@ function Home() {
             boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(34,197,94,0.1), inset 0 1px 1px rgba(255,255,255,0.15)', 
             minWidth: '220px'
           } as React.CSSProperties}>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.8rem', fontWeight: '600' }}>BILHETE DO DIA</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-               <div style={{ background: 'var(--green-success)', padding: '3px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                 <Check size={16} strokeWidth={4} color="#000" />
-               </div>
-               <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--green-success)' }}>
-                 {bilheteDia ? `${bilheteDia.acertos}/${bilheteDia.possiveis} ACERTOS` : '—'}
-               </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-               <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
-                 ODD <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
-                   {bilheteDia?.odd.toFixed(2) ?? '—'}
-                 </span>
-               </span>
-               <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>GANHOS</p>
-                  <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--green-success)' }}>
-                    <CountingNumber value={bilheteDia?.ganhos ?? 0} duration={2500} suffix="€" />
-                  </p>
-               </div>
-            </div>
+            {bilheteDia ? (
+              <>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.8rem', fontWeight: '600' }}>BILHETE DO DIA</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                   <div style={{ background: 'var(--green-success)', padding: '3px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <Check size={16} strokeWidth={4} color="#000" />
+                   </div>
+                   <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--green-success)' }}>
+                     {bilheteDia.acertos}/{bilheteDia.possiveis} ACERTOS
+                   </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                   <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
+                     ODD <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                       {bilheteDia.odd.toFixed(2)}
+                     </span>
+                   </span>
+                   <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>GANHOS</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--green-success)' }}>
+                        <CountingNumber value={bilheteDia.ganhos} duration={2500} suffix="€" />
+                      </p>
+                   </div>
+                </div>
+              </>
+            ) : (
+              /* Sem bilhete registado, mostra o último green real do canal */
+              <>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.8rem', fontWeight: '600' }}>ÚLTIMO GREEN · CANAL PÚBLICO</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.2rem' }}>
+                   <div style={{ background: 'var(--green-success)', padding: '3px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <Check size={16} strokeWidth={4} color="#000" />
+                   </div>
+                   <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--green-success)', lineHeight: 1.2 }}>
+                     {ultimoGreen?.evento ?? '—'}
+                   </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                   <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
+                     ODD <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                       {ultimoGreen?.odd.toFixed(2) ?? '—'}
+                     </span>
+                   </span>
+                   <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>LUCRO</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--green-success)' }}>
+                        {ultimoGreen ? fmtUnidades(lucroDaTip(ultimoGreen)) : '—'}
+                      </p>
+                   </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* CARTÃO 3: TOP APOSTA */}
@@ -594,7 +685,9 @@ function Home() {
             gap: '0.8rem'
           } as React.CSSProperties}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <p style={{ fontSize: '0.65rem', color: 'var(--text-gray)', fontWeight: '600', letterSpacing: '1px' }}>TOP APOSTA</p>
+              <p style={{ fontSize: '0.65rem', color: 'var(--text-gray)', fontWeight: '600', letterSpacing: '1px' }}>
+                {topAposta ? 'TOP APOSTA' : 'MAIOR GREEN · CANAL PÚBLICO'}
+              </p>
               {topAposta?.imagem_url && (
                 <button
                   onClick={() => setShowImageModal(true)}
@@ -616,29 +709,33 @@ function Home() {
             </div>
             <div>
               <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#fff' }}>
-                {topAposta?.mercado ?? '—'}
+                {topAposta?.mercado ?? melhorGreen?.pick ?? '—'}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.3rem' }}>
-                {topAposta?.jogo ?? '—'}
+                {topAposta?.jogo ?? melhorGreen?.evento ?? '—'}
               </p>
             </div>
             <div style={{ borderTop: '1px solid #333', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>ODD</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--gold-primary)' }}>
-                  {topAposta?.odd.toFixed(2) ?? '—'}
+                  {(topAposta?.odd ?? melhorGreen?.odd)?.toFixed(2) ?? '—'}
                 </p>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>APOSTA</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>{topAposta ? 'APOSTA' : 'STAKE'}</p>
                 <p style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>
-                  {topAposta ? `${topAposta.valor_apostado.toFixed(0)}€` : '—'}
+                  {topAposta
+                    ? `${topAposta.valor_apostado.toFixed(0)}€`
+                    : melhorGreen ? `${melhorGreen.stake}u` : '—'}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>GANHOS</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>{topAposta ? 'GANHOS' : 'LUCRO'}</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--green-success)' }}>
-                  <CountingNumber value={topAposta?.valor_ganho ?? 0} duration={2500} suffix="€" />
+                  {topAposta
+                    ? <CountingNumber value={topAposta.valor_ganho} duration={2500} suffix="€" />
+                    : melhorGreen ? fmtUnidades(lucroDaTip(melhorGreen)) : '—'}
                 </p>
               </div>
             </div>
@@ -673,15 +770,21 @@ function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Gift size={36} />
           <div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>78.4%</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>
+              {raioxStats.resolvidas > 0 ? fmtPercent(raioxStats.taxaAcerto) : '—'}
+            </h3>
             <p style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '1px' }}>TAXA DE ACERTOS</p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <BarChart3 size={36} /> 
           <div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>21.000€</h3>
-            <p style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '1px' }}>LUCRO GERADO</p>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>
+              {raioxStats.resolvidas > 0 ? fmtUnidades(raioxStats.lucroUnidades) : '—'}
+            </h3>
+            <p style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '1px' }}>
+              {raioxStats.resolvidas > 0 ? 'LUCRO · 90 DIAS' : 'LUCRO GERADO'}
+            </p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -692,6 +795,13 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* --------------------------------------------------- */}
+      {/* RAIO-X EPC — prova social do canal público           */}
+      {/* --------------------------------------------------- */}
+      <div style={{ padding: '0 5%', marginBottom: '3rem' }}>
+        <RaioXResumo />
+      </div>
 
       {/* --------------------------------------------------- */}
       {/* GRELHA PRINCIPAL (3 COLUNAS)                        */}
@@ -911,6 +1021,11 @@ function Home() {
       </section>
 
       {/* --------------------------------------------------- */}
+      {/* GANHOS RECENTES (SLIDER CAPITANSBET)                */}
+      {/* --------------------------------------------------- */}
+      <SlotWinsSlider />
+
+      {/* --------------------------------------------------- */}
       {/* BANNER PROMOCIONAL                                  */}
       {/* --------------------------------------------------- */}
       <section className="promo-banner" style={{
@@ -953,35 +1068,43 @@ function Home() {
             <h2 style={{ fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Resultados que falam por si</h2>
             <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>Não mostramos promessas, mostramos resultados.</p>
           </div>
-          <button className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.6rem 1.2rem' }}>VER TODOS</button>
+          <button
+            className="btn-outline"
+            style={{ fontSize: '0.8rem', padding: '0.6rem 1.2rem' }}
+            onClick={() => navigate('/passaporte')}
+          >
+            VER TODOS
+          </button>
         </div>
 
+        {ultimosGreens.length === 0 ? (
+          <div className="card-premium" style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-gray)', fontSize: '0.85rem' }}>
+            Ainda sem greens registados no histórico auditado.
+          </div>
+        ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-          {[
-            { profit: 523.40, odd: '4.75' },
-            { profit: 862.50, odd: '5.10' },
-            { profit: 1320.00, odd: '6.60' },
-            { profit: 412.30, odd: '3.85' }
-          ].map((result, i) => (
-            <div key={i} className="card-premium hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {ultimosGreens.map((tip) => (
+            <div key={tip.id} className="card-premium hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-gray)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>BILHETE</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-gray)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>
+                  {VERTICAL_LABELS[tip.vertical] ?? tip.vertical}
+                </span>
                 <span style={{ background: 'rgba(34, 197, 94, 0.1)', color: 'var(--green-success)', padding: '0.3rem 0.6rem', borderRadius: '12px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                  <div style={{ width: '6px', height: '6px', background: 'var(--green-success)', borderRadius: '50%' }}></div> Ganho
+                  <div style={{ width: '6px', height: '6px', background: 'var(--green-success)', borderRadius: '50%' }}></div> Green
                 </span>
               </div>
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                <h3 style={{ fontSize: '2.2rem', color: 'var(--green-success)', fontWeight: '900' }}>+<CountingNumber value={result.profit} duration={2500} decimals={2} prefix="€" /></h3>
-                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: '#fff'}}>{result.odd}</span></p>
+                <h3 style={{ fontSize: '2.2rem', color: 'var(--green-success)', fontWeight: '900' }}>{fmtUnidades(lucroDaTip(tip))}</h3>
+                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: '#fff'}}>{tip.odd.toFixed(2)}</span></p>
               </div>
               <div style={{ borderTop: '1px solid #222', paddingTop: '1rem' }}>
-                 <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                    Ver bilhete ▸
-                 </span>
+                 <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: '600', marginBottom: '0.2rem' }}>{tip.evento}</p>
+                 <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>{tip.pick}</p>
               </div>
             </div>
           ))}
         </div>
+        )}
       </section>
 
       {/* --------------------------------------------------- */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Loader2 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
+import FunilVip from '../components/FunilVip';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/Plans.css';
@@ -219,6 +220,10 @@ export default function Plans() {
             </div>
           </div>
         </div>
+
+        {/* Depois dos preços de propósito: quem já decidiu compra em cima,
+            quem ainda tem dúvidas vê os vídeos e fala com a equipa (roadmap 12). */}
+        <FunilVip />
       </div>
     </div>
   );

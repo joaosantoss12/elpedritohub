@@ -10,7 +10,11 @@ import {
 import {
   Plus, ChevronLeft, ChevronRight,
   X, Target, CheckCircle, XCircle, Clock, Calendar, Pencil, Trash2, Lock as LockIcon, Save,
+  ShieldCheck, Download,
 } from 'lucide-react';
+import {
+  carregarTips, calcularStats, fmtPercent, fmtRoi, VERTICAL_LABELS, type RaioxTip,
+} from '../lib/raiox';
 import '../styles/Banca.css';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -210,6 +214,47 @@ export default function BancaManagement() {
   });
   const emptySelecao = (): Selecao => ({ desporto: 'Futebol', equipa_casa: '', equipa_fora: '', mercado: '', odd: '' });
   const [selecoes, setSelecoes] = useState<Selecao[]>([emptySelecao(), emptySelecao()]);
+
+  // ── Histórico auditado do canal ──────────────────────────────────────
+  // A banca deixa de viver só de preenchimento manual: as tips publicadas
+  // servem de referência e podem ser importadas para o registo pessoal.
+  const [tipsAuditadas, setTipsAuditadas] = useState<RaioxTip[]>([]);
+
+  useEffect(() => {
+    carregarTips({ canal: 'publico', desdeDias: 90, limite: 400 }).then(setTipsAuditadas);
+  }, []);
+
+  const statsCanal = useMemo(() => calcularStats(tipsAuditadas), [tipsAuditadas]);
+
+  /** Tips recentes ainda não registadas na banca pessoal, prontas a importar. */
+  const tipsImportaveis = useMemo(() => {
+    const registadas = new Set(
+      apostas.map(a => `${a.equipa_casa}|${a.equipa_fora}|${a.mercado}`.toLowerCase()),
+    );
+    return tipsAuditadas
+      .filter(t => !registadas.has(`${t.evento}||${t.pick}`.toLowerCase()))
+      .slice(0, 6);
+  }, [tipsAuditadas, apostas]);
+
+  /**
+   * Abre o formulário já preenchido com a tip auditada. O membro só decide o
+   * stake — o evento, a odd e o resultado vêm do que foi publicado.
+   */
+  const importarTip = (tip: RaioxTip) => {
+    const [casa, fora] = tip.evento.split(/\s+(?:vs\.?|x|-)\s+/i);
+    setForm({
+      tipo: 'simples',
+      desporto: tip.vertical === 'tenis' ? 'Ténis' : 'Futebol',
+      equipa_casa: (casa ?? tip.evento).trim(),
+      equipa_fora: (fora ?? '').trim(),
+      mercado: tip.pick,
+      odd: String(tip.odd),
+      valor_apostado: '',
+      estado: tip.resultado === 'green' ? 'ganha' : tip.resultado === 'red' ? 'perdida' : 'pendente',
+      data_aposta: tip.publicado_em.slice(0, 10),
+    });
+    setShowModal(true);
+  };
 
   // ── Load starting balance from localStorage ────────────────────────
   useEffect(() => {
@@ -547,8 +592,10 @@ export default function BancaManagement() {
         {/* ── Header ── */}
         <div className="banca-header">
           <div>
-            <h1 className="banca-title">Gestão de <span>Banca</span></h1>
-            <p className="banca-subtitle">Regista e acompanha as tuas apostas</p>
+            <h1 className="banca-title">A tua <span>Banca</span></h1>
+            <p className="banca-subtitle">
+              A tua banca, lado a lado com o historial auditado do canal público
+            </p>
           </div>
           {user ? (
             <button className="banca-btn-add" onClick={() => setShowModal(true)}>
@@ -649,6 +696,63 @@ export default function BancaManagement() {
             </span>
           </div>
         </div>
+
+        {/* ── Canal auditado: referência e importação ── */}
+        {statsCanal.resolvidas > 0 && (
+          <div className="banca-canal">
+            <div className="banca-canal__head">
+              <h2 className="banca-canal__title">
+                <ShieldCheck size={17} color="var(--green-success)" />
+                Canal público · últimos 90 dias
+              </h2>
+              <span className="banca-canal__nota">
+                Publicado antes do jogo, resultado registado depois. Serve-te de referência.
+              </span>
+            </div>
+
+            <div className="banca-canal__stats">
+              <div className="banca-canal__stat">
+                <span className="banca-canal__stat-lbl">Tips auditadas</span>
+                <span className="banca-canal__stat-val">{statsCanal.resolvidas}</span>
+              </div>
+              <div className="banca-canal__stat">
+                <span className="banca-canal__stat-lbl">Taxa de acerto</span>
+                <span className="banca-canal__stat-val gold">{fmtPercent(statsCanal.taxaAcerto)}</span>
+              </div>
+              <div className="banca-canal__stat">
+                <span className="banca-canal__stat-lbl">ROI do canal</span>
+                <span className={`banca-canal__stat-val ${statsCanal.roi >= 0 ? 'pos' : 'neg'}`}>
+                  {fmtRoi(statsCanal.roi)}
+                </span>
+              </div>
+              <div className="banca-canal__stat">
+                <span className="banca-canal__stat-lbl">O teu ROI (mês)</span>
+                <span className={`banca-canal__stat-val ${stats.roi >= 0 ? 'pos' : 'neg'}`}>
+                  {stats.total > 0 ? `${stats.roi >= 0 ? '+' : ''}${stats.roi.toFixed(1)}%` : '—'}
+                </span>
+              </div>
+            </div>
+
+            {user && tipsImportaveis.length > 0 && (
+              <>
+                <p className="banca-canal__sub">Importar para a minha banca</p>
+                <div className="banca-canal__tips">
+                  {tipsImportaveis.map(t => (
+                    <button key={t.id} className="banca-canal__tip" onClick={() => importarTip(t)}>
+                      <span className="banca-canal__tip-vert">
+                        {VERTICAL_LABELS[t.vertical] ?? t.vertical}
+                      </span>
+                      <span className="banca-canal__tip-evento">{t.evento}</span>
+                      <span className="banca-canal__tip-pick">{t.pick}</span>
+                      <span className="banca-canal__tip-odd">{t.odd.toFixed(2)}</span>
+                      <Download size={13} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── Calendar + Day Detail ── */}
         <div className="banca-content">

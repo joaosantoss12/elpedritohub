@@ -1,0 +1,529 @@
+/* ═══════════════════════════════════════════════════════════════
+   CANAIS OFICIAIS — verificação de marca (roadmap 9) e alcance (5)
+   ═══════════════════════════════════════════════════════════════ */
+
+.canais-page {
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+.canais-wrapper {
+  padding: 2.5rem 5%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Cabeçalho ───────────────────────────────────────────────── */
+
+.canais-header {
+  margin-bottom: 1.8rem;
+}
+
+.canais-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  margin-bottom: 0.75rem;
+}
+
+.canais-header h1 {
+  font-size: 2.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  margin-bottom: 0.6rem;
+}
+
+.canais-header h1 span {
+  color: var(--gold-primary);
+}
+
+.canais-header p {
+  color: var(--text-gray);
+  font-size: 0.95rem;
+  max-width: 640px;
+  line-height: 1.6;
+}
+
+/* ── Regra de ouro ───────────────────────────────────────────── */
+
+.canais-regra {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 1.1rem 1.3rem;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.07);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  margin-bottom: 2.2rem;
+}
+
+.canais-regra svg {
+  color: #f87171;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.canais-regra strong {
+  display: block;
+  color: #fca5a5;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.canais-regra span {
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ── Alcance e fidelidade ────────────────────────────────────── */
+
+.canais-alcance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.2rem;
+}
+
+.canais-alcance__stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.canais-alcance__val {
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.canais-alcance__val.gold {
+  color: var(--gold-primary);
+}
+
+.canais-alcance__lbl {
+  font-size: 0.72rem;
+  color: var(--text-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+/* ── Secções ─────────────────────────────────────────────────── */
+
+.canais-sec {
+  margin-bottom: 2.6rem;
+}
+
+.canais-sec__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.canais-sec__title--perigo {
+  color: #f87171;
+}
+
+.canais-sec__sub {
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  max-width: 640px;
+  margin-bottom: 1.1rem;
+}
+
+/* ── Cartão de canal oficial ─────────────────────────────────── */
+
+.canais-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.canal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--gold-primary);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.canal-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.canal-card__nome {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.canal-card__acesso {
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 0.22rem 0.5rem;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.canal-card__acesso--gratuito {
+  color: var(--text-gray);
+  background: rgba(163, 163, 163, 0.1);
+  border: 1px solid rgba(163, 163, 163, 0.3);
+}
+
+.canal-card__acesso--vip {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+}
+
+.canal-card__handle {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: var(--gold-primary);
+  background: rgba(230, 185, 92, 0.08);
+  border: 1px solid rgba(230, 185, 92, 0.22);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  align-self: flex-start;
+}
+
+.canal-card__handle--vazio {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.08);
+  border-color: rgba(107, 114, 128, 0.25);
+  font-style: italic;
+}
+
+.canal-card__metricas {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.canal-card__metricas > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-gray);
+}
+
+.canal-card__metricas svg {
+  align-self: center;
+  color: #6b7280;
+}
+
+.canal-card__metricas strong {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 800;
+}
+
+.canal-card__cadencia {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--green-success);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+}
+
+/* Cadência irregular assume-se em amarelo, não se esconde em verde. */
+.canal-card__cadencia--irregular {
+  color: var(--gold-primary);
+  background: rgba(230, 185, 92, 0.08);
+  border-color: rgba(230, 185, 92, 0.25);
+}
+
+.canal-card__nota {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  line-height: 1.55;
+}
+
+.canal-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 0.3rem;
+}
+
+.canal-card__link:hover {
+  text-decoration: underline;
+}
+
+/* ── Contactos ───────────────────────────────────────────────── */
+
+.canais-contactos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.canal-contacto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--green-success);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.canal-contacto:hover {
+  background: rgba(34, 197, 94, 0.13);
+}
+
+.canal-contacto code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* ── Perfis falsos ───────────────────────────────────────────── */
+
+.canais-falsos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.canal-falso {
+  background: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  border-radius: 12px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.canal-falso__top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.canal-falso__top h3 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: line-through;
+  text-decoration-color: rgba(248, 113, 113, 0.6);
+  color: #d4d4d4;
+}
+
+.canal-falso__badge {
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background: #dc2626;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.canal-falso__handle {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: #fca5a5;
+  align-self: flex-start;
+}
+
+.canal-falso__subs {
+  font-size: 0.7rem;
+  color: var(--text-gray);
+}
+
+.canal-falso__nota {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  line-height: 1.55;
+}
+
+.canais-denuncia {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  margin-top: 1.2rem;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.canais-denuncia svg {
+  color: var(--gold-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.canais-denuncia strong {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.25rem;
+}
+
+.canais-denuncia span {
+  font-size: 0.8rem;
+  color: var(--text-gray);
+  line-height: 1.6;
+}
+
+.canais-recolha {
+  font-size: 0.72rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Estados ─────────────────────────────────────────────────── */
+
+.canais-loading,
+.canais-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 4rem 1rem;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.canais-empty h3 {
+  font-size: 1.05rem;
+  color: #d4d4d4;
+}
+
+.canais-spin {
+  animation: canais-rodar 1s linear infinite;
+}
+
+@keyframes canais-rodar {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AVISO DE PERFIS FALSOS — banner reutilizável
+   ═══════════════════════════════════════════════════════════════ */
+
+.aviso-falsos {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.32);
+  margin: 0 5% 1.5rem;
+  flex-wrap: wrap;
+}
+
+.aviso-falsos--compacto {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.95rem;
+}
+
+.aviso-falsos__icon {
+  color: #f87171;
+  flex-shrink: 0;
+}
+
+.aviso-falsos__corpo {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.aviso-falsos__titulo {
+  display: block;
+  font-size: 0.88rem;
+  color: #fca5a5;
+  margin-bottom: 0.2rem;
+}
+
+.aviso-falsos--compacto .aviso-falsos__titulo {
+  font-size: 0.8rem;
+}
+
+.aviso-falsos__texto {
+  font-size: 0.8rem;
+  color: var(--text-gray);
+  line-height: 1.55;
+}
+
+.aviso-falsos__texto strong {
+  color: #d4d4d4;
+}
+
+.aviso-falsos__handle {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.12);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+.aviso-falsos__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: transparent;
+  color: #fca5a5;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.aviso-falsos__cta:hover {
+  background: rgba(220, 38, 38, 0.15);
+}
+
+@media (max-width: 768px) {
+  .canais-header h1 { font-size: 2rem; }
+  .aviso-falsos { margin: 0 5% 1.2rem; }
+}

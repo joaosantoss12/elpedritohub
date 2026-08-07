@@ -1,0 +1,692 @@
+/* ═══════════════════════════════════════════════════════════════
+   RAIO-X EPC — prova social a partir do histórico auditado
+   ═══════════════════════════════════════════════════════════════ */
+
+.raiox-page {
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+.raiox-wrapper {
+  padding: 2.5rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Cabeçalho ───────────────────────────────────────────────── */
+
+.raiox-header {
+  margin-bottom: 2rem;
+}
+
+.raiox-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--gold-primary);
+  margin-bottom: 0.75rem;
+}
+
+.raiox-header h1 {
+  font-size: 2.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  margin-bottom: 0.6rem;
+}
+
+.raiox-header h1 span {
+  color: var(--gold-primary);
+}
+
+.raiox-header p {
+  color: var(--text-gray);
+  font-size: 0.95rem;
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+/* Selo de auditoria — o argumento central do conceito */
+.raiox-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.2rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green-success);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+/* ── Filtros ─────────────────────────────────────────────────── */
+
+.raiox-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 2rem 0 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.raiox-filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.raiox-filtro-grupo__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.raiox-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.raiox-chip {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.raiox-chip:hover {
+  border-color: rgba(230, 185, 92, 0.4);
+  color: #fff;
+}
+
+.raiox-chip--active {
+  background: rgba(230, 185, 92, 0.12);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+/* ── KPIs ────────────────────────────────────────────────────── */
+
+.raiox-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.raiox-kpi {
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 1.3rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.raiox-kpi--destaque {
+  border-color: rgba(230, 185, 92, 0.35);
+}
+
+.raiox-kpi__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-gray);
+  text-transform: uppercase;
+}
+
+.raiox-kpi__valor {
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.raiox-kpi__valor.pos { color: var(--green-success); }
+.raiox-kpi__valor.neg { color: #ef4444; }
+.raiox-kpi__valor.gold { color: var(--gold-primary); }
+
+.raiox-kpi__nota {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+/* ── Cartões genéricos ───────────────────────────────────────── */
+
+.raiox-card {
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin-bottom: 1.5rem;
+}
+
+.raiox-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+
+.raiox-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.raiox-card__sub {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* ── Grelha curva + verticais ────────────────────────────────── */
+
+.raiox-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .raiox-split { grid-template-columns: 1fr; }
+}
+
+/* ── Verticais ───────────────────────────────────────────────── */
+
+.raiox-vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.raiox-vertical {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left-width: 3px;
+  border-radius: 10px;
+  padding: 0.95rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.raiox-vertical__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.raiox-vertical__nome {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.raiox-vertical__lucro {
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.raiox-vertical__lucro.pos { color: var(--green-success); }
+.raiox-vertical__lucro.neg { color: #ef4444; }
+
+.raiox-vertical__meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.raiox-vertical__meta strong {
+  color: #d4d4d4;
+  font-weight: 700;
+}
+
+/* Barra de taxa de acerto */
+.raiox-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.raiox-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* ── Tabela de tips (a trilha de auditoria) ──────────────────── */
+
+.raiox-table-wrap {
+  overflow-x: auto;
+}
+
+.raiox-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 720px;
+}
+
+.raiox-table th {
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6b7280;
+  padding: 0 0.75rem 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.raiox-table td {
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+
+.raiox-table tr:last-child td {
+  border-bottom: none;
+}
+
+.raiox-table__hora {
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.raiox-table__evento {
+  font-weight: 600;
+  color: #fff;
+}
+
+.raiox-table__comp {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+.raiox-table__pick {
+  color: var(--text-gray);
+}
+
+.raiox-table__odd {
+  font-weight: 800;
+  color: var(--gold-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.raiox-table__lucro {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.raiox-table__lucro.pos { color: var(--green-success); }
+.raiox-table__lucro.neg { color: #ef4444; }
+.raiox-table__lucro.neutro { color: #6b7280; }
+
+/* Etiquetas de vertical e resultado */
+.raiox-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.raiox-res {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.22rem 0.6rem;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.raiox-res--green {
+  color: var(--green-success);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.raiox-res--red {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.raiox-res--pendente {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.raiox-res--void {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+/* ── Tooltip do gráfico ──────────────────────────────────────── */
+
+.raiox-tooltip {
+  background: rgba(10, 10, 10, 0.97);
+  border: 1px solid rgba(230, 185, 92, 0.3);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.75rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+  min-width: 170px;
+}
+
+.raiox-tooltip__data {
+  color: #6b7280;
+  font-size: 0.68rem;
+  margin-bottom: 0.4rem;
+}
+
+.raiox-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+}
+
+.raiox-tooltip__row span { color: var(--text-gray); }
+.raiox-tooltip__row strong { font-weight: 800; }
+.raiox-tooltip__row strong.pos { color: var(--green-success); }
+.raiox-tooltip__row strong.neg { color: #ef4444; }
+
+/* ── Estados vazios / carregamento ───────────────────────────── */
+
+.raiox-loading,
+.raiox-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-gray);
+}
+
+.raiox-empty h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.raiox-empty p {
+  font-size: 0.88rem;
+  max-width: 460px;
+  line-height: 1.6;
+}
+
+.raiox-spin {
+  animation: raiox-spin 1s linear infinite;
+}
+
+@keyframes raiox-spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESUMO NA HOME — versão compacta do Raio-X
+   ═══════════════════════════════════════════════════════════════ */
+
+.raiox-resumo {
+  margin: 0 5% 3rem 5%;
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(230, 185, 92, 0.22);
+  border-radius: 16px;
+  padding: 2rem 2.25rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.raiox-resumo__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.6rem;
+}
+
+.raiox-resumo__title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.raiox-resumo__sub {
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.raiox-resumo__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.25rem;
+}
+
+.raiox-resumo__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.raiox-resumo__stat-val {
+  font-size: 1.9rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.raiox-resumo__stat-val.pos { color: var(--green-success); }
+.raiox-resumo__stat-val.neg { color: #ef4444; }
+.raiox-resumo__stat-val.gold { color: var(--gold-primary); }
+
+.raiox-resumo__stat-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-gray);
+}
+
+.raiox-resumo__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid rgba(230, 185, 92, 0.4);
+  color: var(--gold-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.raiox-resumo__cta:hover {
+  background: rgba(230, 185, 92, 0.1);
+  transform: translateX(3px);
+}
+
+/* Faixa dos últimos resultados — leitura instantânea de forma */
+.raiox-forma {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-top: 1.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.raiox-forma__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-gray);
+}
+
+.raiox-forma__dots {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.raiox-forma__dot {
+  width: 22px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.raiox-forma__dot--green { background: var(--green-success); }
+.raiox-forma__dot--red   { background: #ef4444; }
+.raiox-forma__dot--void  { background: #3f3f46; }
+
+@media (max-width: 768px) {
+  .raiox-wrapper { padding: 2rem 5%; }
+  .raiox-header h1 { font-size: 2rem; }
+  .raiox-resumo { padding: 1.5rem 1.25rem; }
+  .raiox-resumo__stat-val { font-size: 1.5rem; }
+  .raiox-card { padding: 1.25rem; }
+}
+
+/* ── Alcance e fidelidade dos canais (roadmap 5) ──────────────── */
+
+.raiox-canais {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1.4rem;
+  margin-bottom: 1.5rem;
+}
+
+.raiox-canais__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.raiox-canais__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.raiox-canal {
+  border-left: 3px solid var(--gold-primary);
+  padding-left: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.raiox-canal__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.raiox-canal__nome {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.raiox-canal__subs {
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.raiox-canal__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--text-gray);
+}
+
+.raiox-canal__meta strong {
+  color: #d4d4d4;
+}
+
+/* Cadência irregular fica assinalada em vez de disfarçada (roadmap 1). */
+.raiox-canal__irregular {
+  color: var(--gold-primary);
+}
+
+.raiox-canais__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: rgba(34, 197, 94, 0.07);
+  color: var(--green-success);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.raiox-canais__link:hover {
+  background: rgba(34, 197, 94, 0.14);
+}

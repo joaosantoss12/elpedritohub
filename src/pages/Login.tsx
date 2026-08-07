@@ -41,7 +41,7 @@ function Login() {
         throw error;
       }
 
-      navigate('/profile'); // Redirect after login
+      navigate('/passaporte'); // Redirect after login
     } catch (err: any) {
       console.error('Error during login:', err);
       setError(err.message || 'Erro ao efetuar login. Verifique as suas credenciais.');

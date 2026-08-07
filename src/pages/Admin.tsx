@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,13 +7,36 @@ import {
   Users, Radio, Gift, CreditCard, Calendar, TrendingUp, Star, Globe,
   Plus, Pencil, Trash2, Save, X, Search, ShieldAlert, ShieldOff, Trophy,
   CheckCircle, AlertCircle, ChevronRight, Loader2, ToggleLeft, ToggleRight,
-  MessageSquare, Send, Paperclip, ChevronLeft,
+  MessageSquare, Send, Paperclip, ChevronLeft, Activity, ShieldCheck,
+  CalendarClock, PlayCircle,
 } from 'lucide-react';
+import {
+  VERTICAL_LABELS, RESULTADO_LABELS, calcularStats, fmtUnidades, fmtPercent, fmtRoi,
+  type RaioxTip, type Vertical, type Resultado, type Canal,
+} from '../lib/raiox';
+import {
+  fmtSubscritores, fmtEngagement, fmtHandle,
+  type CanalTelegram, type TipoCanal, type AcessoCanal,
+} from '../lib/canais';
+import {
+  carregarRanking, carregarConfig, carregarVencedores, CONFIG_PADRAO,
+  nomeMes, nomeMesISO,
+  // Alias: o Raio-X já exporta fmtRoi e fmtUnidades com outra unidade de base.
+  fmtRoi as fmtRankingRoi, fmtUnidades as fmtRankingUnidades,
+  type LinhaRanking, type RankingConfig, type Vencedor,
+} from '../lib/ranking';
+import {
+  carregarVideos, carregarReunioes, ESTADO_REUNIAO_LABELS,
+  type VipVideo, type Reuniao, type EstadoReuniao,
+} from '../lib/funilVip';
+import {
+  carregarSalasConfig, SALAS_CONFIG_PADRAO, type SalasConfig,
+} from '../lib/salasJogo';
 import '../styles/Admin.css';
 
 // ─── TYPES ──────────────────────────────────────────────────────
 
-type Section = 'membros' | 'live' | 'premios' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'mundial-bets' | 'suporte';
+type Section = 'membros' | 'raiox' | 'canais' | 'ranking' | 'funil-vip' | 'salas' | 'live' | 'premios' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'mundial-bets' | 'suporte';
 
 interface SupportTicket {
   id: string;
@@ -118,12 +141,20 @@ interface LiveConfig {
   twitch_channel: string;
   titulo: string;
   online: boolean;
+  /* Sala de Comando: o Hub redireciona para o Telegram, não o substitui. */
+  telegram_tv_url: string | null;
+  telegram_chat_url: string | null;
 }
 
 // ─── NAV ────────────────────────────────────────────────────────
 
 const NAV_ITEMS: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: 'membros',       label: 'Membros',        icon: <Users size={15} /> },
+  { key: 'raiox',         label: 'Raio-X',         icon: <Activity size={15} /> },
+  { key: 'canais',        label: 'Canais',         icon: <ShieldCheck size={15} /> },
+  { key: 'ranking',       label: 'Ranking',        icon: <Trophy size={15} /> },
+  { key: 'funil-vip',     label: 'Funil VIP',      icon: <PlayCircle size={15} /> },
+  { key: 'salas',         label: 'Salas de Jogo',  icon: <Radio size={15} /> },
   { key: 'live',          label: 'Live',           icon: <Radio size={15} /> },
   { key: 'premios',       label: 'Giveaways',      icon: <Gift size={15} /> },
   { key: 'planos',        label: 'Planos',         icon: <CreditCard size={15} /> },
@@ -436,12 +467,17 @@ function SectionMembros({ showToast }: { showToast: (msg: string, type?: 'succes
 // ─── SECTION: LIVE ───────────────────────────────────────────────
 
 function SectionLive({ showToast }: { showToast: (msg: string, type?: 'success' | 'error') => void }) {
-  const [config, setConfig] = useState<LiveConfig>({ twitch_channel: '', titulo: '', online: false });
+  const [config, setConfig] = useState<LiveConfig>({
+    twitch_channel: '', titulo: '', online: false,
+    telegram_tv_url: '', telegram_chat_url: '',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.from('livestream_config').select('twitch_channel, titulo, online').eq('id', 1).maybeSingle()
+    supabase.from('livestream_config')
+      .select('twitch_channel, titulo, online, telegram_tv_url, telegram_chat_url')
+      .eq('id', 1).maybeSingle()
       .then(({ data }) => {
         if (data) setConfig(data as LiveConfig);
         setLoading(false);
@@ -481,6 +517,23 @@ function SectionLive({ showToast }: { showToast: (msg: string, type?: 'success' 
       </Field>
       <Field label="Título da Live">
         <input className="admin-input" value={config.titulo} onChange={e => setConfig(c => ({ ...c, titulo: e.target.value }))} />
+      </Field>
+
+      <Field label="Canal TV no Telegram (URL) — aparece na Sala de Comando">
+        <input
+          className="admin-input"
+          placeholder="https://t.me/..."
+          value={config.telegram_tv_url ?? ''}
+          onChange={e => setConfig(c => ({ ...c, telegram_tv_url: e.target.value }))}
+        />
+      </Field>
+      <Field label="Canal público no Telegram (URL)">
+        <input
+          className="admin-input"
+          placeholder="https://t.me/..."
+          value={config.telegram_chat_url ?? ''}
+          onChange={e => setConfig(c => ({ ...c, telegram_chat_url: e.target.value }))}
+        />
       </Field>
 
       <button className="admin-btn-primary" style={{ marginTop: 8 }} onClick={save} disabled={saving}>
@@ -1587,6 +1640,1006 @@ function SectionMundialBets({ showToast }: { showToast: (msg: string, type?: 'su
   );
 }
 
+// ─── SECTION: RAIO-X ─────────────────────────────────────────────
+// O historial auditado que alimenta a Home, o Raio-X, o Passaporte e a Banca.
+// Registar antes do jogo e só depois marcar o resultado é o que dá valor a
+// isto — editar uma odd à posteriori destrói a prova social toda.
+
+const VERTICAIS: Vertical[] = ['futebol', 'tenis', 'escadinha', 'footmillion'];
+const RESULTADOS: Resultado[] = ['pendente', 'green', 'red', 'void'];
+
+type TipDraft = Omit<RaioxTip, 'id' | 'resolvido_em'> & { id?: string };
+
+const novaTip = (): TipDraft => ({
+  vertical: 'futebol',
+  canal: 'publico',
+  publicado_em: new Date().toISOString().slice(0, 16),
+  evento: '',
+  competicao: '',
+  pick: '',
+  odd: 1.5,
+  stake: 1,
+  resultado: 'pendente',
+});
+
+function SectionRaioX({ showToast }: { showToast: (msg: string, type?: 'success' | 'error') => void }) {
+  const [tips, setTips] = useState<RaioxTip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filtroVertical, setFiltroVertical] = useState<'todas' | Vertical>('todas');
+  const [editing, setEditing] = useState<TipDraft | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('raiox_tips')
+      .select('*')
+      .order('publicado_em', { ascending: false })
+      .limit(300);
+    if (error) showToast('Erro ao carregar tips: ' + error.message, 'error');
+    setTips((data ?? []) as RaioxTip[]);
+    setLoading(false);
+  }, [showToast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const visiveis = filtroVertical === 'todas'
+    ? tips
+    : tips.filter(t => t.vertical === filtroVertical);
+
+  const stats = calcularStats(visiveis);
+
+  const openNew = () => { setEditing(novaTip()); setIsNew(true); };
+
+  const openEdit = (t: RaioxTip) => {
+    setEditing({ ...t, publicado_em: t.publicado_em.slice(0, 16) });
+    setIsNew(false);
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.evento.trim() || !editing.pick.trim()) {
+      showToast('Evento e pick são obrigatórios', 'error');
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      vertical: editing.vertical,
+      canal: editing.canal,
+      publicado_em: new Date(editing.publicado_em).toISOString(),
+      evento: editing.evento.trim(),
+      competicao: editing.competicao?.trim() || null,
+      pick: editing.pick.trim(),
+      odd: Number(editing.odd),
+      stake: Number(editing.stake),
+      resultado: editing.resultado,
+    };
+    const { error } = isNew
+      ? await supabase.from('raiox_tips').insert(payload)
+      : await supabase.from('raiox_tips').update(payload).eq('id', editing.id!);
+    setSaving(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(isNew ? 'Tip registada' : 'Tip atualizada');
+    setEditing(null);
+    load();
+  };
+
+  /** Atalho para o caso mais frequente: marcar o resultado de uma pendente. */
+  const marcarResultado = async (t: RaioxTip, resultado: Resultado) => {
+    const { error } = await supabase.from('raiox_tips').update({ resultado }).eq('id', t.id);
+    if (error) showToast('Erro: ' + error.message, 'error');
+    else { showToast(`Marcada como ${RESULTADO_LABELS[resultado]}`); load(); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm('Eliminar esta tip do historial auditado?')) return;
+    const { error } = await supabase.from('raiox_tips').delete().eq('id', id);
+    if (error) showToast('Erro ao eliminar', 'error');
+    else { showToast('Tip eliminada'); load(); }
+  };
+
+  return (
+    <div className="admin-section-content">
+      <div className="admin-toolbar">
+        <select
+          className="admin-input"
+          style={{ flex: 'none', width: 190 }}
+          value={filtroVertical}
+          onChange={e => setFiltroVertical(e.target.value as 'todas' | Vertical)}
+        >
+          <option value="todas">Todas as verticais</option>
+          {VERTICAIS.map(v => <option key={v} value={v}>{VERTICAL_LABELS[v]}</option>)}
+        </select>
+        <button className="admin-btn-primary" onClick={openNew}><Plus size={14} /> Nova Tip</button>
+      </div>
+
+      {stats.resolvidas > 0 && (
+        <div className="admin-raiox-stats">
+          <span>{stats.resolvidas} resolvidas</span>
+          <span>{stats.pendentes} pendentes</span>
+          <span>Acerto: <strong>{fmtPercent(stats.taxaAcerto)}</strong></span>
+          <span>Lucro: <strong>{fmtUnidades(stats.lucroUnidades)}</strong></span>
+          <span>ROI: <strong>{fmtRoi(stats.roi)}</strong></span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="admin-loading"><Loader2 size={22} className="spin" /> A carregar…</div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Publicado</th><th>Vertical</th><th>Evento</th><th>Pick</th>
+                <th>ODD</th><th>Stake</th><th>Resultado</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visiveis.map(t => (
+                <tr key={t.id}>
+                  <td>{new Date(t.publicado_em).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                  <td>{VERTICAL_LABELS[t.vertical] ?? t.vertical}</td>
+                  <td>{t.evento}</td>
+                  <td>{t.pick}</td>
+                  <td>{Number(t.odd).toFixed(2)}</td>
+                  <td>{Number(t.stake).toFixed(2)}u</td>
+                  <td>
+                    {t.resultado === 'pendente' ? (
+                      <div className="admin-raiox-quick">
+                        <button className="admin-btn-icon" title="Green" onClick={() => marcarResultado(t, 'green')}>✅</button>
+                        <button className="admin-btn-icon" title="Red" onClick={() => marcarResultado(t, 'red')}>❌</button>
+                        <button className="admin-btn-icon" title="Anulada" onClick={() => marcarResultado(t, 'void')}>⚪</button>
+                      </div>
+                    ) : (
+                      <span className={`admin-result-chip result-${t.resultado}`}>{RESULTADO_LABELS[t.resultado]}</span>
+                    )}
+                  </td>
+                  <td className="admin-actions-cell">
+                    <button className="admin-btn-icon" onClick={() => openEdit(t)}><Pencil size={14} /></button>
+                    <button className="admin-btn-icon danger" onClick={() => del(t.id)}><Trash2 size={14} /></button>
+                  </td>
+                </tr>
+              ))}
+              {visiveis.length === 0 && (
+                <tr><td colSpan={8} className="admin-empty-row">Sem tips registadas</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={isNew ? 'Nova Tip' : 'Editar Tip'} onClose={() => setEditing(null)}>
+          <Field label="Vertical">
+            <select className="admin-input" value={editing.vertical}
+              onChange={e => setEditing(t => ({ ...t!, vertical: e.target.value as Vertical }))}>
+              {VERTICAIS.map(v => <option key={v} value={v}>{VERTICAL_LABELS[v]}</option>)}
+            </select>
+          </Field>
+          <Field label="Canal">
+            <select className="admin-input" value={editing.canal}
+              onChange={e => setEditing(t => ({ ...t!, canal: e.target.value as Canal }))}>
+              <option value="publico">Canal público (51 mil)</option>
+              <option value="vip">VIP</option>
+            </select>
+          </Field>
+          <Field label="Publicado em">
+            <input type="datetime-local" className="admin-input" value={editing.publicado_em}
+              onChange={e => setEditing(t => ({ ...t!, publicado_em: e.target.value }))} />
+          </Field>
+          <Field label="Evento (ex: Benfica vs Porto)">
+            <input className="admin-input" value={editing.evento}
+              onChange={e => setEditing(t => ({ ...t!, evento: e.target.value }))} />
+          </Field>
+          <Field label="Competição (opcional)">
+            <input className="admin-input" value={editing.competicao ?? ''}
+              onChange={e => setEditing(t => ({ ...t!, competicao: e.target.value }))} />
+          </Field>
+          <Field label="Pick">
+            <input className="admin-input" value={editing.pick}
+              onChange={e => setEditing(t => ({ ...t!, pick: e.target.value }))} />
+          </Field>
+          <Field label="ODD">
+            <NumericInput className="admin-input" step={0.01} value={editing.odd}
+              onChange={n => setEditing(t => ({ ...t!, odd: n }))} />
+          </Field>
+          <Field label="Stake (unidades)">
+            <NumericInput className="admin-input" step={0.5} value={editing.stake}
+              onChange={n => setEditing(t => ({ ...t!, stake: n }))} />
+          </Field>
+          <Field label="Resultado">
+            <select className="admin-input" value={editing.resultado}
+              onChange={e => setEditing(t => ({ ...t!, resultado: e.target.value as Resultado }))}>
+              {RESULTADOS.map(r => <option key={r} value={r}>{RESULTADO_LABELS[r]}</option>)}
+            </select>
+          </Field>
+          <div className="admin-modal__actions">
+            <button className="admin-btn-secondary" onClick={() => setEditing(null)}>Cancelar</button>
+            <button className="admin-btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />}
+              Guardar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ─── SECTION: CANAIS DE TELEGRAM ─────────────────────────────────
+// Roadmap 9 (perfis falsos), 5 (alcance e fidelidade) e 1 (cadência).
+
+type CanalDraft = Omit<CanalTelegram, 'id'> & { id?: string };
+
+const TIPOS_CANAL: { valor: TipoCanal; label: string }[] = [
+  { valor: 'oficial',  label: 'Canal oficial' },
+  { valor: 'contacto', label: 'Contacto oficial' },
+  { valor: 'falso',    label: 'Perfil falso (a denunciar)' },
+];
+
+function novoCanal(): CanalDraft {
+  return {
+    nome: '', handle: null, url: null, tipo: 'oficial', vertical: null,
+    acesso: 'gratuito', subscritores: null, engagement_min: null, engagement_max: null,
+    cadencia: null, cadencia_estavel: true, nota: null, ordem: 0, ativo: true,
+    recolhido_em: new Date().toISOString().slice(0, 10),
+  };
+}
+
+function SectionCanais({ showToast }: { showToast: (msg: string, type?: 'success' | 'error') => void }) {
+  const [canais, setCanais] = useState<CanalTelegram[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<CanalDraft | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('telegram_canais')
+      .select('*')
+      .order('tipo')
+      .order('ordem');
+    if (error) showToast('Erro ao carregar canais: ' + error.message, 'error');
+    setCanais((data ?? []) as CanalTelegram[]);
+    setLoading(false);
+  }, [showToast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const semHandle = canais.filter(c => c.tipo === 'oficial' && !c.handle).length;
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.nome.trim()) { showToast('O nome é obrigatório', 'error'); return; }
+
+    // Um perfil falso listado sem handle não serve de nada: o handle é
+    // precisamente o que o membro vai comparar.
+    if (editing.tipo !== 'oficial' && !editing.handle?.trim()) {
+      showToast('Handle obrigatório para contactos e perfis falsos', 'error');
+      return;
+    }
+
+    setSaving(true);
+    const handle = editing.handle?.trim().replace(/^@/, '') || null;
+    const payload = {
+      nome: editing.nome.trim(),
+      handle,
+      url: editing.url?.trim() || (handle ? `https://t.me/${handle}` : null),
+      tipo: editing.tipo,
+      vertical: editing.vertical || null,
+      acesso: editing.acesso,
+      subscritores: editing.subscritores ?? null,
+      engagement_min: editing.engagement_min ?? null,
+      engagement_max: editing.engagement_max ?? null,
+      cadencia: editing.cadencia?.trim() || null,
+      cadencia_estavel: editing.cadencia_estavel,
+      nota: editing.nota?.trim() || null,
+      ordem: editing.ordem,
+      ativo: editing.ativo,
+      recolhido_em: editing.recolhido_em || null,
+    };
+    const { error } = isNew
+      ? await supabase.from('telegram_canais').insert(payload)
+      : await supabase.from('telegram_canais').update(payload).eq('id', editing.id!);
+    setSaving(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(isNew ? 'Canal registado' : 'Canal atualizado');
+    setEditing(null);
+    load();
+  };
+
+  const del = async (id: string) => {
+    if (!confirm('Remover este canal da lista pública?')) return;
+    const { error } = await supabase.from('telegram_canais').delete().eq('id', id);
+    if (error) showToast('Erro ao eliminar', 'error');
+    else { showToast('Canal removido'); load(); }
+  };
+
+  return (
+    <div className="admin-section-content">
+      <div className="admin-toolbar">
+        <button className="admin-btn-primary" onClick={() => { setEditing(novoCanal()); setIsNew(true); }}>
+          <Plus size={14} /> Novo Canal
+        </button>
+      </div>
+
+      {semHandle > 0 && (
+        <div className="admin-canais-alerta">
+          <ShieldAlert size={15} />
+          <span>
+            {semHandle} {semHandle === 1 ? 'canal oficial está' : 'canais oficiais estão'} sem handle.
+            A página pública mostra “handle por confirmar” — preencher antes de divulgar,
+            porque é o handle que o membro usa para distinguir o verdadeiro do falso.
+          </span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="admin-loading"><Loader2 size={22} className="spin" /> A carregar…</div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Tipo</th><th>Nome</th><th>Handle</th><th>Subscritores</th>
+                <th>Visualização</th><th>Cadência</th><th>Ativo</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {canais.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <span className={`admin-canal-chip canal-${c.tipo}`}>
+                      {c.tipo === 'oficial' ? 'OFICIAL' : c.tipo === 'contacto' ? 'CONTACTO' : 'FALSO'}
+                    </span>
+                  </td>
+                  <td>{c.nome}</td>
+                  <td>{fmtHandle(c.handle) ?? <em style={{ color: '#6b7280' }}>por confirmar</em>}</td>
+                  <td>{fmtSubscritores(c.subscritores)}</td>
+                  <td>{fmtEngagement(c.engagement_min, c.engagement_max)}</td>
+                  <td>
+                    {c.cadencia ?? '—'}
+                    {c.cadencia && !c.cadencia_estavel && (
+                      <span className="admin-canal-irregular"> · irregular</span>
+                    )}
+                  </td>
+                  <td>{c.ativo ? 'Sim' : 'Não'}</td>
+                  <td className="admin-actions-cell">
+                    <button className="admin-btn-icon" onClick={() => { setEditing({ ...c }); setIsNew(false); }}>
+                      <Pencil size={14} />
+                    </button>
+                    <button className="admin-btn-icon danger" onClick={() => del(c.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {canais.length === 0 && (
+                <tr><td colSpan={8} className="admin-empty-row">Sem canais registados</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={isNew ? 'Novo Canal' : 'Editar Canal'} onClose={() => setEditing(null)}>
+          <Field label="Tipo">
+            <select className="admin-input" value={editing.tipo}
+              onChange={e => setEditing(c => ({ ...c!, tipo: e.target.value as TipoCanal }))}>
+              {TIPOS_CANAL.map(t => <option key={t.valor} value={t.valor}>{t.label}</option>)}
+            </select>
+          </Field>
+          <Field label="Nome apresentado">
+            <input className="admin-input" value={editing.nome}
+              onChange={e => setEditing(c => ({ ...c!, nome: e.target.value }))} />
+          </Field>
+          <Field label="Handle (sem @)">
+            <input className="admin-input" value={editing.handle ?? ''} placeholder="elpedritooo"
+              onChange={e => setEditing(c => ({ ...c!, handle: e.target.value }))} />
+          </Field>
+          <Field label="URL (deixa vazio para gerar a partir do handle)">
+            <input className="admin-input" value={editing.url ?? ''} placeholder="https://t.me/…"
+              onChange={e => setEditing(c => ({ ...c!, url: e.target.value }))} />
+          </Field>
+
+          {editing.tipo === 'oficial' && (
+            <>
+              <Field label="Vertical">
+                <select className="admin-input" value={editing.vertical ?? ''}
+                  onChange={e => setEditing(c => ({ ...c!, vertical: (e.target.value || null) as Vertical | null }))}>
+                  <option value="">— sem vertical —</option>
+                  {VERTICAIS.map(v => <option key={v} value={v}>{VERTICAL_LABELS[v]}</option>)}
+                </select>
+              </Field>
+              <Field label="Acesso">
+                <select className="admin-input" value={editing.acesso}
+                  onChange={e => setEditing(c => ({ ...c!, acesso: e.target.value as AcessoCanal }))}>
+                  <option value="gratuito">Gratuito</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </Field>
+              <Field label="Taxa de visualização mínima (%)">
+                <NumericInput className="admin-input" step={1} value={editing.engagement_min ?? 0}
+                  onChange={n => setEditing(c => ({ ...c!, engagement_min: n }))} />
+              </Field>
+              <Field label="Taxa de visualização máxima (%)">
+                <NumericInput className="admin-input" step={1} value={editing.engagement_max ?? 0}
+                  onChange={n => setEditing(c => ({ ...c!, engagement_max: n }))} />
+              </Field>
+              <Field label="Cadência (ex: Diária, várias vezes por dia)">
+                <input className="admin-input" value={editing.cadencia ?? ''}
+                  onChange={e => setEditing(c => ({ ...c!, cadencia: e.target.value }))} />
+              </Field>
+              <Field label="Cadência regular?">
+                <select className="admin-input" value={editing.cadencia_estavel ? 'sim' : 'nao'}
+                  onChange={e => setEditing(c => ({ ...c!, cadencia_estavel: e.target.value === 'sim' }))}>
+                  <option value="sim">Sim — publica com regularidade</option>
+                  <option value="nao">Não — assume-se irregular publicamente</option>
+                </select>
+              </Field>
+            </>
+          )}
+
+          <Field label="Subscritores">
+            <NumericInput className="admin-input" step={1} value={editing.subscritores ?? 0}
+              onChange={n => setEditing(c => ({ ...c!, subscritores: n }))} />
+          </Field>
+          <Field label="Data da recolha dos números">
+            <input type="date" className="admin-input" value={editing.recolhido_em ?? ''}
+              onChange={e => setEditing(c => ({ ...c!, recolhido_em: e.target.value }))} />
+          </Field>
+          <Field label="Nota">
+            <input className="admin-input" value={editing.nota ?? ''}
+              onChange={e => setEditing(c => ({ ...c!, nota: e.target.value }))} />
+          </Field>
+          <Field label="Ordem">
+            <NumericInput className="admin-input" step={1} value={editing.ordem}
+              onChange={n => setEditing(c => ({ ...c!, ordem: n }))} />
+          </Field>
+          <Field label="Visível na página pública">
+            <select className="admin-input" value={editing.ativo ? 'sim' : 'nao'}
+              onChange={e => setEditing(c => ({ ...c!, ativo: e.target.value === 'sim' }))}>
+              <option value="sim">Sim</option>
+              <option value="nao">Não</option>
+            </select>
+          </Field>
+
+          <div className="admin-modal__actions">
+            <button className="admin-btn-secondary" onClick={() => setEditing(null)}>Cancelar</button>
+            <button className="admin-btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />}
+              Guardar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ─── SECTION: RANKING MENSAL ─────────────────────────────────────
+
+/**
+ * Configuração do ranking mensal e fecho do mês (roadmap 10).
+ *
+ * O fecho existe porque a tabela ao vivo continua a mexer depois do mês
+ * acabar — basta alguém resolver uma aposta atrasada. Fechar grava o pódio
+ * em ranking_vencedores e é isso que passa a valer.
+ */
+function SectionRanking({ showToast }: { showToast: (m: string, t?: 'success' | 'error') => void }) {
+  const [cfg, setCfg] = useState<RankingConfig>(CONFIG_PADRAO);
+  const [linhas, setLinhas] = useState<LinhaRanking[]>([]);
+  const [vencedores, setVencedores] = useState<Vencedor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [fechando, setFechando] = useState(false);
+
+  // Por omissão fecha-se o mês passado, que é o caso normal.
+  const [mesISO, setMesISO] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [posicoes, setPosicoes] = useState(3);
+
+  const mesDate = useMemo(() => {
+    const [ano, mes] = mesISO.split('-').map(Number);
+    return new Date(ano, (mes || 1) - 1, 1);
+  }, [mesISO]);
+
+  const load = async () => {
+    setLoading(true);
+    const [c, v] = await Promise.all([carregarConfig(), carregarVencedores(40)]);
+    setCfg(c);
+    setVencedores(v);
+    setLinhas(await carregarRanking(mesDate));
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [mesISO]);
+
+  const guardarConfig = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from('ranking_config')
+      .update({
+        ativo: cfg.ativo,
+        premio_titulo: cfg.premio_titulo?.trim() || null,
+        premio_descricao: cfg.premio_descricao?.trim() || null,
+        min_apostas: cfg.min_apostas,
+        lugares: cfg.lugares,
+        regras: cfg.regras?.trim() || null,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq('id', 1);
+    setSaving(false);
+    if (error) showToast('Erro: ' + error.message, 'error');
+    else showToast('Configuração guardada');
+  };
+
+  const fecharMes = async () => {
+    if (!linhas.length) {
+      showToast('Não há ninguém elegível neste mês', 'error');
+      return;
+    }
+    const nomes = linhas.slice(0, posicoes).map((l, i) => `${i + 1}º ${l.username}`).join(', ');
+    if (!confirm(`Fechar ${nomeMes(mesDate)} e gravar o pódio?\n\n${nomes}\n\nVolta a correr sem problema se precisares de corrigir.`)) return;
+
+    setFechando(true);
+    const { data, error } = await supabase.rpc('ranking_fechar_mes', {
+      p_mes: `${mesISO}-01`,
+      p_posicoes: posicoes,
+      p_premio: cfg.premio_titulo,
+    });
+    setFechando(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(`${data ?? 0} lugares gravados`);
+    setVencedores(await carregarVencedores(40));
+  };
+
+  const marcarEntregue = async (v: Vencedor) => {
+    const { error } = await supabase
+      .from('ranking_vencedores')
+      .update({ entregue: !v.entregue })
+      .eq('id', v.id);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    setVencedores(await carregarVencedores(40));
+  };
+
+  return (
+    <div className="admin-section-content">
+      {/* ── Configuração ── */}
+      <div className="admin-card">
+        <h3 className="admin-card__title"><Trophy size={15} /> Prémio e regras</h3>
+
+        <Field label="Título do prémio">
+          <input className="admin-input" value={cfg.premio_titulo ?? ''}
+            onChange={e => setCfg(c => ({ ...c, premio_titulo: e.target.value }))} />
+        </Field>
+        <Field label="Descrição do prémio">
+          <input className="admin-input" value={cfg.premio_descricao ?? ''}
+            onChange={e => setCfg(c => ({ ...c, premio_descricao: e.target.value }))} />
+        </Field>
+        <Field label="Mínimo de apostas resolvidas para entrar">
+          <NumericInput className="admin-input" step={1} value={cfg.min_apostas}
+            onChange={n => setCfg(c => ({ ...c, min_apostas: Math.max(1, Math.round(n)) }))} />
+        </Field>
+        <Field label="Lugares visíveis na tabela">
+          <NumericInput className="admin-input" step={1} value={cfg.lugares}
+            onChange={n => setCfg(c => ({ ...c, lugares: Math.min(100, Math.max(3, Math.round(n))) }))} />
+        </Field>
+        <Field label="Nota de regras (opcional)">
+          <input className="admin-input" value={cfg.regras ?? ''}
+            onChange={e => setCfg(c => ({ ...c, regras: e.target.value }))} />
+        </Field>
+        <Field label="Competição ativa">
+          <select className="admin-input" value={cfg.ativo ? 'sim' : 'nao'}
+            onChange={e => setCfg(c => ({ ...c, ativo: e.target.value === 'sim' }))}>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </Field>
+
+        <div className="admin-modal__actions">
+          <button className="admin-btn-primary" onClick={guardarConfig} disabled={saving}>
+            {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} Guardar
+          </button>
+        </div>
+      </div>
+
+      {/* ── Fechar o mês ── */}
+      <div className="admin-card">
+        <h3 className="admin-card__title"><CheckCircle size={15} /> Fechar o mês</h3>
+        <p className="admin-card__hint">
+          A tabela ao vivo continua a mexer depois do mês acabar — uma aposta
+          resolvida com atraso muda posições. Fechar congela o pódio no estado
+          que anunciaste.
+        </p>
+
+        <div className="admin-toolbar">
+          <input className="admin-input" type="month" value={mesISO}
+            onChange={e => setMesISO(e.target.value)} style={{ maxWidth: 180 }} />
+          <NumericInput className="admin-input" step={1} value={posicoes}
+            onChange={n => setPosicoes(Math.min(10, Math.max(1, Math.round(n))))} />
+          <button className="admin-btn-primary" onClick={fecharMes} disabled={fechando || loading}>
+            {fechando ? <Loader2 size={14} className="spin" /> : <Trophy size={14} />} Fechar {nomeMes(mesDate)}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="admin-loading"><Loader2 size={22} className="spin" /> A calcular…</div>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr><th>#</th><th>Membro</th><th>ROI</th><th>Lucro</th><th>Acerto</th><th>Apostas</th></tr>
+              </thead>
+              <tbody>
+                {linhas.map(l => (
+                  <tr key={l.user_id}>
+                    <td>{l.posicao}</td>
+                    <td>{l.username}</td>
+                    <td>{fmtRankingRoi(l.roi)}</td>
+                    <td>{fmtRankingUnidades(l.lucro_unidades)}</td>
+                    <td>{l.taxa_acerto == null ? '—' : `${l.taxa_acerto.toFixed(0)}%`}</td>
+                    <td>{l.apostas}</td>
+                  </tr>
+                ))}
+                {linhas.length === 0 && (
+                  <tr><td colSpan={6} className="admin-empty-row">
+                    Ninguém com {cfg.min_apostas} ou mais apostas resolvidas neste mês
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Vencedores gravados ── */}
+      <div className="admin-card">
+        <h3 className="admin-card__title"><Star size={15} /> Vencedores gravados</h3>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Mês</th><th>#</th><th>Membro</th><th>ROI</th><th>Prémio</th><th>Entregue</th></tr>
+            </thead>
+            <tbody>
+              {vencedores.map(v => (
+                <tr key={v.id}>
+                  <td>{nomeMesISO(v.mes)}</td>
+                  <td>{v.posicao}</td>
+                  <td>{v.username}</td>
+                  <td>{fmtRankingRoi(v.roi)}</td>
+                  <td>{v.premio ?? '—'}</td>
+                  <td>
+                    <button className="admin-btn-icon" onClick={() => marcarEntregue(v)}
+                      title={v.entregue ? 'Marcar como não entregue' : 'Marcar como entregue'}>
+                      {v.entregue ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {vencedores.length === 0 && (
+                <tr><td colSpan={6} className="admin-empty-row">Nenhum mês fechado ainda</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SECTION: FUNIL VIP ──────────────────────────────────────────
+
+const ESTADOS_REUNIAO: EstadoReuniao[] =
+  ['pendente', 'agendada', 'realizada', 'cancelada', 'convertida'];
+
+function novoVideo(): Partial<VipVideo> {
+  return { titulo: '', descricao: '', embed_url: '', thumb_url: '', duracao: '', ordem: 0, ativo: true };
+}
+
+/**
+ * Vídeos do funil e pedidos de reunião (roadmap 12).
+ *
+ * Os pedidos têm nome, email e telefone: por isso é que a RLS de vip_reunioes
+ * só deixa o próprio membro e os administradores lerem cada linha.
+ */
+function SectionFunilVip({ showToast }: { showToast: (m: string, t?: 'success' | 'error') => void }) {
+  const [videos, setVideos] = useState<VipVideo[]>([]);
+  const [reunioes, setReunioes] = useState<Reuniao[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<Partial<VipVideo> | null>(null);
+  const [isNew, setIsNew] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const [vs, rs] = await Promise.all([carregarVideos(false), carregarReunioes()]);
+    setVideos(vs);
+    setReunioes(rs);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const porTratar = reunioes.filter(r => r.estado === 'pendente').length;
+
+  const save = async () => {
+    if (!editing?.titulo?.trim() || !editing.embed_url?.trim()) {
+      showToast('Título e URL de embed são obrigatórios', 'error');
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      titulo: editing.titulo.trim(),
+      descricao: editing.descricao?.trim() || null,
+      embed_url: editing.embed_url.trim(),
+      thumb_url: editing.thumb_url?.trim() || null,
+      duracao: editing.duracao?.trim() || null,
+      ordem: editing.ordem ?? 0,
+      ativo: editing.ativo ?? true,
+    };
+    const { error } = isNew
+      ? await supabase.from('vip_videos').insert(payload)
+      : await supabase.from('vip_videos').update(payload).eq('id', editing.id!);
+    setSaving(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(isNew ? 'Vídeo adicionado' : 'Vídeo atualizado');
+    setEditing(null);
+    load();
+  };
+
+  const del = async (id: string) => {
+    if (!confirm('Remover este vídeo do funil?')) return;
+    const { error } = await supabase.from('vip_videos').delete().eq('id', id);
+    if (error) showToast('Erro ao eliminar', 'error');
+    else { showToast('Vídeo removido'); load(); }
+  };
+
+  const mudarEstado = async (r: Reuniao, estado: EstadoReuniao) => {
+    const { error } = await supabase.from('vip_reunioes').update({ estado }).eq('id', r.id);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    setReunioes(await carregarReunioes());
+  };
+
+  return (
+    <div className="admin-section-content">
+      {/* ── Pedidos de reunião ── */}
+      <div className="admin-card">
+        <h3 className="admin-card__title">
+          <CalendarClock size={15} /> Pedidos de reunião
+          {porTratar > 0 && <span style={{ color: '#ef4444' }}>· {porTratar} por contactar</span>}
+        </h3>
+        <p className="admin-card__hint">
+          Cada linha é alguém que pediu 15 minutos antes de subscrever. Quanto
+          mais depressa forem contactados, mais valem.
+        </p>
+
+        {loading ? (
+          <div className="admin-loading"><Loader2 size={22} className="spin" /> A carregar…</div>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Pedido</th><th>Nome</th><th>Contacto</th>
+                  <th>Disponibilidade</th><th>Mensagem</th><th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reunioes.map(r => (
+                  <tr key={r.id}>
+                    <td>{new Date(r.created_at).toLocaleDateString('pt-PT')}</td>
+                    <td>{r.nome}</td>
+                    <td>
+                      {r.email}
+                      {r.telefone && <><br />{r.telefone}</>}
+                    </td>
+                    <td>{r.preferencia ?? '—'}</td>
+                    <td>{r.mensagem ?? '—'}</td>
+                    <td>
+                      <select
+                        className="admin-input"
+                        value={r.estado}
+                        onChange={e => mudarEstado(r, e.target.value as EstadoReuniao)}
+                      >
+                        {ESTADOS_REUNIAO.map(e => (
+                          <option key={e} value={e}>{ESTADO_REUNIAO_LABELS[e]}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+                {reunioes.length === 0 && (
+                  <tr><td colSpan={6} className="admin-empty-row">Sem pedidos de reunião</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Vídeos ── */}
+      <div className="admin-card">
+        <h3 className="admin-card__title"><PlayCircle size={15} /> Vídeos do funil</h3>
+        <p className="admin-card__hint">
+          O URL tem de ser de <strong>embed</strong>, não o link de partilha —
+          por exemplo <code>https://www.youtube.com/embed/ID</code>.
+        </p>
+
+        <div className="admin-toolbar">
+          <button className="admin-btn-primary" onClick={() => { setEditing(novoVideo()); setIsNew(true); }}>
+            <Plus size={14} /> Novo Vídeo
+          </button>
+        </div>
+
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Ordem</th><th>Título</th><th>Duração</th><th>Ativo</th><th></th></tr>
+            </thead>
+            <tbody>
+              {videos.map(v => (
+                <tr key={v.id}>
+                  <td>{v.ordem}</td>
+                  <td>{v.titulo}</td>
+                  <td>{v.duracao ?? '—'}</td>
+                  <td>{v.ativo ? 'Sim' : 'Não'}</td>
+                  <td className="admin-actions-cell">
+                    <button className="admin-btn-icon" onClick={() => { setEditing({ ...v }); setIsNew(false); }}>
+                      <Pencil size={14} />
+                    </button>
+                    <button className="admin-btn-icon danger" onClick={() => del(v.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {videos.length === 0 && (
+                <tr><td colSpan={5} className="admin-empty-row">Sem vídeos no funil</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {editing && (
+        <Modal title={isNew ? 'Novo Vídeo' : 'Editar Vídeo'} onClose={() => setEditing(null)}>
+          <Field label="Título">
+            <input className="admin-input" value={editing.titulo ?? ''}
+              onChange={e => setEditing(v => ({ ...v!, titulo: e.target.value }))} />
+          </Field>
+          <Field label="Descrição">
+            <input className="admin-input" value={editing.descricao ?? ''}
+              onChange={e => setEditing(v => ({ ...v!, descricao: e.target.value }))} />
+          </Field>
+          <Field label="URL de embed">
+            <input className="admin-input" value={editing.embed_url ?? ''}
+              placeholder="https://www.youtube.com/embed/…"
+              onChange={e => setEditing(v => ({ ...v!, embed_url: e.target.value }))} />
+          </Field>
+          <Field label="Miniatura (URL)">
+            <input className="admin-input" value={editing.thumb_url ?? ''}
+              onChange={e => setEditing(v => ({ ...v!, thumb_url: e.target.value }))} />
+          </Field>
+          <Field label="Duração">
+            <input className="admin-input" value={editing.duracao ?? ''} placeholder="4:12"
+              onChange={e => setEditing(v => ({ ...v!, duracao: e.target.value }))} />
+          </Field>
+          <Field label="Ordem">
+            <NumericInput className="admin-input" step={1} value={editing.ordem ?? 0}
+              onChange={n => setEditing(v => ({ ...v!, ordem: Math.round(n) }))} />
+          </Field>
+          <Field label="Visível">
+            <select className="admin-input" value={editing.ativo ? 'sim' : 'nao'}
+              onChange={e => setEditing(v => ({ ...v!, ativo: e.target.value === 'sim' }))}>
+              <option value="sim">Sim</option>
+              <option value="nao">Não</option>
+            </select>
+          </Field>
+
+          <div className="admin-modal__actions">
+            <button className="admin-btn-secondary" onClick={() => setEditing(null)}>Cancelar</button>
+            <button className="admin-btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} Guardar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ─── SECTION: SALAS POR JOGO ─────────────────────────────────────
+
+/**
+ * Configuração das salas por jogo (roadmap 11). As salas criam-se sozinhas a
+ * partir dos jogos do dia — aqui só se escolhe que competições seguir.
+ */
+function SectionSalas({ showToast }: { showToast: (m: string, t?: 'success' | 'error') => void }) {
+  const [cfg, setCfg] = useState<SalasConfig>(SALAS_CONFIG_PADRAO);
+  const [ligasTexto, setLigasTexto] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    carregarSalasConfig().then(c => {
+      setCfg(c);
+      setLigasTexto(c.ligas.join(', '));
+      setLoading(false);
+    });
+  }, []);
+
+  const guardar = async () => {
+    const ligas = ligasTexto.split(',').map(s => s.trim()).filter(Boolean);
+    if (!ligas.length) {
+      showToast('Indica pelo menos uma competição', 'error');
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from('salas_config')
+      .update({
+        ativo: cfg.ativo,
+        ligas,
+        janela_horas: cfg.janela_horas,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq('id', 1);
+    setSaving(false);
+    if (error) showToast('Erro: ' + error.message, 'error');
+    else { setCfg(c => ({ ...c, ligas })); showToast('Configuração guardada'); }
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-section-content">
+        <div className="admin-loading"><Loader2 size={22} className="spin" /> A carregar…</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-section-content">
+      <div className="admin-card">
+        <h3 className="admin-card__title"><Radio size={15} /> Competições seguidas</h3>
+        <p className="admin-card__hint">
+          Slugs de competição da fonte de placar, separados por vírgulas.
+          Exemplos: <code>por.1</code> Liga Portugal, <code>eng.1</code> Premier
+          League, <code>esp.1</code> LaLiga, <code>uefa.champions</code>.
+          As salas aparecem e desaparecem sozinhas conforme os jogos do dia.
+        </p>
+
+        <Field label="Ligas">
+          <input className="admin-input" value={ligasTexto}
+            onChange={e => setLigasTexto(e.target.value)} />
+        </Field>
+        <Field label="Horas que a sala fica aberta depois do apito">
+          <NumericInput className="admin-input" step={1} value={cfg.janela_horas}
+            onChange={n => setCfg(c => ({ ...c, janela_horas: Math.min(48, Math.max(1, Math.round(n))) }))} />
+        </Field>
+        <Field label="Salas ativas">
+          <select className="admin-input" value={cfg.ativo ? 'sim' : 'nao'}
+            onChange={e => setCfg(c => ({ ...c, ativo: e.target.value === 'sim' }))}>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+        </Field>
+
+        <div className="admin-modal__actions">
+          <button className="admin-btn-primary" onClick={guardar} disabled={saving}>
+            {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />} Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SECTION: SUPORTE ────────────────────────────────────────────
 
 function AdminTicketPanel({
@@ -2042,6 +3095,11 @@ export default function Admin() {
             </h2>
           </div>
           {section === 'membros'      && <SectionMembros showToast={showToast} />}
+          {section === 'raiox'        && <SectionRaioX showToast={showToast} />}
+          {section === 'canais'       && <SectionCanais showToast={showToast} />}
+          {section === 'ranking'      && <SectionRanking showToast={showToast} />}
+          {section === 'funil-vip'    && <SectionFunilVip showToast={showToast} />}
+          {section === 'salas'        && <SectionSalas showToast={showToast} />}
           {section === 'live'         && <SectionLive showToast={showToast} />}
           {section === 'premios'      && <SectionPremios showToast={showToast} />}
           {section === 'planos'       && <SectionPlanos showToast={showToast} />}

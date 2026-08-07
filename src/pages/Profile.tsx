@@ -4,7 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 import { Toast } from '../components/Toast';
-import { User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2, Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import {
+  User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2,
+  Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle,
+  XCircle, ExternalLink, Target,
+} from 'lucide-react';
 import '../index.css';
 
 function Profile() {
@@ -21,7 +25,7 @@ function Profile() {
   const [email, setEmail] = useState('');
   const [pendingEmailChange, setPendingEmailChange] = useState(false);
   const [pendingNewEmail, setPendingNewEmail] = useState('');
-  
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,9 +35,11 @@ function Profile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login');
-    } else if (user) {
+    if (!authLoading && !user) navigate('/login');
+  }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (user) {
       setEmail(user.email || '');
       // Derive avatar from storage (not stale metadata) with cache buster
       const { data: { publicUrl } } = supabase.storage
@@ -139,7 +145,7 @@ function Profile() {
       setLoading(true);
       const { error } = await supabase.auth.updateUser({ email });
       if (error) throw error;
-      
+
       const requestedEmail = email;
       setPendingEmailChange(true);
       setPendingNewEmail(requestedEmail);
@@ -159,7 +165,7 @@ function Profile() {
       addToast('Precisa de introduzir a sua palavra-passe atual.', 'error');
       return;
     }
-    
+
     if (!password || password !== confirmPassword) {
       addToast('A nova palavra-passe e a confirmação não coincidem.', 'error');
       return;
@@ -167,7 +173,7 @@ function Profile() {
 
     try {
       setLoading(true);
-      
+
       // 1. Verificar a palavra-passe atual fazendo re-login
       if (user?.email) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -183,7 +189,7 @@ function Profile() {
       // 2. Atualizar para a nova palavra-passe
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      
+
       setCurrentPassword('');
       setPassword('');
       setConfirmPassword('');
@@ -223,18 +229,18 @@ function Profile() {
 
   const handleDeleteAccount = async () => {
     const isConfirmed = window.confirm('Tem a certeza absoluta de que pretende eliminar a sua conta? Esta ação é irreversível.');
-    
+
     if (isConfirmed) {
       try {
         setLoading(true);
         // Note: Client-side deletion often requires an Edge Function or RPC if admin rights are needed.
-        // For public keys, Supabase might not allow direct deletion. 
+        // For public keys, Supabase might not allow direct deletion.
         // Calling a custom RPC function or warning the user:
-        alert('A API de eliminação de contas costuma exigir um Edge Function. Contacte o suporte se isto falhar.'); 
-        
+        alert('A API de eliminação de contas costuma exigir um Edge Function. Contacte o suporte se isto falhar.');
+
         // Exemplo de como chamaria um RPC se estivesse configurado
         // await supabase.rpc('delete_user');
-        
+
         await signOut();
         navigate('/');
       } catch (error: any) {
@@ -244,23 +250,6 @@ function Profile() {
       }
     }
   };
-
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Loader2 size={40} className="spin" color="var(--gold-primary)" />
-          <style>{`
-            .spin { animation: spin 1s linear infinite; }
-            @keyframes spin { 100% { transform: rotate(360deg); } }
-          `}</style>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -309,18 +298,31 @@ function Profile() {
           </div>
         </div>
       )}
+
+      {authLoading || !user ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem 0' }}>
+          <Loader2 size={32} className="spin" color="var(--gold-primary)" />
+          <style>{`
+            .spin { animation: spin 1s linear infinite; }
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+          `}</style>
+        </div>
+      ) : (
       <div style={{ padding: '2rem 5%', display: 'flex', flexDirection: 'column', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
       <div style={{ width: '100%', alignSelf: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', marginBottom: '2rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', marginBottom: '0.5rem', textAlign: 'center' }}>
           O Meu <span style={{ color: 'var(--gold-primary)' }}>Perfil</span>
         </h1>
+        <p style={{ textAlign: 'center', color: 'var(--text-gray)', fontSize: '0.9rem', maxWidth: '640px', margin: '0 auto 2rem auto', lineHeight: 1.6 }}>
+          Conta, subscrição e progresso no Hub.
+        </p>
 
         {/* CONTAINER DUPLO: DADOS ESQUERDA | ESTATÍSTICAS DIREITA */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(450px, 100%), 1fr))', gap: '3rem', width: '100%' }}>
-          
+
           {/* COLUNA ESQUERDA: GESTÃO DA CONTA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
+
             {/* SECÇÃO: IMAGEM DE PERFIL */}
             <div style={{
               background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
@@ -333,7 +335,7 @@ function Profile() {
           gap: '1rem',
           boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
         }}>
-          <div 
+          <div
             style={{
               position: 'relative',
               width: '120px',
@@ -372,12 +374,12 @@ function Profile() {
               <Camera size={16} color="var(--gold-primary)" />
             </div>
           </div>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleAvatarUpload} 
-            accept="image/*" 
-            style={{ display: 'none' }} 
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarUpload}
+            accept="image/*"
+            style={{ display: 'none' }}
             disabled={loading}
           />
           <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem' }}>Clique na imagem para alterar</p>
@@ -415,12 +417,12 @@ function Profile() {
                 }}
               />
             </div>
-            
+
             {!isEditingEmail ? (
-              <button 
-                type="button" 
-                onClick={() => setIsEditingEmail(true)} 
-                className="btn-outline" 
+              <button
+                type="button"
+                onClick={() => setIsEditingEmail(true)}
+                className="btn-outline"
                 style={{ padding: '0.8rem', height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', cursor: pendingEmailChange ? 'not-allowed' : 'pointer', opacity: pendingEmailChange ? 0.5 : 1 }}
                 title={pendingEmailChange ? "Aguarde a confirmação de email pendente" : "Editar Email"}
                 disabled={pendingEmailChange}
@@ -432,13 +434,13 @@ function Profile() {
                 <button type="submit" disabled={loading || email === user?.email} className="btn-gold" style={{ padding: '0 1.5rem', height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: loading ? 'not-allowed' : 'pointer', opacity: (loading || email === user?.email) ? 0.5 : 1 }}>
                   {loading ? <Loader2 size={18} className="spin" /> : 'GUARDAR'}
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => {
                     setIsEditingEmail(false);
                     setEmail(user?.email || '');
-                  }} 
-                  className="btn-outline" 
+                  }}
+                  className="btn-outline"
                   style={{ padding: '0.8rem 1.5rem', height: '46px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
                 >
                   Cancelar
@@ -655,10 +657,10 @@ function Profile() {
           <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
             Ao eliminar a conta, perderá permanentemente o acesso ao Hub, todo o histórico e subscrições ativas. Esta ação não pode ser desfeita.
           </p>
-          <button 
-            onClick={handleDeleteAccount} 
+          <button
+            onClick={handleDeleteAccount}
             disabled={loading}
-            style={{ 
+            style={{
               background: 'transparent',
               border: '1px solid #ef4444',
               color: '#ef4444',
@@ -685,7 +687,7 @@ function Profile() {
 
           {/* COLUNA DIREITA: ESTATÍSTICAS */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
+
             {/* SECÇÃO: ASSINATURAS */}
             <div style={{
               background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
@@ -814,35 +816,35 @@ function Profile() {
                 {membro?.badges?.map((badge, index) => {
                   if (badge === 'VIP') {
                     return (
-                      <div key={index} style={{ 
-                        background: 'rgba(139, 92, 246, 0.1)', 
-                        border: '1px solid #8b5cf6', 
-                        padding: '0.5rem 1rem', 
-                        borderRadius: '20px', 
-                        color: '#8b5cf6', 
-                        fontSize: '0.85rem', 
-                        fontWeight: 'bold', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem' 
+                      <div key={index} style={{
+                        background: 'rgba(139, 92, 246, 0.1)',
+                        border: '1px solid #8b5cf6',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '20px',
+                        color: '#8b5cf6',
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
                       }}>
                         <Shield size={16} /> VIP
                       </div>
                     );
                   }
-                  
+
                   return (
-                    <div key={index} style={{ 
-                      background: 'rgba(230,185,92,0.1)', 
-                      border: '1px solid var(--gold-primary)', 
-                      padding: '0.5rem 1rem', 
-                      borderRadius: '20px', 
-                      color: 'var(--gold-primary)', 
-                      fontSize: '0.85rem', 
-                      fontWeight: 'bold', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem' 
+                    <div key={index} style={{
+                      background: 'rgba(230,185,92,0.1)',
+                      border: '1px solid var(--gold-primary)',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '20px',
+                      color: 'var(--gold-primary)',
+                      fontSize: '0.85rem',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
                     }}>
                       <Award size={16} /> {badge}
                     </div>
@@ -895,6 +897,19 @@ function Profile() {
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{membro ? membro.prizes_claimed : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Prémios</span>
                 </div>
+
+                {/* Simulador de Banca */}
+                <div
+                  onClick={() => navigate('/simulador')}
+                  style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center', cursor: 'pointer' }}
+                  title="Abrir o Simulador de Banca"
+                >
+                  <Target size={28} color="#8b5cf6" />
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>
+                    {membro?.saldo_simulador != null ? Math.round(membro.saldo_simulador) : '--'}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Banca simulada</span>
+                </div>
               </div>
             </div>
 
@@ -903,7 +918,9 @@ function Profile() {
         </div> {/* FIM DO CONTAINER DUPLO */}
 
       </div>
-      
+      </div>
+      )}
+
       {/* Toasts */}
       {toasts.map(toast => (
         <Toast
@@ -919,7 +936,6 @@ function Profile() {
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
-      </div>
     </div>
   );
 }

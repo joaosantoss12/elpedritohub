@@ -40,7 +40,11 @@ const BADGE_LABELS: Record<string, string> = {
   membro_vip: '💎 VIP',
 };
 
-export default function Chat() {
+/**
+ * `embedded` — quando o Chat corre dentro da Sala de Comando, a Navbar é da
+ * página anfitriã. Sem isto apareceriam duas barras de navegação.
+ */
+export default function Chat({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, membro, refreshMembro } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [membersCache, setMembersCache] = useState<Record<string, MemberInfo>>({});
@@ -622,7 +626,7 @@ export default function Chat() {
 
   return (
     <div className="chat-container">
-      <Navbar />
+      {!embedded && <Navbar />}
       {/* Notifications toggle bar */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '0.4rem 5%', gap: '0.5rem'}}>
         {isAdmin && (

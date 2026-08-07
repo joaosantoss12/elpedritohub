@@ -36,11 +36,6 @@ export default defineConfig({
       },
     }),
   ],
-  define: {
-    'import.meta.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL),
-    'import.meta.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY),
-    'import.meta.env.FOOTBALL_API_KEY': JSON.stringify(process.env.FOOTBALL_API_KEY),
-  },
   server: {
     proxy: {
       '/api/football': {

@@ -32,7 +32,7 @@ interface Lider {
 const COMO_GANHAR = [
   { icon: <LogIn size={20} />, titulo: 'Login Diário', descricao: 'Faz login todos os dias', pontos: '+10 EPC/dia (+50 VIP)' },
   { icon: <MessageCircle size={20} />, titulo: 'Chat Ativo', descricao: 'A cada 10 mensagens no Chat (mín. 3 caracteres)', pontos: '+1 EPC (+5 VIP)' },
-  { icon: <Spade size={20} />, titulo: 'Casino', descricao: 'Joga no Casino El Pedrito', pontos: '+x EPC/jogo' },
+  { icon: <Spade size={20} />, titulo: 'Simulador de Banca', descricao: 'Testa as tuas apostas com moedas EPC, sem dinheiro real', pontos: '+x EPC/aposta certa' },
 ];
 
 function formatDeadline(dateStr: string | null): string {
@@ -301,7 +301,7 @@ export default function Premios() {
               onClick={() => setActiveTab(tab)}
             >
               {tab === 'giveaways' ? <Gift size={15} /> : <Trophy size={15} />}
-              {tab === 'giveaways' ? 'Giveaways' : 'Ranking'}
+              {tab === 'giveaways' ? 'Giveaways' : 'Ranking EPCoins'}
             </button>
           ))}
         </div>

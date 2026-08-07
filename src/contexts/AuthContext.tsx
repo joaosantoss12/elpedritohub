@@ -17,6 +17,13 @@ export interface MembroData {
   stripe_subscription_id: string | null;
   subscription_cancel_at: string | null;
   vip_telegram_link: string | null;
+  /* Passaporte do Membro — perfil de risco e simulador de banca */
+  perfil_risco: 'conservador' | 'equilibrado' | 'agressivo' | null;
+  vertical_preferida: string | null;
+  saldo_simulador: number | null;
+  passaporte_criado_em: string | null;
+  /** Ranking mensal de banca — quem não quer aparecer sai sem perder nada. */
+  ranking_oculto: boolean | null;
 }
 
 interface AuthContextType {

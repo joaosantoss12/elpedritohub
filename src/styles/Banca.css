@@ -1255,3 +1255,128 @@
     text-align: center;
   }
 }
+
+/* ─── CANAL AUDITADO (Perfil & Banca) ─────────────────────────────
+   A banca deixa de ser só preenchimento manual: mostra o historial
+   publicado do canal e permite importá-lo para o registo pessoal.
+   ─────────────────────────────────────────────────────────────── */
+
+.banca-canal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.banca-canal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.banca-canal__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.banca-canal__nota {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+}
+
+.banca-canal__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.banca-canal__stat {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.banca-canal__stat-lbl {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-gray);
+  margin-bottom: 0.35rem;
+}
+
+.banca-canal__stat-val {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.banca-canal__stat-val.gold { color: var(--gold-primary); }
+.banca-canal__stat-val.pos { color: var(--green-success); }
+.banca-canal__stat-val.neg { color: #ef4444; }
+
+.banca-canal__sub {
+  font-size: 0.78rem;
+  color: var(--text-gray);
+  margin: 1.25rem 0 0.6rem 0;
+}
+
+.banca-canal__tips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.banca-canal__tip {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr 54px 18px;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.banca-canal__tip:hover {
+  border-color: var(--gold-primary);
+  color: #fff;
+}
+
+.banca-canal__tip-vert {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+}
+
+.banca-canal__tip-evento { font-size: 0.82rem; font-weight: 600; color: #fff; }
+.banca-canal__tip-pick { font-size: 0.78rem; }
+
+.banca-canal__tip-odd {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .banca-canal__tip {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.25rem;
+  }
+  .banca-canal__tip-vert { grid-column: 1 / -1; }
+}

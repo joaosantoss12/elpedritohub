@@ -1,0 +1,256 @@
+/* Slider horizontal automático de ganhos recentes (CapitansBet) */
+
+.slot-wins {
+  padding: 0 5%;
+  margin-bottom: 4rem;
+}
+
+.slot-wins__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.slot-wins__title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.slot-wins__subtitle {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+}
+
+.slot-wins__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green-success);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+}
+
+.slot-wins__live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-success);
+  animation: slot-wins-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes slot-wins-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+/* Viewport + máscaras laterais */
+.slot-wins__viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.slot-wins__fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 90px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slot-wins__fade--left {
+  left: 0;
+  background: linear-gradient(90deg, var(--bg-main) 0%, transparent 100%);
+}
+
+.slot-wins__fade--right {
+  right: 0;
+  background: linear-gradient(270deg, var(--bg-main) 0%, transparent 100%);
+}
+
+.slot-wins__track {
+  display: flex;
+  gap: 1rem;
+  will-change: transform;
+}
+
+/* Cartão */
+.slot-win-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 250px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.slot-win-card:hover {
+  border-color: rgba(230, 185, 92, 0.5);
+  transform: translateY(-3px);
+}
+
+.slot-win-card__thumb {
+  position: relative;
+  height: 128px;
+  overflow: hidden;
+}
+
+.slot-win-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.slot-win-card__thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--bg-card) 0%, rgba(20, 20, 20, 0.55) 55%, transparent 100%);
+}
+
+.slot-win-card__badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(230, 185, 92, 0.3);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+}
+
+.slot-win-card__body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.slot-win-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slot-win-card__user {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--gold-primary);
+}
+
+.slot-win-card__user span {
+  color: #555;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.slot-win-card__game {
+  font-size: 0.62rem;
+  color: var(--text-gray);
+  font-weight: 600;
+  text-align: right;
+  line-height: 1.2;
+  max-width: 55%;
+}
+
+.slot-win-card__amount {
+  background: linear-gradient(90deg, rgba(230, 185, 92, 0.14), rgba(230, 185, 92, 0.04));
+  border: 1px solid rgba(230, 185, 92, 0.25);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  text-align: center;
+}
+
+.slot-win-card__amount small {
+  display: block;
+  font-size: 0.55rem;
+  color: rgba(230, 185, 92, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.2rem;
+}
+
+.slot-win-card__amount strong {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--gold-primary);
+}
+
+.slot-win-card__time {
+  font-size: 0.55rem;
+  color: #666;
+  text-align: center;
+}
+
+/* Hover: CTA */
+.slot-win-card__cta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.92);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.slot-win-card:hover .slot-win-card__cta {
+  opacity: 1;
+}
+
+.slot-win-card__cta span {
+  background: var(--gold-primary);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 0.6rem 1.6rem;
+  border-radius: 6px;
+  box-shadow: 0 0 30px rgba(230, 185, 92, 0.35);
+}
+
+.slot-wins__disclaimer {
+  margin-top: 1rem;
+  font-size: 0.6rem;
+  color: #555;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .slot-wins__fade { width: 40px; }
+  .slot-win-card { width: 200px; }
+  .slot-win-card__thumb { height: 104px; }
+  .slot-wins__title { font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot-wins__viewport { overflow-x: auto; }
+  .slot-wins__live::before { animation: none; }
+}

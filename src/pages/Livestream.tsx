@@ -53,7 +53,10 @@ const CHAT_H_MIN = 44;
 
 // ─── COMPONENT ────────────────────────────────────────────────
 
-export default function Livestream() {
+/**
+ * `embedded` — dentro da Sala de Comando a Navbar é da página anfitriã.
+ */
+export default function Livestream({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, membro, loading } = useAuth();
   const navigate = useNavigate();
   const isAdmin = membro?.badges?.some(b => b.toLowerCase() === 'administrador') ?? false;
@@ -342,7 +345,7 @@ export default function Livestream() {
 
   return (
     <div className="live-page">
-      <Navbar />
+      {!embedded && <Navbar />}
 
       <div className="live-wrapper">
 
