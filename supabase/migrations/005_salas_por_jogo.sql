@@ -43,7 +43,11 @@ create table if not exists public.salas_config (
   -- deploy: 'eng.1' Premier League, 'por.1' Liga Portugal, etc.
   ligas         text[] not null default array[
                   'por.1', 'eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1',
-                  'uefa.champions', 'uefa.europa'
+                  'uefa.champions', 'uefa.europa', 'uefa.europa.conf',
+                  'ned.1', 'bel.1', 'sco.1', 'den.1', 'swe.1', 'nor.1', 'tur.1', 'sui.1', 'aut.1',
+                  'bra.1', 'arg.1', 'conmebol.libertadores', 'conmebol.sudamericana',
+                  'usa.1',
+                  'ksa.1', 'jpn.1', 'kor.1'
                 ],
   -- Quanto tempo depois do apito a sala continua aberta para comentários.
   janela_horas  integer not null default 6 check (janela_horas between 1 and 48),

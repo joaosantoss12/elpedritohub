@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft, Send, Lock,
-  Crown, Users, Trash2, RefreshCw,
+  Crown, Users, Trash2, RefreshCw, Target, Square, ArrowLeftRight,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
-import { carregarJogos, estaAoVivo, labelJogo, type JogoAoVivo } from '../lib/placar';
+import {
+  carregarJogos, carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga,
+  ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo,
+} from '../lib/placar';
 import {
   carregarSalasConfig, carregarMensagens, contarPorEvento, enviarMensagem,
   apagarMensagem, subscreverSala,
@@ -35,6 +38,9 @@ export default function Salas() {
   const [carregado, setCarregado] = useState(false);
   const [contagens, setContagens] = useState<Record<string, number>>({});
   const [aberto, setAberto] = useState<JogoAoVivo | null>(null);
+  const [continente, setContinente] = useState<string>('todos');
+  const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
+  const [apenasAoVivo, setApenasAoVivo] = useState(false);
 
   const isVip = membro?.subscription_status === 'active'
     || (membro?.badges?.some(b => ['vip', 'administrador'].includes(b.toLowerCase())) ?? false);
@@ -68,9 +74,33 @@ export default function Salas() {
     [aberto, jogos],
   );
 
-  const aoVivo = jogos.filter(estaAoVivo);
-  const proximos = jogos.filter(j => j.estado === 'agendado');
-  const acabados = jogos.filter(j => j.estado === 'terminado' || j.estado === 'adiado');
+  // Trocar de continente pode deixar a liga escolhida sem jogos — volta a "todas".
+  useEffect(() => { setLigaFiltro('todas'); }, [continente]);
+
+  const continentesDisponiveis = useMemo(
+    () => ORDEM_CONTINENTES.filter(c => jogos.some(j => continenteDaLiga(j.ligaSlug) === c)),
+    [jogos],
+  );
+
+  const jogosDoContinente = useMemo(
+    () => (continente === 'todos' ? jogos : jogos.filter(j => continenteDaLiga(j.ligaSlug) === continente)),
+    [jogos, continente],
+  );
+
+  const ligasDisponiveis = useMemo(() => {
+    const mapa = new Map<string, string>();
+    jogosDoContinente.forEach(j => mapa.set(j.ligaSlug, j.liga));
+    return [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [jogosDoContinente]);
+
+  const jogosFiltrados = useMemo(
+    () => (ligaFiltro === 'todas' ? jogosDoContinente : jogosDoContinente.filter(j => j.ligaSlug === ligaFiltro)),
+    [jogosDoContinente, ligaFiltro],
+  );
+
+  const aoVivo = jogosFiltrados.filter(estaAoVivo);
+  const proximos = apenasAoVivo ? [] : jogosFiltrados.filter(j => j.estado === 'agendado');
+  const acabados = apenasAoVivo ? [] : jogosFiltrados.filter(j => j.estado === 'terminado' || j.estado === 'adiado');
 
   if (jogoAberto) {
     return (
@@ -117,20 +147,87 @@ export default function Salas() {
           </div>
         ) : (
           <>
-            {aoVivo.length > 0 && (
-              <GrupoJogos
-                titulo="A decorrer"
-                aoVivo
-                jogos={aoVivo}
-                contagens={contagens}
-                onAbrir={setAberto}
-              />
-            )}
-            {proximos.length > 0 && (
-              <GrupoJogos titulo="Hoje, mais logo" jogos={proximos} contagens={contagens} onAbrir={setAberto} />
-            )}
-            {acabados.length > 0 && (
-              <GrupoJogos titulo="Já terminados" jogos={acabados} contagens={contagens} onAbrir={setAberto} />
+            <div className="salas-filtros">
+              <div className="salas-filtros__linha">
+                <button
+                  className={!apenasAoVivo ? 'salas-chip ativo' : 'salas-chip'}
+                  onClick={() => setApenasAoVivo(false)}
+                >
+                  Todos
+                </button>
+                <button
+                  className={apenasAoVivo ? 'salas-chip salas-chip--vivo ativo' : 'salas-chip salas-chip--vivo'}
+                  onClick={() => setApenasAoVivo(true)}
+                >
+                  <span className="salas-dot" /> A decorrer
+                </button>
+              </div>
+
+              {continentesDisponiveis.length > 1 && (
+                <div className="salas-filtros__linha">
+                  <button
+                    className={continente === 'todos' ? 'salas-chip ativo' : 'salas-chip'}
+                    onClick={() => setContinente('todos')}
+                  >
+                    Todos os continentes
+                  </button>
+                  {continentesDisponiveis.map(c => (
+                    <button
+                      key={c}
+                      className={continente === c ? 'salas-chip ativo' : 'salas-chip'}
+                      onClick={() => setContinente(c)}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {ligasDisponiveis.length > 1 && (
+                <div className="salas-filtros__linha">
+                  <button
+                    className={ligaFiltro === 'todas' ? 'salas-chip salas-chip--liga ativo' : 'salas-chip salas-chip--liga'}
+                    onClick={() => setLigaFiltro('todas')}
+                  >
+                    Todas as ligas
+                  </button>
+                  {ligasDisponiveis.map(([slug, nome]) => (
+                    <button
+                      key={slug}
+                      className={ligaFiltro === slug ? 'salas-chip salas-chip--liga ativo' : 'salas-chip salas-chip--liga'}
+                      onClick={() => setLigaFiltro(slug)}
+                    >
+                      {nome}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {aoVivo.length === 0 && proximos.length === 0 && acabados.length === 0 ? (
+              <div className="salas-vazio">
+                <Radio size={30} color="var(--text-gray)" />
+                <strong>Sem jogos para este filtro</strong>
+                <span>Experimenta outro continente ou liga.</span>
+              </div>
+            ) : (
+              <>
+                {aoVivo.length > 0 && (
+                  <GrupoJogos
+                    titulo="A decorrer"
+                    aoVivo
+                    jogos={aoVivo}
+                    contagens={contagens}
+                    onAbrir={setAberto}
+                  />
+                )}
+                {proximos.length > 0 && (
+                  <GrupoJogos titulo="Hoje, mais logo" jogos={proximos} contagens={contagens} onAbrir={setAberto} />
+                )}
+                {acabados.length > 0 && (
+                  <GrupoJogos titulo="Já terminados" jogos={acabados} contagens={contagens} onAbrir={setAberto} />
+                )}
+              </>
             )}
           </>
         )}
@@ -214,9 +311,23 @@ function SalaJogo({
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [] });
   const fundoRef = useRef<HTMLDivElement | null>(null);
 
   const podeVer = canal === 'geral' || isVip;
+
+  useEffect(() => {
+    let vivo = true;
+    const puxarDetalhes = () => {
+      carregarDetalhesJogo(jogo.ligaSlug, jogo.id).then(d => { if (vivo) setDetalhes(d); });
+    };
+    puxarDetalhes();
+    // Estatísticas e eventos vêm de um endpoint à parte do placar; a ESPN
+    // nem sempre os publica antes do jogo começar, por isso o painel só
+    // aparece quando há algo para mostrar (ver render mais abaixo).
+    const t = window.setInterval(puxarDetalhes, INTERVALO_PLACAR);
+    return () => { vivo = false; window.clearInterval(t); };
+  }, [jogo.id, jogo.ligaSlug]);
 
   useEffect(() => {
     if (!podeVer) { setMensagens([]); setCarregado(true); return; }
@@ -300,6 +411,44 @@ function SalaJogo({
           </div>
         </div>
       </div>
+
+      {/* ── Estatísticas + eventos ── */}
+      {(detalhes.eventos.length > 0 || detalhes.estatisticas.length > 0) && (
+        <div className="jogo-detalhes">
+          {detalhes.eventos.length > 0 && (
+            <div className="jogo-detalhes__bloco">
+              <h3>Eventos</h3>
+              <ul className="jogo-eventos">
+                {detalhes.eventos.map((e, i) => (
+                  <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
+                    <span className="jogo-evento__minuto">{e.minuto}</span>
+                    <span className="jogo-evento__icone">
+                      {e.tipo === 'golo' && <Target size={13} />}
+                      {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
+                      {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
+                      {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
+                    </span>
+                    <span className="jogo-evento__desc">{e.descricao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detalhes.estatisticas.length > 0 && (
+            <div className="jogo-detalhes__bloco">
+              <h3>Estatísticas</h3>
+              {detalhes.estatisticas.map(s => (
+                <div key={s.nome} className="jogo-stat">
+                  <span className="jogo-stat__valor">{s.casa}</span>
+                  <span className="jogo-stat__nome">{s.nome}</span>
+                  <span className="jogo-stat__valor">{s.fora}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Canais ── */}
       <nav className="sala-jogo__tabs">
