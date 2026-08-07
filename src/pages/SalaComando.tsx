@@ -26,7 +26,6 @@ interface SalaConfig {
  * apontam para a Twitch, o chat e os canais apontam para o Telegram.
  */
 export default function SalaComando() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user, loading } = useAuth();
   const abaPedida = (location.state as { aba?: Aba } | null)?.aba;

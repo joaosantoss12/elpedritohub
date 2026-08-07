@@ -287,7 +287,7 @@ function mapearEventos(json: Bruto): EventoJogo[] {
   const equipas = lista(comp.competitors).map(obj);
   const idCasa = txt(obj(equipas.find(c => c.homeAway === 'home')?.team ?? {}).id);
 
-  return lista(comp.details).map(obj).map(d => {
+  return lista(comp.details).map(obj).map((d): EventoJogo => {
     const textoTipo = txt(obj(d.type).text) ?? '';
     const idEquipa = txt(obj(d.team).id);
     const jogador = txt(obj(lista(d.athletesInvolved).map(obj)[0] ?? {}).displayName);
