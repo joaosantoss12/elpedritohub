@@ -28,7 +28,7 @@ export function Navbar() {
   };
 
   const isActive = (path: string) =>
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+    path === '/' ? location.pathname === '/' : (location.pathname === path || location.pathname.startsWith(path + '/'));
 
   return (
     <nav className="epc-nav" style={{
