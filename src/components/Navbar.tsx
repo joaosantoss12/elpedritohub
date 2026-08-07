@@ -70,6 +70,7 @@ export function Navbar() {
         }}
         style={{
           display: 'flex',
+          justifyContent: 'center',
           gap: '1.4rem',
           listStyle: 'none',
           color: 'var(--text-gray)',
