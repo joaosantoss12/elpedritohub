@@ -65,7 +65,7 @@
   padding: 0 0.4rem 0 0.75rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: rgba(44, 34, 22, 0.03);
+  background: var(--surface-sunken);
   color: var(--text-gray);
 }
 
@@ -81,7 +81,7 @@
 .salas-filtros__campo select {
   border: none;
   background: transparent;
-  color: #2c2216;
+  color: var(--text-white);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -90,7 +90,7 @@
   padding: 0.55rem 0.3rem;
 }
 
-.salas-filtros__campo select option { background: #f5ecdd; color: #2c2216; }
+.salas-filtros__campo select option { background: var(--bg-card); color: var(--text-white); }
 
 .salas-filtros__limpar {
   border: none;
@@ -104,7 +104,7 @@
   padding: 0.5rem;
 }
 
-.salas-filtros__limpar:hover { color: #2c2216; }
+.salas-filtros__limpar:hover { color: var(--text-white); }
 
 @media (max-width: 768px) {
   .salas-filtros__campo { flex: 1 1 100%; }
@@ -301,7 +301,7 @@
   cursor: pointer;
 }
 
-.sala-jogo__voltar:hover { color: #2c2216; border-color: var(--gold-primary); }
+.sala-jogo__voltar:hover { color: var(--text-white); border-color: var(--gold-primary); }
 
 /* ── Placar ──────────────────────────────────────────────────── */
 
@@ -432,7 +432,7 @@
   color: var(--gold-primary);
 }
 
-.jogo-evento__icone .cartao-amarelo { color: #eab308; }
+.jogo-evento__icone .cartao-amarelo { color: #8a6144; }
 .jogo-evento__icone .cartao-vermelho { color: #ef4444; }
 
 .jogo-evento__desc { line-height: 1.4; }
@@ -489,14 +489,14 @@
   max-width: 88%;
   padding: 0.55rem 0.8rem;
   border-radius: 11px;
-  background: rgba(44, 34, 22, 0.035);
+  background: rgba(255, 255, 255, 0.076);
   border: 1px solid var(--border-color);
 }
 
 .msg--eu {
   align-self: flex-end;
-  background: rgba(154, 98, 56, 0.09);
-  border-color: rgba(154, 98, 56, 0.28);
+  background: rgba(161, 124, 91, 0.09);
+  border-color: rgba(161, 124, 91, 0.28);
 }
 
 .msg__topo {
@@ -547,7 +547,7 @@
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  color: #2c2216;
+  color: var(--text-white);
   font-size: 0.88rem;
   font-family: inherit;
 }
@@ -565,7 +565,7 @@
   border-radius: 10px;
   border: none;
   background: var(--gold-primary);
-  color: #e7dcc7;
+  color: #0d1220;
   cursor: pointer;
 }
 

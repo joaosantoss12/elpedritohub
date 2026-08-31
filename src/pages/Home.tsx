@@ -388,24 +388,24 @@ function Home() {
             width: '50px',
             height: '50px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--gold-primary), #82502c)',
+            background: 'linear-gradient(135deg, var(--gold-primary), #8a6144)',
             border: 'none',
-            color: '#fff',
+            color: '#0d1220',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: '999',
-            boxShadow: '0 10px 30px rgba(154, 98, 56,0.3)',
+            boxShadow: '0 10px 30px rgba(161, 124, 91,0.3)',
             transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.1)';
-            e.currentTarget.style.boxShadow = '0 15px 40px rgba(154, 98, 56,0.5)';
+            e.currentTarget.style.boxShadow = '0 15px 40px rgba(161, 124, 91,0.5)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 10px 30px rgba(154, 98, 56,0.3)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.3)';
           }}
         >
           <ArrowUp size={24} />
@@ -420,7 +420,7 @@ function Home() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(74, 55, 35, 0.9)',
+          background: 'var(--overlay)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -435,7 +435,7 @@ function Home() {
                 maxWidth: '90vw',
                 maxHeight: '90vh',
                 borderRadius: '16px',
-                border: '2px solid rgba(154, 98, 56,0.6)'
+                border: '2px solid rgba(161, 124, 91,0.6)'
               }}
             />
             <button
@@ -446,7 +446,7 @@ function Home() {
                 right: '0',
                 background: 'transparent',
                 border: 'none',
-                color: '#2c2216',
+                color: 'var(--text-white)',
                 cursor: 'pointer',
                 fontSize: '1.5rem',
                 padding: '0.5rem'
@@ -469,9 +469,9 @@ function Home() {
         alignItems: 'center', 
         justifyContent: 'space-between',
         position: 'relative',
-        backgroundImage: 'linear-gradient(rgba(231, 220, 199, 0.78), rgba(231, 220, 199, 0.78)), url(/elpedrito.jpeg)',
+        backgroundImage: 'linear-gradient(rgba(13, 18, 32, 0.88), rgba(13, 18, 32, 0.82)), url(/elpedrito.jpeg)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center 10%',
+        backgroundPosition: 'center 25%',
         backgroundAttachment: 'fixed'
       }}>
         
@@ -555,15 +555,15 @@ function Home() {
             position: 'absolute', 
             top: '5%', 
             right: '-10%', 
-            background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem 2rem', 
             borderRadius: '16px',
-            border: '1px solid rgba(154, 98, 56,0.4)', 
+            border: '1px solid rgba(161, 124, 91,0.4)', 
             zIndex: 10,
             '--base-rotate': '3deg',
             '--base-translate-y': '0px',
-            boxShadow: '0 30px 60px -15px rgba(74, 55, 35,0.9), 0 0 25px rgba(154, 98, 56,0.15), inset 0 1px 1px rgba(44, 34, 22,0.15)', 
+            boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.16), 0 0 25px rgba(161, 124, 91,0.15), inset 0 1px 1px rgba(0,0,0,0.26)', 
             minWidth: '220px'
           } as React.CSSProperties}>
             {lucroMes && lucroMes.lucro > 0 ? (
@@ -580,7 +580,7 @@ function Home() {
                 <p style={{ fontSize: '2.2rem', fontWeight: '900', color: raioxMes.lucroUnidades >= 0 ? 'var(--green-success)' : '#ef4444' }}>
                   {raioxMes.resolvidas > 0 ? fmtUnidades(raioxMes.lucroUnidades) : '—'}
                 </p>
-                <p style={{ fontSize: '0.62rem', color: '#6f6047', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <p style={{ fontSize: '0.62rem', color: '#6b7891', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <ShieldCheck size={11} /> {raioxMes.resolvidas} tips auditadas
                 </p>
               </>
@@ -592,7 +592,7 @@ function Home() {
             position: 'absolute', 
             top: '35%', 
             right: '-5%', 
-            background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem', 
             borderRadius: '16px',
@@ -600,7 +600,7 @@ function Home() {
             zIndex: 10,
             '--base-rotate': '-2.5deg',
             '--base-translate-y': '0px',
-            boxShadow: '0 30px 60px -15px rgba(74, 55, 35,0.9), 0 0 25px rgba(34,197,94,0.1), inset 0 1px 1px rgba(44, 34, 22,0.15)', 
+            boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.16), 0 0 25px rgba(34,197,94,0.1), inset 0 1px 1px rgba(0,0,0,0.26)', 
             minWidth: '220px'
           } as React.CSSProperties}>
             {bilheteDia ? (
@@ -608,7 +608,7 @@ function Home() {
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.8rem', fontWeight: '600' }}>BILHETE DO DIA</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
                    <div style={{ background: 'var(--green-success)', padding: '3px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <Check size={16} strokeWidth={4} color="#fff" />
+                     <Check size={16} strokeWidth={4} color="#0d1220" />
                    </div>
                    <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--green-success)' }}>
                      {bilheteDia.acertos}/{bilheteDia.possiveis} ACERTOS
@@ -616,7 +616,7 @@ function Home() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                    <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
-                     ODD <span style={{ color: '#2c2216', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                     ODD <span style={{ color: 'var(--text-white)', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
                        {bilheteDia.odd.toFixed(2)}
                      </span>
                    </span>
@@ -634,7 +634,7 @@ function Home() {
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)', marginBottom: '0.8rem', fontWeight: '600' }}>ÚLTIMO GREEN · CANAL PÚBLICO</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.2rem' }}>
                    <div style={{ background: 'var(--green-success)', padding: '3px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <Check size={16} strokeWidth={4} color="#fff" />
+                     <Check size={16} strokeWidth={4} color="#0d1220" />
                    </div>
                    <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--green-success)', lineHeight: 1.2 }}>
                      {ultimoGreen?.evento ?? '—'}
@@ -642,7 +642,7 @@ function Home() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                    <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
-                     ODD <span style={{ color: '#2c2216', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                     ODD <span style={{ color: 'var(--text-white)', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
                        {ultimoGreen?.odd.toFixed(2) ?? '—'}
                      </span>
                    </span>
@@ -662,15 +662,15 @@ function Home() {
             position: 'absolute', 
             bottom: '15%', 
             left: '-20%', 
-            background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1rem', 
             borderRadius: '16px',
-            border: '1px solid rgba(44, 34, 22,0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
             zIndex: 10,
             '--base-rotate': '2deg',
             '--base-translate-y': '-10px',
-            boxShadow: '0 25px 50px -12px rgba(74, 55, 35,0.9), 0 0 15px rgba(44, 34, 22,0.05), inset 0 1px 1px rgba(44, 34, 22,0.15)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.16), 0 0 15px var(--surface-sunken), inset 0 1px 1px rgba(0,0,0,0.26)',
             width: '260px',
             display: 'flex',
             flexDirection: 'column',
@@ -684,8 +684,8 @@ function Home() {
                 <button
                   onClick={() => setShowImageModal(true)}
                   style={{
-                    background: 'rgba(154, 98, 56,0.1)',
-                    border: '1px solid rgba(154, 98, 56,0.3)',
+                    background: 'var(--gold-tint)',
+                    border: '1px solid rgba(161, 124, 91,0.3)',
                     color: 'var(--gold-primary)',
                     padding: '0.3rem 0.6rem',
                     borderRadius: '4px',
@@ -700,14 +700,14 @@ function Home() {
               )}
             </div>
             <div>
-              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2c2216' }}>
+              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-white)' }}>
                 {topAposta?.mercado ?? melhorGreen?.pick ?? '—'}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.3rem' }}>
                 {topAposta?.jogo ?? melhorGreen?.evento ?? '—'}
               </p>
             </div>
-            <div style={{ borderTop: '1px solid #d3c2a5', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>ODD</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--gold-primary)' }}>
@@ -742,7 +742,7 @@ function Home() {
       {/* --------------------------------------------------- */}
       <section style={{ 
         background: 'var(--gold-primary)', 
-        color: '#fff', 
+        color: '#0d1220', 
         margin: '0 5% 3rem 5%', 
         padding: '2rem 4rem', 
         borderRadius: '12px',
@@ -810,16 +810,16 @@ function Home() {
         <div className="card-premium">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>PALPITES DO DIA</h3>
-            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #d3c2a5', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER TODOS</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid var(--border-color)', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER TODOS</span>
           </div>
           
           {palpites.length === 0 ? (
             <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>Sem palpites para hoje</p>
           ) : (
             palpites.map((pick, i) => (
-              <div key={pick.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderBottom: i !== palpites.length - 1 ? '1px solid #e3d6bf' : 'none' }}>
+              <div key={pick.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderBottom: i !== palpites.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: pick.color, border: '2px solid #d3c2a5' }}></div>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: pick.color, border: '2px solid var(--border-color)' }}></div>
                   <div>
                     <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{pick.team}</p>
                     <p style={{ fontSize: '0.65rem', color: 'var(--text-gray)' }}>{pick.league}</p>
@@ -838,17 +838,17 @@ function Home() {
         <div className="card-premium">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>COMUNIDADE QUE GANHA</h3>
-            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #d3c2a5', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER PROVAS</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid var(--border-color)', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER PROVAS</span>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: '#e7dcc7', padding: '1rem', borderRadius: '8px', border: '1px solid #e3d6bf' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e3d6bf', flexShrink: 0, border: '1px solid #c3ae8c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <User size={20} color="#888" />
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-sunken)', flexShrink: 0, border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={20} color="#6b7891" />
             </div>
             <div>
               <p style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Nome Privado</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.2rem', lineHeight: '1.4' }}>Fiz +620€ com o VIP só ontem! 🔥</p>
-              <p style={{ fontSize: '0.65rem', color: '#666', textAlign: 'right', marginTop: '0.5rem' }}>há 3 horas</p>
+              <p style={{ fontSize: '0.65rem', color: '#5c6883', textAlign: 'right', marginTop: '0.5rem' }}>há 3 horas</p>
             </div>
           </div>
 
@@ -859,8 +859,8 @@ function Home() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
                <div style={{ display: 'flex' }}>
                  {[1,2,3,4].map(n => (
-                   <div key={n} style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#e3d6bf', border: '2px solid var(--bg-card)', marginLeft: n !== 1 ? '-10px' : '0', zIndex: 5-n, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <User size={14} color="#888" />
+                   <div key={n} style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--surface-sunken)', border: '2px solid var(--bg-card)', marginLeft: n !== 1 ? '-10px' : '0', zIndex: 5-n, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <User size={14} color="#6b7891" />
                    </div>
                  ))}
                </div>
@@ -887,25 +887,25 @@ function Home() {
               {
                 title: '50% no 2º Depósito',
                 tag: '2º DEPÓSITO',
-                tagColor: '#e07b39',
+                tagColor: '#a17c5b',
                 details: ['👉 5€ a 100€ → Bónus 50%', '🔁 Wagering: 5x depósito', '✅ Odds: 1.5–10 | Mín. 2 jogos | ⏳ 24h'],
               },
               {
                 title: '30% no 3º Depósito',
                 tag: '3º DEPÓSITO',
-                tagColor: '#e07b39',
+                tagColor: '#a17c5b',
                 details: ['👉 5€ a 100€ → Bónus 30%', '🔁 Wagering: 5x depósito', '✅ Odds: 1.5–10 | Mín. 2 jogos | ⏳ 24h'],
               },
               {
                 title: '20% no 4º Depósito',
                 tag: '4º DEPÓSITO',
-                tagColor: '#e07b39',
+                tagColor: '#a17c5b',
                 details: ['👉 5€ a 100€ → Bónus 20%', '🔁 Wagering: 5x depósito', '✅ Odds: 1.5–10 | Mín. 2 jogos | ⏳ 24h'],
               },
               {
                 title: 'Free Spins – Até 100 Rodadas Grátis!',
                 tag: 'FREE SPINS',
-                tagColor: '#9b59b6',
+                tagColor: '#818cf8',
                 details: ['🎰 Flaming Bells (Playson)', '👉 30–50€ → 30 FS | 50–100€ → 50 FS | 100€+ → 100 FS', '🔁 5x depósito | ⏳ 24h | ✅ Seg, Qui, Sáb, Dom'],
               },
               {
@@ -929,7 +929,7 @@ function Home() {
               {
                 title: 'Quarta – 25 Free Spins Sun of Egypt',
                 tag: 'FREE SPINS',
-                tagColor: '#9b59b6',
+                tagColor: '#818cf8',
                 details: ['🎰 Sun of Egypt', '👉 25–100€ → 25 Rodadas Grátis', '🔁 5x depósito | ⏳ 24h | ✅ Todas as quartas'],
               },
               {
@@ -941,13 +941,13 @@ function Home() {
               {
                 title: 'Sexta – 15 Free Spins Scarab Riches',
                 tag: 'FREE SPINS',
-                tagColor: '#9b59b6',
+                tagColor: '#818cf8',
                 details: ['🎰 Scarab Riches', '👉 20–50€ → 15 Free Spins', '⏳ 24h | ✅ Todas as sextas'],
               },
               {
                 title: 'Sexta – Bónus de Depósito',
                 tag: 'SEXTA',
-                tagColor: '#e07b39',
+                tagColor: '#a17c5b',
                 details: ['💎 Depósito: 50€ a 1000€', '🎁 5€ Bónus garantido'],
               },
               {
@@ -958,8 +958,8 @@ function Home() {
               },
             ].map((promo, i) => (
               <div key={i} style={{
-                background: 'rgba(44, 34, 22,0.03)',
-                border: '1px solid #e3d6bf',
+                background: 'var(--surface-sunken)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '10px',
                 padding: '0.9rem 1rem',
                 display: 'flex',
@@ -992,7 +992,7 @@ function Home() {
                   style={{
                     alignSelf: 'flex-end',
                     background: 'var(--gold-primary)',
-                    color: '#fff',
+                    color: '#0d1220',
                     border: 'none',
                     padding: '0.45rem 1rem',
                     borderRadius: '4px',
@@ -1022,8 +1022,8 @@ function Home() {
       {/* --------------------------------------------------- */}
       <section className="promo-banner" style={{
         margin: '0 5% 4rem 5%',
-        background: 'linear-gradient(90deg, #d8c4a4 0%, #f0e6d3 50%, #d8c4a4 100%)',
-        border: '1px solid rgba(154, 98, 56,0.3)',
+        background: 'linear-gradient(90deg, #1a2233 0%, #1a2233 50%, #1a2233 100%)',
+        border: '1px solid rgba(161, 124, 91,0.3)',
         borderRadius: '12px',
         padding: '2.5rem 4rem',
         display: 'flex',
@@ -1031,7 +1031,7 @@ function Home() {
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <div style={{ background: 'rgba(154, 98, 56,0.1)', padding: '1rem', borderRadius: '12px' }}>
+          <div style={{ background: 'var(--gold-tint)', padding: '1rem', borderRadius: '12px' }}>
             <Gift size={40} color="var(--gold-primary)" />
           </div>
           <div>
@@ -1087,10 +1087,10 @@ function Home() {
               </div>
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <h3 style={{ fontSize: '2.2rem', color: 'var(--green-success)', fontWeight: '900' }}>{fmtUnidades(lucroDaTip(tip))}</h3>
-                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: '#2c2216'}}>{tip.odd.toFixed(2)}</span></p>
+                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: 'var(--text-white)'}}>{tip.odd.toFixed(2)}</span></p>
               </div>
-              <div style={{ borderTop: '1px solid #e3d6bf', paddingTop: '1rem' }}>
-                 <p style={{ fontSize: '0.8rem', color: '#2c2216', fontWeight: '600', marginBottom: '0.2rem' }}>{tip.evento}</p>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                 <p style={{ fontSize: '0.8rem', color: 'var(--text-white)', fontWeight: '600', marginBottom: '0.2rem' }}>{tip.evento}</p>
                  <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>{tip.pick}</p>
               </div>
             </div>

@@ -1166,7 +1166,7 @@ function SectionPlanos({ showToast }: { showToast: (msg: string, type?: 'success
 // ─── SECTION: PALPITES DO DIA ───────────────────────────────────────
 
 const EMPTY_PALPITE: Omit<PalpiteDia, 'id'> = {
-  data: '', team: '', league: '', odd: '', time: '', color: '#888888', ordem: 0,
+  data: '', team: '', league: '', odd: '', time: '', color: '#6b7891', ordem: 0,
 };
 
 function SectionPalpites({ showToast }: { showToast: (msg: string, type?: 'success' | 'error') => void }) {
@@ -1277,9 +1277,9 @@ function SectionPalpites({ showToast }: { showToast: (msg: string, type?: 'succe
           </Field>
           <Field label="Cor (hex)">
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input type="color" value={editing.color ?? '#888888'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))}
-                style={{ width: 40, height: 36, padding: 2, border: '1px solid #d3c2a5', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
-              <input className="admin-input" value={editing.color ?? '#888888'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))} />
+              <input type="color" value={editing.color ?? '#6b7891'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))}
+                style={{ width: 40, height: 36, padding: 2, border: '1px solid #9aa7bd', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
+              <input className="admin-input" value={editing.color ?? '#6b7891'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))} />
             </div>
           </Field>
           <Field label="Ordem">
@@ -1996,7 +1996,7 @@ function SectionCanais({ showToast }: { showToast: (msg: string, type?: 'success
                     </span>
                   </td>
                   <td>{c.nome}</td>
-                  <td>{fmtHandle(c.handle) ?? <em style={{ color: '#6f6047' }}>por confirmar</em>}</td>
+                  <td>{fmtHandle(c.handle) ?? <em style={{ color: 'var(--text-gray)' }}>por confirmar</em>}</td>
                   <td>{fmtSubscritores(c.subscritores)}</td>
                   <td>{fmtEngagement(c.engagement_min, c.engagement_max)}</td>
                   <td>
@@ -2758,13 +2758,13 @@ function AdminTicketPanel({
   const isClosed = ticket.estado === 'fechado' || ticket.estado === 'resolvido';
 
   const ESTADO_COLORS: Record<string, string> = {
-    aberto: '#60a5fa', em_analise: '#9a6238', resolvido: '#4ade80', fechado: '#6f6047',
+    aberto: '#60a5fa', em_analise: '#8a6144', resolvido: '#4ade80', fechado: '#2a3750',
   };
   const ESTADO_LABELS: Record<string, string> = {
     aberto: 'Aberto', em_analise: 'Em Análise', resolvido: 'Resolvido', fechado: 'Fechado',
   };
   const PRIO_COLORS: Record<string, string> = {
-    baixa: '#6f6047', normal: '#8a7a5f', alta: '#9a6238', urgente: '#f87171',
+    baixa: '#2a3750', normal: '#3a4a6b', alta: '#8a6144', urgente: '#f87171',
   };
 
   return (
@@ -2780,7 +2780,7 @@ function AdminTicketPanel({
             <span style={{ fontSize: 11, fontWeight: 700, color: ESTADO_COLORS[ticket.estado], background: `${ESTADO_COLORS[ticket.estado]}1a`, border: `1px solid ${ESTADO_COLORS[ticket.estado]}33`, borderRadius: 4, padding: '2px 8px' }}>
               {ESTADO_LABELS[ticket.estado]}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: PRIO_COLORS[ticket.prioridade], background: 'rgba(44, 34, 22,.04)', border: '1px solid var(--border-color)', borderRadius: 4, padding: '2px 8px' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: PRIO_COLORS[ticket.prioridade], background: 'rgba(255, 255, 255,.04)', border: '1px solid var(--border-color)', borderRadius: 4, padding: '2px 8px' }}>
               {ticket.prioridade}
             </span>
             <span style={{ fontSize: 11, color: 'var(--text-gray)' }}>
@@ -2937,13 +2937,13 @@ function SectionSuporte({ showToast }: { showToast: (msg: string, type?: 'succes
   useEffect(() => { load(); }, [load]);
 
   const ESTADO_COLORS: Record<string, string> = {
-    aberto: '#60a5fa', em_analise: '#9a6238', resolvido: '#4ade80', fechado: '#6f6047',
+    aberto: '#60a5fa', em_analise: '#8a6144', resolvido: '#4ade80', fechado: '#2a3750',
   };
   const ESTADO_LABELS: Record<string, string> = {
     aberto: 'Aberto', em_analise: 'Em Análise', resolvido: 'Resolvido', fechado: 'Fechado',
   };
   const PRIO_COLORS: Record<string, string> = {
-    baixa: '#6f6047', normal: '#8a7a5f', alta: '#9a6238', urgente: '#f87171',
+    baixa: '#2a3750', normal: '#3a4a6b', alta: '#8a6144', urgente: '#f87171',
   };
 
   const counts = {

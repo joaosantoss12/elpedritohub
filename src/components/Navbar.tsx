@@ -35,7 +35,7 @@ export function Navbar() {
       borderBottom: '1px solid var(--border-color)',
       position: 'sticky',
       top: 0,
-      background: 'rgba(231, 220, 199, 0.95)',
+      background: 'rgba(13, 18, 32, 0.9)',
       backdropFilter: 'blur(10px)',
       zIndex: 100,
       gap: '1rem'
@@ -124,8 +124,8 @@ export function Navbar() {
               }}
               onClick={() => navigate('/login')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(154, 98, 56,0.4)';
+                e.currentTarget.style.background = 'var(--gold-tint)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(161, 124, 91,0.4)';
                 e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseLeave={(e) => {
@@ -144,9 +144,9 @@ export function Navbar() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 transition: 'all 0.3s ease',
-                background: 'linear-gradient(135deg, var(--gold-primary), #82502c)',
+                background: 'linear-gradient(135deg, var(--gold-primary), #8a6144)',
                 border: 'none',
-                color: '#fff',
+                color: '#0d1220',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: 'bold'
@@ -154,7 +154,7 @@ export function Navbar() {
               onClick={() => navigate('/register')}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(154, 98, 56,0.4)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
@@ -173,7 +173,7 @@ export function Navbar() {
                 padding: '0.6rem 1.2rem',
                 background: '#901010',
                 border: 'none',
-                color: '#2c2216',
+                color: '#dce3ee',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
@@ -185,7 +185,7 @@ export function Navbar() {
               onClick={() => navigate('/admin')}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(154, 98, 56,0.4)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
@@ -213,8 +213,8 @@ export function Navbar() {
               }}
               onClick={() => navigate('/profile')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(154, 98, 56,0.4)';
+                e.currentTarget.style.background = 'var(--gold-tint)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(161, 124, 91,0.4)';
                 e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseLeave={(e) => {
@@ -233,9 +233,9 @@ export function Navbar() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 transition: 'all 0.3s ease',
-                background: 'linear-gradient(135deg, var(--gold-primary), #82502c)',
+                background: 'linear-gradient(135deg, var(--gold-primary), #8a6144)',
                 border: 'none',
-                color: '#fff',
+                color: '#0d1220',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: 'bold'
@@ -243,7 +243,7 @@ export function Navbar() {
               onClick={handleLogout}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(154, 98, 56,0.4)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';

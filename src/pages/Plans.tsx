@@ -180,7 +180,7 @@ export default function Plans() {
                 <ul className="features-list">
                   {(plan.funcionalidades ?? []).map((feature, index) => (
                     <li key={index}>
-                      <Check size={18} color={plan.destaque ? '#9a6238' : '#10b981'} className="feature-icon" />
+                      <Check size={18} color={plan.destaque ? '#a17c5b' : '#10b981'} className="feature-icon" />
                       <span>{feature}</span>
                     </li>
                   ))}

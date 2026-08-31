@@ -76,7 +76,7 @@ function ForgotPassword() {
           transition: 'all 0.3s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
+          e.currentTarget.style.background = 'rgba(161, 124, 91,0.1)';
           e.currentTarget.style.borderColor = 'var(--gold-primary)';
           e.currentTarget.style.color = 'var(--gold-primary)';
         }}
@@ -90,15 +90,15 @@ function ForgotPassword() {
       </button>
 
       <div style={{
-        background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
-        border: '1px solid rgba(154, 98, 56,0.3)',
+        background: 'linear-gradient(145deg, rgba(26, 34, 51,0.95) 0%, rgba(26, 34, 51,0.98) 100%)',
+        border: '1px solid rgba(161, 124, 91,0.3)',
         borderRadius: '16px',
         padding: '3rem 2.5rem',
         maxWidth: '450px',
         width: '100%',
         maxHeight: '80vh',
         overflow: 'auto',
-        boxShadow: '0 30px 60px rgba(74, 55, 35,0.9), 0 0 40px rgba(154, 98, 56,0.1)',
+        boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 40px rgba(161, 124, 91,0.1)',
         marginTop: '4rem',
         boxSizing: 'border-box'
       }}>
@@ -138,21 +138,21 @@ function ForgotPassword() {
                     style={{
                       width: '100%',
                       padding: '0.9rem 1rem 0.9rem 2.8rem',
-                      background: 'rgba(44, 34, 22,0.05)',
-                      border: '1px solid #d3c2a5',
+                      background: 'rgba(255, 255, 255,0.05)',
+                      border: '1px solid #9aa7bd',
                       borderRadius: '8px',
-                      color: '#2c2216',
+                      color: 'var(--text-white)',
                       fontSize: '0.95rem',
                       transition: 'all 0.3s ease',
                       boxSizing: 'border-box'
                     }}
                     onFocus={(e) => {
-                      e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255,0.08)';
                       e.currentTarget.style.borderColor = 'var(--gold-primary)';
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
-                      e.currentTarget.style.borderColor = '#d3c2a5';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255,0.05)';
+                      e.currentTarget.style.borderColor = '#9aa7bd';
                     }}
                   />
                 </div>
@@ -258,7 +258,7 @@ function ForgotPassword() {
               <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '0.5rem' }}>Email Enviado!</h2>
               <p style={{ color: 'var(--text-gray)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
                 Enviámos um link para redefinir a sua palavra-passe para<br />
-                <strong style={{ color: '#2c2216' }}>{email}</strong>
+                <strong style={{ color: 'var(--text-white)' }}>{email}</strong>
               </p>
 
               <div style={{
@@ -301,13 +301,13 @@ function ForgotPassword() {
                   fontWeight: 'bold',
                   background: 'transparent',
                   border: '1px solid var(--border-color)',
-                  color: '#2c2216',
+                  color: 'var(--text-white)',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
+                  e.currentTarget.style.background = 'rgba(161, 124, 91,0.1)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onMouseLeave={(e) => {
