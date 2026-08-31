@@ -308,7 +308,7 @@ function Profile() {
           `}</style>
         </div>
       ) : (
-      <div style={{ padding: '2rem 5%', display: 'flex', flexDirection: 'column', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+      <div style={{ padding: '2rem 0', display: 'flex', flexDirection: 'column', margin: '0 auto', width: '80%' }}>
       <div style={{ width: '100%', alignSelf: 'center' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', marginBottom: '0.5rem', textAlign: 'center' }}>
           O Meu <span style={{ color: 'var(--gold-primary)' }}>Perfil</span>

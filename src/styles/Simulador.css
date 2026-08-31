@@ -10,9 +10,9 @@
 }
 
 .sim-wrapper {
-  max-width: 1400px;
+  width: 80%;
   margin: 0 auto;
-  padding: 2rem 5% 4rem 5%;
+  padding: 2rem 0 4rem 0;
 }
 
 /* ── Cabeçalho ── */

@@ -15,7 +15,9 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.25rem;
-  padding: 2rem 5% 1.25rem 5%;
+  padding: 2rem 0 1.25rem 0;
+  width: 80%;
+  margin: 0 auto;
 }
 
 .sala-title {
@@ -77,7 +79,9 @@
 /* Aviso de perfis falsos — usa a margem própria do banner reduzida a zero,
    porque aqui quem dá o alinhamento lateral é o wrapper. */
 .sala-aviso {
-  padding: 0 5% 1.25rem 5%;
+  padding: 0 0 1.25rem 0;
+  width: 80%;
+  margin: 0 auto;
 }
 
 .sala-aviso .aviso-falsos {
@@ -87,7 +91,9 @@
 .sala-tabs {
   display: flex;
   gap: 0.5rem;
-  padding: 0 5%;
+  padding: 0;
+  width: 80%;
+  margin: 0 auto;
   border-bottom: 1px solid var(--border-color);
 }
 

@@ -6,9 +6,9 @@
 }
 
 .plans-wrapper {
-  max-width: 1200px;
+  width: 80%;
   margin: 0 auto;
-  padding: 3rem 5%;
+  padding: 3rem 0;
 }
 
 .plans-header {
@@ -201,7 +201,8 @@
   }
 
   .plans-wrapper {
-    padding: 2rem 4%;
+    width: 92%;
+    padding: 2rem 0;
   }
 
   .plans-title {

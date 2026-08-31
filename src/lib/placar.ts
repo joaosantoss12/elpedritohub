@@ -33,7 +33,9 @@ export interface JogoAoVivo {
 export const LIGAS_PADRAO = [
   // Europa — topo
   'por.1', 'eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1',
-  'uefa.champions', 'uefa.europa', 'uefa.europa.conf',
+  'uefa.champions', 'uefa.champions_qual',
+  'uefa.europa', 'uefa.europa_qual',
+  'uefa.europa.conf', 'uefa.europa.conf_qual',
   // Europa — restantes (jogam no verão, quando as "top 5" ainda não começaram)
   'ned.1', 'bel.1', 'sco.1', 'den.1', 'swe.1', 'nor.1', 'tur.1', 'sui.1', 'aut.1',
   // América do Sul
@@ -42,6 +44,8 @@ export const LIGAS_PADRAO = [
   'usa.1',
   // Ásia
   'ksa.1', 'jpn.1', 'kor.1',
+  // Seleções — grandes torneios internacionais
+  'fifa.world', 'uefa.euro', 'conmebol.america',
 ] as const;
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -49,16 +53,19 @@ const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 /** Continente de cada liga, para os separadores de filtro na Sala de Jogos. */
 export const CONTINENTE_LIGA: Record<string, string> = {
   'por.1': 'Europa', 'eng.1': 'Europa', 'esp.1': 'Europa', 'ita.1': 'Europa', 'ger.1': 'Europa', 'fra.1': 'Europa',
-  'uefa.champions': 'Europa', 'uefa.europa': 'Europa', 'uefa.europa.conf': 'Europa',
+  'uefa.champions': 'Europa', 'uefa.champions_qual': 'Europa',
+  'uefa.europa': 'Europa', 'uefa.europa_qual': 'Europa',
+  'uefa.europa.conf': 'Europa', 'uefa.europa.conf_qual': 'Europa',
   'ned.1': 'Europa', 'bel.1': 'Europa', 'sco.1': 'Europa', 'den.1': 'Europa', 'swe.1': 'Europa',
   'nor.1': 'Europa', 'tur.1': 'Europa', 'sui.1': 'Europa', 'aut.1': 'Europa',
   'bra.1': 'América do Sul', 'arg.1': 'América do Sul',
   'conmebol.libertadores': 'América do Sul', 'conmebol.sudamericana': 'América do Sul',
   'usa.1': 'Estados Unidos',
   'ksa.1': 'Ásia', 'jpn.1': 'Ásia', 'kor.1': 'Ásia',
+  'fifa.world': 'Seleções', 'uefa.euro': 'Seleções', 'conmebol.america': 'Seleções',
 };
 
-export const ORDEM_CONTINENTES = ['Europa', 'América do Sul', 'Estados Unidos', 'Ásia'] as const;
+export const ORDEM_CONTINENTES = ['Europa', 'América do Sul', 'Estados Unidos', 'Ásia', 'Seleções'] as const;
 
 export function continenteDaLiga(slug: string): string {
   return CONTINENTE_LIGA[slug] ?? 'Outras';

@@ -8,8 +8,8 @@
 }
 
 .raiox-wrapper {
-  padding: 2.5rem 5%;
-  max-width: 1400px;
+  padding: 2.5rem 0;
+  width: 80%;
   margin: 0 auto;
 }
 
@@ -596,7 +596,7 @@
 .raiox-forma__dot--void  { background: #3f3f46; }
 
 @media (max-width: 768px) {
-  .raiox-wrapper { padding: 2rem 5%; }
+  .raiox-wrapper { width: 92%; padding: 2rem 0; }
   .raiox-header h1 { font-size: 2rem; }
   .raiox-resumo { padding: 1.5rem 1.25rem; }
   .raiox-resumo__stat-val { font-size: 1.5rem; }

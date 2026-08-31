@@ -84,7 +84,9 @@
 }
 
 .admin-section-header {
-  padding: 20px 28px 0;
+  padding: 20px 0 0;
+  width: 80%;
+  margin: 0 auto;
   border-bottom: 1px solid var(--border-color, #262626);
   margin-bottom: 0;
 }
@@ -101,7 +103,9 @@
 }
 
 .admin-section-content {
-  padding: 24px 28px;
+  padding: 24px 0;
+  width: 80%;
+  margin: 0 auto;
   flex: 1;
 }
 

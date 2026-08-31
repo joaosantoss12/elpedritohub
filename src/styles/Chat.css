@@ -16,7 +16,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 2rem 5% 1rem 5%;
+  padding: 2rem 0 1rem 0;
+  width: 80%;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -94,10 +96,15 @@
 
 .chat-input-container {
   flex-shrink: 0;
-  padding: 0.8rem 5%;
+  padding: 0.8rem 0;
   border-top: 1px solid rgba(230,185,92,0.12);
   background: rgba(13,12,10,0.97);
   z-index: 100;
+}
+
+.chat-input-container > * {
+  width: 80%;
+  margin: 0 auto;
 }
 
 .image-preview {

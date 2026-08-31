@@ -7,9 +7,9 @@
 }
 
 .sp-wrapper {
-  max-width: 860px;
+  width: 80%;
   margin: 0 auto;
-  padding: 36px 24px 80px;
+  padding: 36px 0 80px;
 }
 
 /* ─── HEADER ────────────────────────────────────────────────────── */
@@ -906,7 +906,7 @@
 /* ─── RESPONSIVE ────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .sp-wrapper { padding: 20px 14px 80px; }
+  .sp-wrapper { width: 92%; padding: 20px 0 80px; }
 
   .sp-header { flex-direction: column; gap: 12px; }
   .sp-header > div:last-child { width: 100%; }
