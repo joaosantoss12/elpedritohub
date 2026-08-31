@@ -420,7 +420,7 @@ function Home() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.9)',
+          background: 'var(--overlay)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -446,7 +446,7 @@ function Home() {
                 right: '0',
                 background: 'transparent',
                 border: 'none',
-                color: '#fff',
+                color: 'var(--text-white)',
                 cursor: 'pointer',
                 fontSize: '1.5rem',
                 padding: '0.5rem'
@@ -469,7 +469,7 @@ function Home() {
         alignItems: 'center', 
         justifyContent: 'space-between',
         position: 'relative',
-        backgroundImage: 'linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.75)), url(/elpedrito.jpeg)',
+        backgroundImage: 'linear-gradient(rgba(246, 241, 231, 0.88), rgba(246, 241, 231, 0.82)), url(/elpedrito.jpeg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'
@@ -555,7 +555,7 @@ function Home() {
             position: 'absolute', 
             top: '5%', 
             right: '-10%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem 2rem', 
             borderRadius: '16px',
@@ -563,7 +563,7 @@ function Home() {
             zIndex: 10,
             '--base-rotate': '3deg',
             '--base-translate-y': '0px',
-            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(230,185,92,0.15), inset 0 1px 1px rgba(255,255,255,0.15)', 
+            boxShadow: '0 30px 60px -15px rgba(70, 52, 20, 0.16), 0 0 25px rgba(230,185,92,0.15), inset 0 1px 1px rgba(42, 33, 24, 0.26)', 
             minWidth: '220px'
           } as React.CSSProperties}>
             {lucroMes && lucroMes.lucro > 0 ? (
@@ -592,7 +592,7 @@ function Home() {
             position: 'absolute', 
             top: '35%', 
             right: '-5%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem', 
             borderRadius: '16px',
@@ -600,7 +600,7 @@ function Home() {
             zIndex: 10,
             '--base-rotate': '-2.5deg',
             '--base-translate-y': '0px',
-            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(34,197,94,0.1), inset 0 1px 1px rgba(255,255,255,0.15)', 
+            boxShadow: '0 30px 60px -15px rgba(70, 52, 20, 0.16), 0 0 25px rgba(34,197,94,0.1), inset 0 1px 1px rgba(42, 33, 24, 0.26)', 
             minWidth: '220px'
           } as React.CSSProperties}>
             {bilheteDia ? (
@@ -616,7 +616,7 @@ function Home() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                    <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
-                     ODD <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                     ODD <span style={{ color: 'var(--text-white)', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
                        {bilheteDia.odd.toFixed(2)}
                      </span>
                    </span>
@@ -642,7 +642,7 @@ function Home() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                    <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)', fontWeight: '500' }}>
-                     ODD <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
+                     ODD <span style={{ color: 'var(--text-white)', fontWeight: 'bold', fontSize: '1rem', marginLeft: '5px' }}>
                        {ultimoGreen?.odd.toFixed(2) ?? '—'}
                      </span>
                    </span>
@@ -662,15 +662,15 @@ function Home() {
             position: 'absolute', 
             bottom: '15%', 
             left: '-20%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'var(--card-gradient)',
             backdropFilter: 'blur(10px)', 
             padding: '1rem', 
             borderRadius: '16px',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(42, 33, 24, 0.18)',
             zIndex: 10,
             '--base-rotate': '2deg',
             '--base-translate-y': '-10px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.9), 0 0 15px rgba(255,255,255,0.05), inset 0 1px 1px rgba(255,255,255,0.15)',
+            boxShadow: '0 25px 50px -12px rgba(70, 52, 20, 0.16), 0 0 15px var(--surface-sunken), inset 0 1px 1px rgba(42, 33, 24, 0.26)',
             width: '260px',
             display: 'flex',
             flexDirection: 'column',
@@ -684,7 +684,7 @@ function Home() {
                 <button
                   onClick={() => setShowImageModal(true)}
                   style={{
-                    background: 'rgba(230,185,92,0.1)',
+                    background: 'var(--gold-tint)',
                     border: '1px solid rgba(230,185,92,0.3)',
                     color: 'var(--gold-primary)',
                     padding: '0.3rem 0.6rem',
@@ -700,14 +700,14 @@ function Home() {
               )}
             </div>
             <div>
-              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#fff' }}>
+              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-white)' }}>
                 {topAposta?.mercado ?? melhorGreen?.pick ?? '—'}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '0.3rem' }}>
                 {topAposta?.jogo ?? melhorGreen?.evento ?? '—'}
               </p>
             </div>
-            <div style={{ borderTop: '1px solid #333', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>ODD</p>
                 <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--gold-primary)' }}>
@@ -810,16 +810,16 @@ function Home() {
         <div className="card-premium">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>PALPITES DO DIA</h3>
-            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #333', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER TODOS</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid var(--border-color)', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER TODOS</span>
           </div>
           
           {palpites.length === 0 ? (
             <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>Sem palpites para hoje</p>
           ) : (
             palpites.map((pick, i) => (
-              <div key={pick.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderBottom: i !== palpites.length - 1 ? '1px solid #222' : 'none' }}>
+              <div key={pick.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderBottom: i !== palpites.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: pick.color, border: '2px solid #333' }}></div>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: pick.color, border: '2px solid var(--border-color)' }}></div>
                   <div>
                     <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{pick.team}</p>
                     <p style={{ fontSize: '0.65rem', color: 'var(--text-gray)' }}>{pick.league}</p>
@@ -838,11 +838,11 @@ function Home() {
         <div className="card-premium">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>COMUNIDADE QUE GANHA</h3>
-            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #333', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER PROVAS</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid var(--border-color)', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER PROVAS</span>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: '#0a0a0a', padding: '1rem', borderRadius: '8px', border: '1px solid #222' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#222', flexShrink: 0, border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: 'var(--bg-card)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-sunken)', flexShrink: 0, border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <User size={20} color="#888" />
             </div>
             <div>
@@ -859,7 +859,7 @@ function Home() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
                <div style={{ display: 'flex' }}>
                  {[1,2,3,4].map(n => (
-                   <div key={n} style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#222', border: '2px solid var(--bg-card)', marginLeft: n !== 1 ? '-10px' : '0', zIndex: 5-n, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <div key={n} style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--surface-sunken)', border: '2px solid var(--bg-card)', marginLeft: n !== 1 ? '-10px' : '0', zIndex: 5-n, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                      <User size={14} color="#888" />
                    </div>
                  ))}
@@ -958,8 +958,8 @@ function Home() {
               },
             ].map((promo, i) => (
               <div key={i} style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid #222',
+                background: 'var(--surface-sunken)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '10px',
                 padding: '0.9rem 1rem',
                 display: 'flex',
@@ -1022,7 +1022,7 @@ function Home() {
       {/* --------------------------------------------------- */}
       <section className="promo-banner" style={{
         margin: '0 5% 4rem 5%',
-        background: 'linear-gradient(90deg, #1f180a 0%, #050505 50%, #1f180a 100%)',
+        background: 'linear-gradient(90deg, #f1e7d3 0%, #fffdf8 50%, #f1e7d3 100%)',
         border: '1px solid rgba(230,185,92,0.3)',
         borderRadius: '12px',
         padding: '2.5rem 4rem',
@@ -1031,7 +1031,7 @@ function Home() {
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <div style={{ background: 'rgba(230,185,92,0.1)', padding: '1rem', borderRadius: '12px' }}>
+          <div style={{ background: 'var(--gold-tint)', padding: '1rem', borderRadius: '12px' }}>
             <Gift size={40} color="var(--gold-primary)" />
           </div>
           <div>
@@ -1087,10 +1087,10 @@ function Home() {
               </div>
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <h3 style={{ fontSize: '2.2rem', color: 'var(--green-success)', fontWeight: '900' }}>{fmtUnidades(lucroDaTip(tip))}</h3>
-                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: '#fff'}}>{tip.odd.toFixed(2)}</span></p>
+                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '0.5rem', fontWeight: '600' }}>ODD <span style={{color: 'var(--text-white)'}}>{tip.odd.toFixed(2)}</span></p>
               </div>
-              <div style={{ borderTop: '1px solid #222', paddingTop: '1rem' }}>
-                 <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: '600', marginBottom: '0.2rem' }}>{tip.evento}</p>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                 <p style={{ fontSize: '0.8rem', color: 'var(--text-white)', fontWeight: '600', marginBottom: '0.2rem' }}>{tip.evento}</p>
                  <p style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>{tip.pick}</p>
               </div>
             </div>

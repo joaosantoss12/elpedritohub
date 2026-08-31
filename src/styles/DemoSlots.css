@@ -43,7 +43,7 @@
   border: none;
   outline: none;
   background: transparent;
-  color: #fff;
+  color: var(--text-white);
   font-size: 16px;
   min-width: 180px;
   padding: 0.5rem 0;
@@ -69,7 +69,7 @@
   border-radius: 14px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  color: #fff;
+  color: var(--text-white);
   text-align: left;
   cursor: pointer;
   transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
@@ -79,7 +79,7 @@
 .demo-slot-card:focus-visible {
   transform: translateY(-3px);
   border-color: var(--gold-primary);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 30px rgba(70, 52, 20, 0.08);
   outline: none;
 }
 
@@ -91,7 +91,7 @@
   overflow: hidden;
   background:
     radial-gradient(120% 120% at 100% 0%, rgba(230, 185, 92, 0.18), transparent 55%),
-    #1c1c1c;
+    #f0e8d8;
 }
 
 .demo-slot-card__thumb img {
@@ -117,7 +117,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
   color: #000;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 14px rgba(70, 52, 20, 0.08);
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.16s ease, transform 0.16s ease;
@@ -163,7 +163,7 @@
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  color: #fff;
+  color: var(--text-white);
   cursor: pointer;
   transition: border-color 0.16s ease, opacity 0.16s ease;
 }
@@ -207,7 +207,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.78);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
 }
 
@@ -258,7 +258,7 @@
   text-decoration: none;
 }
 
-.demo-modal__ext:hover { color: #fff; border-color: var(--gold-primary); }
+.demo-modal__ext:hover { color: var(--text-white); border-color: var(--gold-primary); }
 
 .demo-modal__close {
   display: inline-flex;
@@ -269,17 +269,17 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #fff;
+  color: var(--text-white);
   cursor: pointer;
 }
 
-.demo-modal__close:hover { background: rgba(255, 255, 255, 0.08); }
+.demo-modal__close:hover { background: var(--surface-sunken-hover); }
 
 .demo-modal__frame {
   position: relative;
   flex: 1;
   min-height: 0;
-  background: #000;
+  background: var(--bg-card);
 }
 
 .demo-modal__frame iframe {

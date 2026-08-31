@@ -11,7 +11,7 @@
 
 .tg-gate--ready {
   border-color: rgba(230, 185, 92, 0.35);
-  background: linear-gradient(180deg, rgba(230, 185, 92, 0.1), rgba(230, 185, 92, 0.03));
+  background: linear-gradient(180deg, var(--gold-tint), rgba(230, 185, 92, 0.03));
 }
 
 @keyframes tg-gate-in {

@@ -3,7 +3,7 @@
 .casino-page {
   min-height: 100vh;
   background: var(--bg-main);
-  color: #fff;
+  color: var(--text-white);
 }
 
 .casino-wrapper {
@@ -43,7 +43,7 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 0.9;
-  background: linear-gradient(135deg, #fff4cf, #f4d78b 28%, var(--gold-primary) 52%, #a67d33);
+  background: linear-gradient(135deg, #2a2118, #6b4e18 40%, var(--gold-primary) 70%, #8a5e12);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

@@ -26,7 +26,7 @@
   font-size: 26px;
   font-weight: 800;
   margin: 0 0 4px;
-  background: linear-gradient(135deg, #fff 40%, var(--gold-primary, #e6b95c));
+  background: linear-gradient(135deg, #2a2118 40%, var(--gold-primary, #b07d1e));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -74,7 +74,7 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.sp-btn-secondary:hover { background: rgba(255,255,255,.06); color: var(--text-white, #fff); }
+.sp-btn-secondary:hover { background: rgba(42, 33, 24, 0.116); color: var(--text-white, #fff); }
 
 /* ─── FILTER TABS ───────────────────────────────────────────────── */
 
@@ -100,7 +100,7 @@
   transition: all 0.15s;
 }
 
-.sp-filter-tab:hover { background: rgba(255,255,255,.05); color: var(--text-white, #fff); }
+.sp-filter-tab:hover { background: rgba(42, 33, 24, 0.1); color: var(--text-white, #fff); }
 
 .sp-filter-tab.active {
   background: rgba(230,185,92,.12);
@@ -109,7 +109,7 @@
 }
 
 .sp-filter-count {
-  background: rgba(255,255,255,.1);
+  background: rgba(42, 33, 24, 0.18);
   border-radius: 10px;
   padding: 1px 7px;
   font-size: 11px;
@@ -272,7 +272,7 @@
   gap: 14px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color, #262626);
-  background: rgba(255,255,255,.02);
+  background: rgba(42, 33, 24, 0.052);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -292,7 +292,7 @@
   flex-shrink: 0;
 }
 
-.sp-back-btn:hover { background: rgba(255,255,255,.05); color: var(--text-white, #fff); }
+.sp-back-btn:hover { background: rgba(42, 33, 24, 0.1); color: var(--text-white, #fff); }
 
 .sp-thread__info {
   flex: 1;
@@ -349,7 +349,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(255,255,255,.05);
+  background: rgba(42, 33, 24, 0.1);
   border: 1px solid var(--border-color, #262626);
   border-radius: 8px;
   color: var(--text-gray, #a3a3a3);
@@ -526,7 +526,7 @@
 .sp-thread__desc-box {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-color, #262626);
-  background: rgba(255,255,255,.015);
+  background: rgba(42, 33, 24, 0.044);
   flex-shrink: 0;
 }
 
@@ -608,8 +608,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(42, 33, 24, 0.132);
+  border: 1px solid rgba(42, 33, 24, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -620,7 +620,7 @@
 }
 
 .sp-msg__bubble {
-  background: rgba(255,255,255,.04);
+  background: rgba(42, 33, 24, 0.084);
   border: 1px solid var(--border-color, #262626);
   border-radius: 12px;
   padding: 10px 14px;
@@ -689,7 +689,7 @@
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
-  background: rgba(255,255,255,.015);
+  background: rgba(42, 33, 24, 0.044);
 }
 
 .sp-img-preview {
@@ -761,7 +761,7 @@
 }
 
 .sp-reply-attach:hover:not(:disabled) {
-  background: rgba(255,255,255,.06);
+  background: rgba(42, 33, 24, 0.116);
   color: var(--text-white, #fff);
 }
 
@@ -780,7 +780,7 @@
 .sp-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.72);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -827,7 +827,7 @@
   transition: all 0.15s;
 }
 
-.sp-modal__close:hover { background: rgba(255,255,255,.08); color: var(--text-white, #fff); }
+.sp-modal__close:hover { background: rgba(42, 33, 24, 0.148); color: var(--text-white, #fff); }
 
 .sp-modal__body {
   padding: 20px;
@@ -874,7 +874,7 @@
 }
 
 .sp-input:focus { border-color: var(--gold-primary, #e6b95c); }
-.sp-input option { background: #1a1a1a; }
+.sp-input option { background: var(--bg-card); color: var(--text-white); }
 
 /* ─── TOAST ─────────────────────────────────────────────────────── */
 
@@ -891,12 +891,12 @@
   font-size: 13px;
   font-weight: 600;
   animation: spToastIn .25s ease;
-  box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  box-shadow: 0 4px 24px rgba(70, 52, 20, 0.14);
   pointer-events: none;
 }
 
-.sp-toast--success { background: #14532d; border: 1px solid #22c55e; color: #86efac; }
-.sp-toast--error   { background: #450a0a; border: 1px solid #ef4444; color: #fca5a5; }
+.sp-toast--success { background: #dcfce7; border: 1px solid #22c55e; color: #15803d; }
+.sp-toast--error   { background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; }
 
 @keyframes spToastIn {
   from { opacity: 0; transform: translateY(8px); }
