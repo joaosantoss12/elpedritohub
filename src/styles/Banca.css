@@ -19,7 +19,7 @@
 .banca-title {
   font-size: 2.2rem;
   font-weight: 900;
-  color: var(--text-white);
+  color: #fff;
   margin: 0 0 0.3rem;
   letter-spacing: -0.5px;
 }
@@ -67,8 +67,8 @@
 
 .banca-balance-card {
   flex: 1;
-  background: rgba(42, 33, 24, 0.084);
-  border: 1px solid var(--surface-sunken-hover);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 1.2rem 1.5rem;
   display: flex;
@@ -108,7 +108,7 @@
 .banca-balance-card__value {
   font-size: 1.7rem;
   font-weight: 900;
-  color: var(--text-white);
+  color: #fff;
   letter-spacing: -0.5px;
 }
 
@@ -117,7 +117,7 @@
   font-weight: 700;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
-  background: rgba(42, 33, 24, 0.116);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .banca-balance-card__delta.pos { color: #4ade80; }
@@ -137,7 +137,7 @@
 
 .banca-balance-card__edit-btn:hover {
   color: var(--gold-primary);
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
 }
 
 .banca-balance-card__edit {
@@ -153,10 +153,10 @@
 }
 
 .banca-balance-card__input {
-  background: rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(230, 185, 92, 0.4);
   border-radius: 8px;
-  color: var(--text-white);
+  color: #fff;
   font-size: 1.2rem;
   font-weight: 800;
   padding: 0.3rem 0.6rem;
@@ -186,8 +186,8 @@
 }
 
 .banca-balance-card__cancel {
-  background: rgba(42, 33, 24, 0.116);
-  border: 1px solid rgba(42, 33, 24, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-gray);
   border-radius: 7px;
   padding: 0.3rem 0.5rem;
@@ -198,8 +198,8 @@
 }
 
 .banca-balance-card__cancel:hover {
-  background: rgba(42, 33, 24, 0.18);
-  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .banca-balance-card__arrow {
@@ -218,8 +218,8 @@
 }
 
 .banca-stat {
-  background: rgba(42, 33, 24, 0.084);
-  border: 1px solid rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   padding: 1.1rem 1.3rem;
   display: flex;
@@ -238,7 +238,7 @@
 .banca-stat__value {
   font-size: 1.35rem;
   font-weight: 800;
-  color: var(--text-white);
+  color: #fff;
 }
 
 .banca-stat__value.pos { color: #4ade80; }
@@ -250,7 +250,7 @@
   display: flex;
   gap: 0.4rem;
   margin-bottom: 1rem;
-  background: rgba(42, 33, 24, 0.084);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   padding: 3px;
   width: fit-content;
@@ -275,7 +275,7 @@
 }
 
 .banca-chart-toggle__btn:hover:not(.active) {
-  background: rgba(42, 33, 24, 0.116);
+  background: rgba(255, 255, 255, 0.06);
   color: #e5e7eb;
 }
 
@@ -319,8 +319,8 @@
 /* ── Calendar ───────────────────────────────────────────────────────── */
 
 .banca-calendar {
-  background: var(--surface-sunken);
-  border: 1px solid rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
   padding: 1.4rem;
 }
@@ -335,13 +335,13 @@
 .banca-cal__month {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text-white);
+  color: #fff;
   letter-spacing: 0.5px;
 }
 
 .banca-cal__nav {
-  background: rgba(42, 33, 24, 0.116);
-  border: 1px solid rgba(42, 33, 24, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: var(--text-gray);
   padding: 0.35rem;
@@ -362,7 +362,7 @@
   display: block;
   margin: 0 auto 0.9rem;
   background: transparent;
-  border: 1px solid rgba(42, 33, 24, 0.212);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-gray);
   padding: 0.3rem 1rem;
   border-radius: 6px;
@@ -410,15 +410,15 @@
   border-radius: 8px;
   cursor: pointer;
   border: 1.5px solid transparent;
-  background: var(--surface-sunken);
+  background: rgba(255, 255, 255, 0.03);
   transition: all 0.15s ease;
   position: relative;
   padding: 4px 2px;
 }
 
 .banca-cal__day:hover {
-  background: rgba(42, 33, 24, 0.132);
-  border-color: rgba(42, 33, 24, 0.26);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .banca-cal__day--empty {
@@ -493,7 +493,7 @@
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(42, 33, 24, 0.116);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   justify-content: center;
 }
 
@@ -518,8 +518,8 @@
 /* ── Day Detail Panel ───────────────────────────────────────────────── */
 
 .banca-detail {
-  background: var(--surface-sunken);
-  border: 1px solid rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
   padding: 1.4rem;
   min-height: 420px;
@@ -537,13 +537,13 @@
   align-items: flex-start;
   margin-bottom: 1.2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(42, 33, 24, 0.116);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .banca-detail__date {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-white);
+  color: #fff;
   margin: 0 0 0.2rem;
   text-transform: capitalize;
 }
@@ -579,7 +579,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
   border: 1px solid rgba(230, 185, 92, 0.3);
   border-radius: 8px;
   color: var(--gold-primary);
@@ -612,7 +612,7 @@
 
 .banca-bet-list::-webkit-scrollbar { width: 4px; }
 .banca-bet-list::-webkit-scrollbar-track { background: transparent; }
-.banca-bet-list::-webkit-scrollbar-thumb { background: rgba(42, 33, 24, 0.18); border-radius: 2px; }
+.banca-bet-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .banca-bet-item {
   display: grid;
@@ -620,15 +620,15 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.65rem 0.9rem;
-  background: rgba(42, 33, 24, 0.084);
-  border: 1px solid rgba(42, 33, 24, 0.116);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   font-size: 0.82rem;
   transition: background 0.15s;
 }
 
 .banca-bet-item:hover {
-  background: rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .banca-bet-item__num {
@@ -731,7 +731,7 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--surface-sunken-hover);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   color: var(--text-gray);
   padding: 0.3rem;
@@ -751,12 +751,12 @@
 /* ── Chart Tooltip ──────────────────────────────────────────────────── */
 
 .banca-tooltip {
-  background: var(--bg-card);
+  background: #1a1a1a;
   border: 1px solid rgba(230, 185, 92, 0.3);
   border-radius: 10px;
   padding: 0.9rem 1rem;
   min-width: 200px;
-  box-shadow: 0 8px 32px rgba(70, 52, 20, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .banca-tooltip__title {
@@ -785,7 +785,7 @@
 .banca-tooltip__match {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-white);
+  color: #fff;
   margin-bottom: 4px;
 }
 
@@ -847,7 +847,7 @@
   font-weight: 600;
   color: var(--text-gray);
   padding-top: 4px;
-  border-top: 1px solid rgba(42, 33, 24, 0.116);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .banca-tooltip__cumulative.pos { color: #4ade80; }
@@ -858,7 +858,7 @@
 .banca-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(70, 52, 20, 0.13);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px);
   z-index: 1000;
   display: flex;
@@ -868,38 +868,38 @@
 }
 
 .banca-modal {
-  background: var(--bg-card);
-  border: 1px solid rgba(42, 33, 24, 0.18);
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(70, 52, 20, 0.15);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
 }
 
 .banca-modal::-webkit-scrollbar { width: 4px; }
 .banca-modal::-webkit-scrollbar-track { background: transparent; }
-.banca-modal::-webkit-scrollbar-thumb { background: rgba(42, 33, 24, 0.18); border-radius: 2px; }
+.banca-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .banca-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.4rem 1.6rem;
-  border-bottom: 1px solid rgba(42, 33, 24, 0.132);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .banca-modal__header h2 {
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--text-white);
+  color: #fff;
   margin: 0;
 }
 
 .banca-modal__close {
-  background: rgba(42, 33, 24, 0.116);
-  border: 1px solid var(--surface-sunken-hover);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   color: var(--text-gray);
   display: flex;
@@ -941,10 +941,10 @@
 
 .banca-form__group input,
 .banca-form__group select {
-  background: var(--surface-sunken);
-  border: 1px solid rgba(42, 33, 24, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9px;
-  color: var(--text-white);
+  color: #fff;
   padding: 0.65rem 0.9rem;
   font-size: 0.9rem;
   outline: none;
@@ -959,7 +959,7 @@
 
 .banca-form__group input:focus {
   border-color: rgba(230, 185, 92, 0.5);
-  box-shadow: 0 0 0 3px var(--gold-tint);
+  box-shadow: 0 0 0 3px rgba(230, 185, 92, 0.1);
 }
 
 .banca-form__row {
@@ -977,8 +977,8 @@
 
 .banca-sport-btn {
   padding: 0.4rem 0.3rem;
-  background: var(--surface-sunken);
-  border: 1px solid var(--surface-sunken-hover);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   color: var(--text-gray);
   font-size: 0.72rem;
@@ -989,8 +989,8 @@
 }
 
 .banca-sport-btn:hover {
-  background: rgba(42, 33, 24, 0.18);
-  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .banca-sport-btn.active {
@@ -1051,8 +1051,8 @@
 /* ── Multiple bet selection rows ─────────────────────────────────────── */
 
 .banca-selecao-row {
-  background: var(--surface-sunken);
-  border: 1px solid rgba(42, 33, 24, 0.132);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   padding: 0.75rem;
   margin-bottom: 0.6rem;
@@ -1102,8 +1102,8 @@
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
-  border: 1.5px solid rgba(42, 33, 24, 0.18);
-  background: rgba(42, 33, 24, 0.084);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-gray);
   transition: all 0.15s;
 }
@@ -1133,8 +1133,8 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
-  background: rgba(42, 33, 24, 0.084);
-  border: 1.5px solid var(--surface-sunken-hover);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
   color: var(--text-gray);
 }
 
@@ -1170,7 +1170,7 @@
 .banca-btn-cancel {
   padding: 0.7rem;
   background: transparent;
-  border: 1.5px solid rgba(42, 33, 24, 0.212);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   border-radius: 9px;
   color: var(--text-gray);
   font-size: 0.88rem;
@@ -1180,8 +1180,8 @@
 }
 
 .banca-btn-cancel:hover {
-  border-color: rgba(42, 33, 24, 0.42);
-  color: var(--text-white);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
 }
 
 .banca-btn-submit {
@@ -1298,7 +1298,7 @@
 }
 
 .banca-canal__stat {
-  background: rgba(70, 52, 20, 0.06);
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
   padding: 1rem;
   text-align: center;
@@ -1315,7 +1315,7 @@
   display: block;
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--text-white);
+  color: #fff;
 }
 
 .banca-canal__stat-val.gold { color: var(--gold-primary); }
@@ -1341,8 +1341,8 @@
   gap: 0.75rem;
   width: 100%;
   text-align: left;
-  background: rgba(70, 52, 20, 0.06);
-  border: 1px solid var(--surface-sunken);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 0.65rem 0.9rem;
   color: var(--text-gray);
@@ -1352,7 +1352,7 @@
 
 .banca-canal__tip:hover {
   border-color: var(--gold-primary);
-  color: var(--text-white);
+  color: #fff;
 }
 
 .banca-canal__tip-vert {
@@ -1363,7 +1363,7 @@
   color: var(--gold-primary);
 }
 
-.banca-canal__tip-evento { font-size: 0.82rem; font-weight: 600; color: var(--text-white); }
+.banca-canal__tip-evento { font-size: 0.82rem; font-weight: 600; color: #fff; }
 .banca-canal__tip-pick { font-size: 0.78rem; }
 
 .banca-canal__tip-odd {
@@ -1395,7 +1395,7 @@
   gap: 0.4rem;
   padding: 0.55rem 0.9rem;
   border-radius: 10px;
-  border: 1px solid rgba(42, 33, 24, 0.212);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bg-card);
   color: var(--text-gray);
   font-size: 0.82rem;
@@ -1416,7 +1416,7 @@
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  border: 1px solid rgba(42, 33, 24, 0.212);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
   color: var(--text-gray);
   cursor: pointer;
@@ -1434,7 +1434,7 @@
 .banca-scope__btn {
   padding: 0.5rem 1rem;
   border-radius: 10px;
-  border: 1px solid rgba(42, 33, 24, 0.212);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bg-card);
   color: var(--text-gray);
   font-size: 0.82rem;
@@ -1452,7 +1452,7 @@
   gap: 0.45rem;
   padding: 0.35rem 0.7rem;
   border-radius: 10px;
-  border: 1px solid rgba(42, 33, 24, 0.212);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bg-card);
   font-size: 0.8rem;
   color: var(--text-gray);
@@ -1468,7 +1468,7 @@
   outline: none;
   cursor: pointer;
 }
-.banca-scope__field select option { background: var(--bg-card); color: var(--text-white); }
+.banca-scope__field select option { background: var(--bg-card); color: #fff; }
 
 /* Stat grid */
 .banca-statgrid {
@@ -1479,7 +1479,7 @@
 }
 .banca-statcard {
   background: var(--bg-card);
-  border: 1px solid var(--surface-sunken-hover);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 1rem;
 }
@@ -1505,7 +1505,7 @@
 }
 .banca-ministats > div {
   background: var(--bg-card);
-  border: 1px solid rgba(42, 33, 24, 0.116);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   padding: 0.7rem;
   display: flex;
@@ -1539,7 +1539,7 @@
 }
 .banca-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--surface-sunken-hover);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: var(--bg-card);
 }
@@ -1551,12 +1551,12 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--text-gray);
-  border-bottom: 1px solid var(--surface-sunken-hover);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .banca-table th.r { text-align: right; }
 .banca-table td {
   padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid rgba(42, 33, 24, 0.084);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--text-light, #fff);
   white-space: nowrap;
 }

@@ -1278,7 +1278,7 @@ function SectionPalpites({ showToast }: { showToast: (msg: string, type?: 'succe
           <Field label="Cor (hex)">
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <input type="color" value={editing.color ?? '#888888'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))}
-                style={{ width: 40, height: 36, padding: 2, border: '1px solid var(--border-color)', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
+                style={{ width: 40, height: 36, padding: 2, border: '1px solid #333', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
               <input className="admin-input" value={editing.color ?? '#888888'} onChange={e => setEditing(p => ({ ...p!, color: e.target.value }))} />
             </div>
           </Field>
@@ -2780,7 +2780,7 @@ function AdminTicketPanel({
             <span style={{ fontSize: 11, fontWeight: 700, color: ESTADO_COLORS[ticket.estado], background: `${ESTADO_COLORS[ticket.estado]}1a`, border: `1px solid ${ESTADO_COLORS[ticket.estado]}33`, borderRadius: 4, padding: '2px 8px' }}>
               {ESTADO_LABELS[ticket.estado]}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: PRIO_COLORS[ticket.prioridade], background: 'rgba(42, 33, 24, 0.084)', border: '1px solid var(--border-color)', borderRadius: 4, padding: '2px 8px' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: PRIO_COLORS[ticket.prioridade], background: 'rgba(255,255,255,.04)', border: '1px solid var(--border-color)', borderRadius: 4, padding: '2px 8px' }}>
               {ticket.prioridade}
             </span>
             <span style={{ fontSize: 11, color: 'var(--text-gray)' }}>

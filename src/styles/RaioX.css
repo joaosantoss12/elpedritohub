@@ -97,7 +97,7 @@
 }
 
 .raiox-chip {
-  background: var(--surface-sunken);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
   color: var(--text-gray);
   font-size: 0.78rem;
@@ -111,7 +111,7 @@
 
 .raiox-chip:hover {
   border-color: rgba(230, 185, 92, 0.4);
-  color: var(--text-white);
+  color: #fff;
 }
 
 .raiox-chip--active {
@@ -130,14 +130,14 @@
 }
 
 .raiox-kpi {
-  background: var(--card-gradient);
-  border: 1px solid var(--surface-sunken);
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 14px;
   padding: 1.3rem 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  box-shadow: 0 10px 30px rgba(70, 52, 20, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .raiox-kpi--destaque {
@@ -174,11 +174,11 @@
 /* ── Cartões genéricos ───────────────────────────────────────── */
 
 .raiox-card {
-  background: var(--card-gradient);
-  border: 1px solid var(--surface-sunken);
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 1.75rem;
-  box-shadow: 0 10px 30px rgba(70, 52, 20, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   margin-bottom: 1.5rem;
 }
 
@@ -226,8 +226,8 @@
 }
 
 .raiox-vertical {
-  background: rgba(70, 52, 20, 0.08);
-  border: 1px solid rgba(42, 33, 24, 0.084);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-left-width: 3px;
   border-radius: 10px;
   padding: 0.95rem 1.1rem;
@@ -272,7 +272,7 @@
 .raiox-bar {
   height: 5px;
   border-radius: 3px;
-  background: rgba(42, 33, 24, 0.116);
+  background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 
@@ -309,7 +309,7 @@
 
 .raiox-table td {
   padding: 0.85rem 0.75rem;
-  border-bottom: 1px solid var(--surface-sunken);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   vertical-align: middle;
 }
 
@@ -325,7 +325,7 @@
 
 .raiox-table__evento {
   font-weight: 600;
-  color: var(--text-white);
+  color: #fff;
 }
 
 .raiox-table__comp {
@@ -407,12 +407,12 @@
 /* ── Tooltip do gráfico ──────────────────────────────────────── */
 
 .raiox-tooltip {
-  background: rgba(246, 241, 231, 0.9);
+  background: rgba(10, 10, 10, 0.97);
   border: 1px solid rgba(230, 185, 92, 0.3);
   border-radius: 10px;
   padding: 0.75rem 0.9rem;
   font-size: 0.75rem;
-  box-shadow: 0 15px 40px rgba(70, 52, 20, 0.15);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
   min-width: 170px;
 }
 
@@ -451,7 +451,7 @@
 .raiox-empty h3 {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--text-white);
+  color: #fff;
 }
 
 .raiox-empty p {
@@ -474,11 +474,11 @@
 
 .raiox-resumo {
   margin: 0 5% 3rem 5%;
-  background: var(--card-gradient);
+  background: linear-gradient(145deg, rgba(22, 22, 22, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
   border: 1px solid rgba(230, 185, 92, 0.22);
   border-radius: 16px;
   padding: 2rem 2.25rem;
-  box-shadow: 0 20px 50px rgba(70, 52, 20, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .raiox-resumo__head {
@@ -556,7 +556,7 @@
 }
 
 .raiox-resumo__cta:hover {
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
   transform: translateX(3px);
 }
 
@@ -568,7 +568,7 @@
   flex-wrap: wrap;
   margin-top: 1.6rem;
   padding-top: 1.4rem;
-  border-top: 1px solid var(--surface-sunken);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .raiox-forma__label {

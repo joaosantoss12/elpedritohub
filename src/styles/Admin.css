@@ -217,7 +217,7 @@
 }
 
 .admin-table tbody tr:hover {
-  background: rgba(42, 33, 24, 0.06);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .admin-table td {
@@ -284,7 +284,7 @@
 }
 
 .admin-btn-secondary:hover {
-  background: rgba(42, 33, 24, 0.116);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-white, #fff);
 }
 
@@ -301,7 +301,7 @@
 }
 
 .admin-btn-icon:hover {
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
   color: var(--gold-primary, #e6b95c);
   border-color: var(--gold-primary, #e6b95c);
 }
@@ -353,8 +353,7 @@
 }
 
 .admin-input option {
-  background: var(--bg-card);
-  color: var(--text-white);
+  background: #1a1a1a;
 }
 
 /* ─── TOGGLE ────────────────────────────────────────────────────── */
@@ -384,7 +383,7 @@
 .admin-toggle.on {
   color: var(--gold-primary, #e6b95c);
   border-color: var(--gold-primary, #e6b95c);
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
 }
 
 .admin-toggle.off {
@@ -418,7 +417,7 @@
 
 .admin-subtab:hover {
   color: var(--text-white, #fff);
-  background: rgba(42, 33, 24, 0.084);
+  background: rgba(255,255,255,0.04);
 }
 
 .admin-subtab.active {
@@ -567,7 +566,7 @@
 .admin-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(70, 52, 20, 0.13);
+  background: rgba(0, 0, 0, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,7 +610,7 @@
 }
 
 .admin-modal__close:hover {
-  background: var(--surface-sunken-hover);
+  background: rgba(255,255,255,0.08);
   color: var(--text-white, #fff);
 }
 
@@ -647,19 +646,19 @@
   font-size: 13px;
   font-weight: 600;
   animation: adminToastIn 0.25s ease;
-  box-shadow: 0 4px 24px rgba(70, 52, 20, 0.1);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
 
 .admin-toast--success {
-  background: #dcfce7;
+  background: #14532d;
   border: 1px solid #22c55e;
-  color: #15803d;
+  color: #86efac;
 }
 
 .admin-toast--error {
-  background: #fef2f2;
+  background: #450a0a;
   border: 1px solid #ef4444;
-  color: #b91c1c;
+  color: #fca5a5;
 }
 
 @keyframes adminToastIn {
@@ -800,7 +799,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 10px;
-  background: rgba(42, 33, 24, 0.148);
+  background: rgba(255,255,255,.08);
   font-size: 10px;
   font-weight: 700;
 }
@@ -993,7 +992,7 @@
 /* Description box */
 .tkt-panel__desc {
   padding: 12px 24px;
-  background: rgba(42, 33, 24, 0.052);
+  background: rgba(255,255,255,.02);
   border-bottom: 1px solid var(--border-color, #262626);
   font-size: 13px;
   color: var(--text-white, #fff);
@@ -1052,8 +1051,8 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(42, 33, 24, 0.132);
-  border: 1px solid rgba(42, 33, 24, 0.18);
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1070,7 +1069,7 @@
 }
 
 .tkt-msg__bubble {
-  background: rgba(42, 33, 24, 0.084);
+  background: rgba(255,255,255,.04);
   border: 1px solid var(--border-color, #262626);
   border-radius: 12px;
   padding: 10px 14px;
@@ -1175,7 +1174,7 @@
 
 .tkt-reply-input {
   flex: 1;
-  background: rgba(42, 33, 24, 0.084);
+  background: rgba(255,255,255,.04);
   border: 1px solid var(--border-color, #262626);
   border-radius: 10px;
   padding: 10px 14px;
@@ -1203,7 +1202,7 @@
 
 .tkt-btn-attach {
   padding: 8px 10px;
-  background: rgba(42, 33, 24, 0.1);
+  background: rgba(255,255,255,.05);
   border: 1px solid var(--border-color, #262626);
   border-radius: 8px;
   color: var(--text-gray, #a3a3a3);
@@ -1273,7 +1272,7 @@
 }
 .admin-date-btn:hover {
   border-color: var(--gold-primary, #e6b95c);
-  background: var(--surface-sunken);
+  background: #222;
 }
 .admin-input[type="date"]::-webkit-calendar-picker-indicator,
 .admin-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
@@ -1382,7 +1381,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--gold-tint);
+  background: rgba(230,185,92,0.1);
   border: 1px solid rgba(230,185,92,0.2);
   display: flex;
   align-items: center;
@@ -1423,14 +1422,14 @@
   gap: 1.25rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
-  background: rgba(42, 33, 24, 0.052);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.78rem;
   color: var(--text-gray);
 }
 
-.admin-raiox-stats strong { color: var(--text-white); }
+.admin-raiox-stats strong { color: #fff; }
 
 .admin-raiox-quick {
   display: flex;
@@ -1440,7 +1439,7 @@
 .admin-result-chip.result-green { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
 .admin-result-chip.result-red { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 .admin-result-chip.result-void { background: rgba(230, 185, 92, 0.12); color: #e6b95c; }
-.admin-result-chip.result-pendente { background: rgba(42, 33, 24, 0.116); color: #a3a3a3; }
+.admin-result-chip.result-pendente { background: rgba(255, 255, 255, 0.06); color: #a3a3a3; }
 
 /* ── Canais de Telegram ──────────────────────────────────────── */
 
@@ -1480,7 +1479,7 @@
 
 .admin-canal-chip.canal-contacto {
   color: var(--gold-primary);
-  background: var(--gold-tint);
+  background: rgba(230, 185, 92, 0.1);
   border: 1px solid rgba(230, 185, 92, 0.3);
 }
 

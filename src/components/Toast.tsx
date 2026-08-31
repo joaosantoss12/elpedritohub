@@ -57,7 +57,7 @@ export function Toast({ id, message, type, duration = 4000, onClose }: ToastProp
         color: '#fff',
         fontSize: '0.95rem',
         fontWeight: '500',
-        boxShadow: '0 10px 40px rgba(70, 52, 20, 0.06)',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
         zIndex: 9999,
         animation: isExiting ? 'slideOut 0.3s ease-out forwards' : 'slideIn 0.3s ease-out',
         maxWidth: '400px',

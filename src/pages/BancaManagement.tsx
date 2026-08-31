@@ -120,15 +120,15 @@ function CustomDot(props: DotProps) {
   const color =
     payload.aposta.estado === 'ganha' ? '#4ade80' :
     payload.aposta.estado === 'perdida' ? '#f87171' : '#94a3b8';
-  return <circle cx={cx} cy={cy} r={6} fill={color} stroke="rgba(42, 33, 24, 0.9)" strokeWidth={2} />;
+  return <circle cx={cx} cy={cy} r={6} fill={color} stroke="rgba(255,255,255,0.25)" strokeWidth={2} />;
 }
 function CustomActiveDot(props: DotProps) {
   const { cx, cy, payload } = props;
   if (cx === undefined || cy === undefined) return null;
-  const color = !payload?.aposta ? '#b07d1e' :
+  const color = !payload?.aposta ? '#e6b95c' :
     payload.aposta.estado === 'ganha' ? '#4ade80' :
     payload.aposta.estado === 'perdida' ? '#f87171' : '#94a3b8';
-  return <circle cx={cx} cy={cy} r={9} fill={color} stroke="rgba(42, 33, 24, 0.9)" strokeWidth={2} />;
+  return <circle cx={cx} cy={cy} r={9} fill={color} stroke="rgba(255,255,255,0.6)" strokeWidth={2} />;
 }
 
 // ── Stat card ──────────────────────────────────────────────────────────
@@ -766,11 +766,11 @@ export default function BancaManagement() {
                     <AreaChart data={bucketData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="bkGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#b07d1e" stopOpacity={0.22} />
-                          <stop offset="95%" stopColor="#b07d1e" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#e6b95c" stopOpacity={0.22} />
+                          <stop offset="95%" stopColor="#e6b95c" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,33,24,0.08)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis
                         dataKey="label"
                         tick={{ fill: '#6b7280', fontSize: 10 }}
@@ -784,11 +784,11 @@ export default function BancaManagement() {
                         tickFormatter={v => `€${v}`} width={52}
                       />
                       <Tooltip content={<BucketTooltip />} />
-                      <ReferenceLine y={0} stroke="rgba(42,33,24,0.18)" strokeDasharray="4 4" />
+                      <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeDasharray="4 4" />
                       <Area
-                        type="monotone" dataKey="cum" stroke="#b07d1e" strokeWidth={2}
+                        type="monotone" dataKey="cum" stroke="#e6b95c" strokeWidth={2}
                         fill="url(#bkGrad)" dot={false}
-                        activeDot={{ r: 5, fill: '#b07d1e', stroke: '#fffdf8', strokeWidth: 2 }}
+                        activeDot={{ r: 5, fill: '#e6b95c', stroke: 'rgba(255,255,255,0.4)', strokeWidth: 2 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -842,17 +842,17 @@ export default function BancaManagement() {
                       <AreaChart data={dayData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="dayGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#b07d1e" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#b07d1e" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#e6b95c" stopOpacity={0.25} />
+                            <stop offset="95%" stopColor="#e6b95c" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,33,24,0.08)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                         <XAxis dataKey="label" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
                         <YAxis domain={yDomain} tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}`} width={55} />
                         <Tooltip content={<BetTooltip />} />
-                        <ReferenceLine y={0} stroke="rgba(42,33,24,0.18)" strokeDasharray="4 4" />
+                        <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeDasharray="4 4" />
                         <Area
-                          type="monotone" dataKey="cum" stroke="#b07d1e" strokeWidth={2} fill="url(#dayGrad)"
+                          type="monotone" dataKey="cum" stroke="#e6b95c" strokeWidth={2} fill="url(#dayGrad)"
                           dot={(props: DotProps) => <CustomDot {...props} />}
                           activeDot={(props: DotProps) => <CustomActiveDot {...props} />}
                         />
