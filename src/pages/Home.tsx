@@ -469,9 +469,9 @@ function Home() {
         alignItems: 'center', 
         justifyContent: 'space-between',
         position: 'relative',
-        backgroundImage: 'linear-gradient(rgba(10, 10, 10, 0.75), rgba(10, 10, 10, 0.75)), url(/elpedrito.jpeg)',
+        backgroundImage: 'linear-gradient(rgba(28, 24, 21, 0.78), rgba(28, 24, 21, 0.78)), url(/elpedrito.jpeg)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center 20%',
         backgroundAttachment: 'fixed'
       }}>
         

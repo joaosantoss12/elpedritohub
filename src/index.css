@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap');
 
 :root {
-  --bg-main: #0a0a0a;
-  --bg-card: #141414;
-  --bg-card-hover: #1a1a1a;
-  --gold-primary: #e6b95c;
-  --gold-hover: #d4a74a;
-  --gold-light: #fbe6a2;
-  --text-white: #ffffff;
-  --text-gray: #a3a3a3;
+  --bg-main: #1c1815;
+  --bg-card: #251f1b;
+  --bg-card-hover: #2e2722;
+  --gold-primary: #e2683c;
+  --gold-hover: #cf5a30;
+  --gold-light: #f0a184;
+  --text-white: #ece6df;
+  --text-gray: #a89e92;
   --green-success: #22c55e;
-  --border-color: #262626;
+  --border-color: #3a322c;
 }
 
 * {
