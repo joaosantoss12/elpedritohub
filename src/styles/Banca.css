@@ -39,7 +39,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 1.4rem;
-  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  background: linear-gradient(135deg, var(--gold-primary), #7c5fe0);
   color: #000;
   border: none;
   border-radius: 10px;
@@ -53,7 +53,7 @@
 
 .banca-btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(230, 185, 92, 0.35);
+  box-shadow: 0 8px 24px rgba(167, 139, 250, 0.35);
 }
 
 /* ── Balance Banner ─────────────────────────────────────────────────── */
@@ -78,7 +78,7 @@
 }
 
 .banca-balance-card--starting {
-  border-color: rgba(230, 185, 92, 0.2);
+  border-color: rgba(167, 139, 250, 0.2);
 }
 
 .banca-balance-card--up {
@@ -137,7 +137,7 @@
 
 .banca-balance-card__edit-btn:hover {
   color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.1);
+  background: rgba(167, 139, 250, 0.1);
 }
 
 .banca-balance-card__edit {
@@ -154,7 +154,7 @@
 
 .banca-balance-card__input {
   background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(230, 185, 92, 0.4);
+  border: 1px solid rgba(167, 139, 250, 0.4);
   border-radius: 8px;
   color: #fff;
   font-size: 1.2rem;
@@ -166,7 +166,7 @@
 
 .banca-balance-card__input:focus {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(230, 185, 92, 0.15);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15);
 }
 
 .banca-balance-card__save {
@@ -270,7 +270,7 @@
 }
 
 .banca-chart-toggle__btn.active {
-  background: rgba(230, 185, 92, 0.18);
+  background: rgba(167, 139, 250, 0.18);
   color: var(--gold-primary);
 }
 
@@ -353,9 +353,9 @@
 }
 
 .banca-cal__nav:hover {
-  background: rgba(230, 185, 92, 0.12);
+  background: rgba(167, 139, 250, 0.12);
   color: var(--gold-primary);
-  border-color: rgba(230, 185, 92, 0.3);
+  border-color: rgba(167, 139, 250, 0.3);
 }
 
 .banca-cal__today-btn {
@@ -433,14 +433,14 @@
 }
 
 .banca-cal__day--today {
-  border-color: rgba(230, 185, 92, 0.5);
-  background: rgba(230, 185, 92, 0.06);
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(167, 139, 250, 0.06);
 }
 
 .banca-cal__day--selected {
   border-color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.15);
-  box-shadow: 0 0 0 2px rgba(230, 185, 92, 0.2);
+  background: rgba(167, 139, 250, 0.15);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
 }
 
 .banca-cal__day--profit {
@@ -579,8 +579,8 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: rgba(230, 185, 92, 0.1);
-  border: 1px solid rgba(230, 185, 92, 0.3);
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
   border-radius: 8px;
   color: var(--gold-primary);
   font-size: 0.82rem;
@@ -590,7 +590,7 @@
 }
 
 .banca-btn-add-small:hover {
-  background: rgba(230, 185, 92, 0.2);
+  background: rgba(167, 139, 250, 0.2);
 }
 
 /* ── Chart area ─────────────────────────────────────────────────────── */
@@ -634,7 +634,7 @@
 .banca-bet-item__num {
   width: 24px;
   height: 24px;
-  background: rgba(230, 185, 92, 0.15);
+  background: rgba(167, 139, 250, 0.15);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -743,8 +743,8 @@
 }
 
 .banca-bet-item__edit:hover {
-  background: rgba(230, 185, 92, 0.12);
-  border-color: rgba(230, 185, 92, 0.4);
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.4);
   color: var(--gold-primary);
 }
 
@@ -752,7 +752,7 @@
 
 .banca-tooltip {
   background: #1a1a1a;
-  border: 1px solid rgba(230, 185, 92, 0.3);
+  border: 1px solid rgba(167, 139, 250, 0.3);
   border-radius: 10px;
   padding: 0.9rem 1rem;
   min-width: 200px;
@@ -800,7 +800,7 @@
   font-weight: 600;
   margin-bottom: 8px;
   padding: 2px 6px;
-  background: rgba(230, 185, 92, 0.08);
+  background: rgba(167, 139, 250, 0.08);
   border-radius: 4px;
   display: inline-block;
 }
@@ -958,8 +958,8 @@
 }
 
 .banca-form__group input:focus {
-  border-color: rgba(230, 185, 92, 0.5);
-  box-shadow: 0 0 0 3px rgba(230, 185, 92, 0.1);
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
 }
 
 .banca-form__row {
@@ -994,8 +994,8 @@
 }
 
 .banca-sport-btn.active {
-  background: rgba(230, 185, 92, 0.15);
-  border-color: rgba(230, 185, 92, 0.5);
+  background: rgba(167, 139, 250, 0.15);
+  border-color: rgba(167, 139, 250, 0.5);
   color: var(--gold-primary);
 }
 
@@ -1112,7 +1112,7 @@
 .banca-selecao-sport-btn:hover {
   border-color: var(--gold-primary);
   color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.08);
+  background: rgba(167, 139, 250, 0.08);
 }
 
 
@@ -1186,7 +1186,7 @@
 
 .banca-btn-submit {
   padding: 0.7rem;
-  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  background: linear-gradient(135deg, var(--gold-primary), #7c5fe0);
   border: none;
   border-radius: 9px;
   color: #000;
@@ -1198,7 +1198,7 @@
 
 .banca-btn-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(230, 185, 92, 0.35);
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.35);
 }
 
 .banca-btn-submit:disabled {

@@ -125,7 +125,7 @@ function CustomDot(props: DotProps) {
 function CustomActiveDot(props: DotProps) {
   const { cx, cy, payload } = props;
   if (cx === undefined || cy === undefined) return null;
-  const color = !payload?.aposta ? '#e6b95c' :
+  const color = !payload?.aposta ? '#a78bfa' :
     payload.aposta.estado === 'ganha' ? '#4ade80' :
     payload.aposta.estado === 'perdida' ? '#f87171' : '#94a3b8';
   return <circle cx={cx} cy={cy} r={9} fill={color} stroke="rgba(255,255,255,0.6)" strokeWidth={2} />;
@@ -766,8 +766,8 @@ export default function BancaManagement() {
                     <AreaChart data={bucketData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="bkGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#e6b95c" stopOpacity={0.22} />
-                          <stop offset="95%" stopColor="#e6b95c" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.22} />
+                          <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -786,9 +786,9 @@ export default function BancaManagement() {
                       <Tooltip content={<BucketTooltip />} />
                       <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeDasharray="4 4" />
                       <Area
-                        type="monotone" dataKey="cum" stroke="#e6b95c" strokeWidth={2}
+                        type="monotone" dataKey="cum" stroke="#a78bfa" strokeWidth={2}
                         fill="url(#bkGrad)" dot={false}
-                        activeDot={{ r: 5, fill: '#e6b95c', stroke: 'rgba(255,255,255,0.4)', strokeWidth: 2 }}
+                        activeDot={{ r: 5, fill: '#a78bfa', stroke: 'rgba(255,255,255,0.4)', strokeWidth: 2 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -842,8 +842,8 @@ export default function BancaManagement() {
                       <AreaChart data={dayData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="dayGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#e6b95c" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#e6b95c" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.25} />
+                            <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -852,7 +852,7 @@ export default function BancaManagement() {
                         <Tooltip content={<BetTooltip />} />
                         <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeDasharray="4 4" />
                         <Area
-                          type="monotone" dataKey="cum" stroke="#e6b95c" strokeWidth={2} fill="url(#dayGrad)"
+                          type="monotone" dataKey="cum" stroke="#a78bfa" strokeWidth={2} fill="url(#dayGrad)"
                           dot={(props: DotProps) => <CustomDot {...props} />}
                           activeDot={(props: DotProps) => <CustomActiveDot {...props} />}
                         />

@@ -10,8 +10,8 @@
 }
 
 .tg-gate--ready {
-  border-color: rgba(230, 185, 92, 0.35);
-  background: linear-gradient(180deg, rgba(230, 185, 92, 0.1), rgba(230, 185, 92, 0.03));
+  border-color: rgba(167, 139, 250, 0.35);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.03));
 }
 
 @keyframes tg-gate-in {
@@ -30,7 +30,7 @@
 }
 
 .tg-gate__icon--ok { background: rgba(34, 197, 94, 0.12); color: var(--green-success); }
-.tg-gate__icon--gold { background: rgba(230, 185, 92, 0.12); color: var(--gold-primary); }
+.tg-gate__icon--gold { background: rgba(167, 139, 250, 0.12); color: var(--gold-primary); }
 
 .tg-gate__spin { animation: tg-gate-spin 1s linear infinite; }
 @keyframes tg-gate-spin { to { transform: rotate(360deg); } }

@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap');
 
 :root {
-  --bg-main: #1c1815;
-  --bg-card: #251f1b;
-  --bg-card-hover: #2e2722;
-  --gold-primary: #e2683c;
-  --gold-hover: #cf5a30;
-  --gold-light: #f0a184;
-  --text-white: #ece6df;
-  --text-gray: #a89e92;
+  --bg-main: #171526;
+  --bg-card: #221f38;
+  --bg-card-hover: #2b2745;
+  --gold-primary: #a78bfa;
+  --gold-hover: #9370f0;
+  --gold-light: #c9b8fc;
+  --text-white: #ece9f5;
+  --text-gray: #a39bc0;
   --green-success: #22c55e;
-  --border-color: #3a322c;
+  --border-color: #332f4d;
 }
 
 * {
@@ -37,7 +37,7 @@ html, body, #root {
 
 /* Utilitários Botões */
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  background: linear-gradient(135deg, var(--gold-primary), #7c5fe0);
   color: #000;
   font-weight: 700;
   padding: 0.75rem 1.5rem;
@@ -71,7 +71,7 @@ html, body, #root {
 
 /* Efeito de Gradiente para Cards Premium */
 .card-premium {
-  background: linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(10,10,10,1) 100%);
+  background: linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(23, 21, 38,1) 100%);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
@@ -97,8 +97,8 @@ html, body, #root {
   /* Levanta o cartão, anula a rotação para ficar direito e aumenta ligeiramente */
   transform: translateY(calc(var(--base-translate-y, 0px) - 15px)) rotate(0deg) scale(1.05);
   z-index: 50 !important;
-  box-shadow: 0 40px 70px -10px rgba(0,0,0,1), 0 0 30px rgba(230,185,92,0.3), inset 0 1px 1px rgba(255,255,255,0.4) !important;
-  border-color: rgba(230,185,92,0.8) !important;
+  box-shadow: 0 40px 70px -10px rgba(0,0,0,1), 0 0 30px rgba(167, 139, 250,0.3), inset 0 1px 1px rgba(255,255,255,0.4) !important;
+  border-color: rgba(167, 139, 250,0.8) !important;
 }
 
 /* Efeitos Hover - Cartões Resultados */
@@ -108,5 +108,5 @@ html, body, #root {
 .hover-scale:hover {
   transform: translateY(-8px);
   border-color: var(--gold-primary);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(230,185,92,0.1);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(167, 139, 250,0.1);
 }

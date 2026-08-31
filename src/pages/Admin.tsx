@@ -2758,13 +2758,13 @@ function AdminTicketPanel({
   const isClosed = ticket.estado === 'fechado' || ticket.estado === 'resolvido';
 
   const ESTADO_COLORS: Record<string, string> = {
-    aberto: '#60a5fa', em_analise: '#fbbf24', resolvido: '#4ade80', fechado: '#9ca3af',
+    aberto: '#60a5fa', em_analise: '#a78bfa', resolvido: '#4ade80', fechado: '#9ca3af',
   };
   const ESTADO_LABELS: Record<string, string> = {
     aberto: 'Aberto', em_analise: 'Em Análise', resolvido: 'Resolvido', fechado: 'Fechado',
   };
   const PRIO_COLORS: Record<string, string> = {
-    baixa: '#9ca3af', normal: '#d4d4d4', alta: '#fbbf24', urgente: '#f87171',
+    baixa: '#9ca3af', normal: '#d4d4d4', alta: '#a78bfa', urgente: '#f87171',
   };
 
   return (
@@ -2937,13 +2937,13 @@ function SectionSuporte({ showToast }: { showToast: (msg: string, type?: 'succes
   useEffect(() => { load(); }, [load]);
 
   const ESTADO_COLORS: Record<string, string> = {
-    aberto: '#60a5fa', em_analise: '#fbbf24', resolvido: '#4ade80', fechado: '#9ca3af',
+    aberto: '#60a5fa', em_analise: '#a78bfa', resolvido: '#4ade80', fechado: '#9ca3af',
   };
   const ESTADO_LABELS: Record<string, string> = {
     aberto: 'Aberto', em_analise: 'Em Análise', resolvido: 'Resolvido', fechado: 'Fechado',
   };
   const PRIO_COLORS: Record<string, string> = {
-    baixa: '#9ca3af', normal: '#d4d4d4', alta: '#fbbf24', urgente: '#f87171',
+    baixa: '#9ca3af', normal: '#d4d4d4', alta: '#a78bfa', urgente: '#f87171',
   };
 
   const counts = {

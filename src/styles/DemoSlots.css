@@ -90,7 +90,7 @@
   border-radius: 10px;
   overflow: hidden;
   background:
-    radial-gradient(120% 120% at 100% 0%, rgba(230, 185, 92, 0.18), transparent 55%),
+    radial-gradient(120% 120% at 100% 0%, rgba(167, 139, 250, 0.18), transparent 55%),
     #1c1c1c;
 }
 
@@ -115,7 +115,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  background: linear-gradient(135deg, var(--gold-primary), #7c5fe0);
   color: #000;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   opacity: 0;

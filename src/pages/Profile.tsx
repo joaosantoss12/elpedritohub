@@ -262,8 +262,8 @@ function Profile() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
         }}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.98) 0%, rgba(8,8,8,1) 100%)',
-            border: '1px solid rgba(230,185,92,0.4)',
+            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.98) 0%, rgba(16, 14, 28,1) 100%)',
+            border: '1px solid rgba(167, 139, 250,0.4)',
             borderRadius: '20px', padding: '3rem 2.5rem', maxWidth: '420px', width: '100%',
             textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
           }}>
@@ -325,8 +325,8 @@ function Profile() {
 
             {/* SECÇÃO: IMAGEM DE PERFIL */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
-              border: '1px solid rgba(230,185,92,0.2)',
+              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
+              border: '1px solid rgba(167, 139, 250,0.2)',
               borderRadius: '16px',
               padding: '2rem',
           display: 'flex',
@@ -387,7 +387,7 @@ function Profile() {
 
         {/* SECÇÃO: DADOS DA CONTA */}
         <div style={{
-          background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+          background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
           border: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '16px',
           padding: '2rem',
@@ -498,7 +498,7 @@ function Profile() {
 
         {/* SECÇÃO: PALAVRA-PASSE */}
         <div style={{
-          background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+          background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
           border: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '16px',
           padding: '2rem',
@@ -690,7 +690,7 @@ function Profile() {
 
             {/* SECÇÃO: ASSINATURAS */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
               border: '1px solid rgba(255,255,255,0.05)',
               borderRadius: '16px',
               padding: '2rem',
@@ -734,8 +734,8 @@ function Profile() {
                       rel="noopener noreferrer"
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                        background: 'rgba(230,185,92,0.1)',
-                        border: '1px solid rgba(230,185,92,0.4)',
+                        background: 'rgba(167, 139, 250,0.1)',
+                        border: '1px solid rgba(167, 139, 250,0.4)',
                         color: 'var(--gold-primary)',
                         padding: '0.6rem 1.2rem',
                         borderRadius: '8px',
@@ -745,8 +745,8 @@ function Profile() {
                         alignSelf: 'flex-start',
                         transition: 'all 0.2s',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(230,185,92,0.2)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(230,185,92,0.1)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(167, 139, 250,0.2)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(167, 139, 250,0.1)'; }}
                     >
                       <ExternalLink size={14} /> Entrar no Grupo VIP Telegram
                     </a>
@@ -802,7 +802,7 @@ function Profile() {
 
             {/* SECÇÃO: CARGOS / BADGES */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
               border: '1px solid rgba(255,255,255,0.05)',
               borderRadius: '16px',
               padding: '2rem',
@@ -835,7 +835,7 @@ function Profile() {
 
                   return (
                     <div key={index} style={{
-                      background: 'rgba(230,185,92,0.1)',
+                      background: 'rgba(167, 139, 250,0.1)',
                       border: '1px solid var(--gold-primary)',
                       padding: '0.5rem 1rem',
                       borderRadius: '20px',
@@ -858,7 +858,7 @@ function Profile() {
 
             {/* SECÇÃO: ESTATÍSTICAS */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
               border: '1px solid rgba(255,255,255,0.05)',
               borderRadius: '16px',
               padding: '2rem',

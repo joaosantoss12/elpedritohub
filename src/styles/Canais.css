@@ -205,8 +205,8 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8rem;
   color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.08);
-  border: 1px solid rgba(230, 185, 92, 0.22);
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.22);
   border-radius: 6px;
   padding: 0.3rem 0.55rem;
   align-self: flex-start;
@@ -259,8 +259,8 @@
 /* Cadência irregular assume-se em amarelo, não se esconde em verde. */
 .canal-card__cadencia--irregular {
   color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.08);
-  border-color: rgba(230, 185, 92, 0.25);
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.25);
 }
 
 .canal-card__nota {

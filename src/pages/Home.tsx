@@ -388,7 +388,7 @@ function Home() {
             width: '50px',
             height: '50px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--gold-primary), #b38b3b)',
+            background: 'linear-gradient(135deg, var(--gold-primary), #7c5fe0)',
             border: 'none',
             color: '#000',
             display: 'flex',
@@ -396,16 +396,16 @@ function Home() {
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: '999',
-            boxShadow: '0 10px 30px rgba(230,185,92,0.3)',
+            boxShadow: '0 10px 30px rgba(167, 139, 250,0.3)',
             transition: 'all 0.3s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.1)';
-            e.currentTarget.style.boxShadow = '0 15px 40px rgba(230,185,92,0.5)';
+            e.currentTarget.style.boxShadow = '0 15px 40px rgba(167, 139, 250,0.5)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 10px 30px rgba(230,185,92,0.3)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(167, 139, 250,0.3)';
           }}
         >
           <ArrowUp size={24} />
@@ -435,7 +435,7 @@ function Home() {
                 maxWidth: '90vw',
                 maxHeight: '90vh',
                 borderRadius: '16px',
-                border: '2px solid rgba(230,185,92,0.6)'
+                border: '2px solid rgba(167, 139, 250,0.6)'
               }}
             />
             <button
@@ -469,9 +469,9 @@ function Home() {
         alignItems: 'center', 
         justifyContent: 'space-between',
         position: 'relative',
-        backgroundImage: 'linear-gradient(rgba(28, 24, 21, 0.78), rgba(28, 24, 21, 0.78)), url(/elpedrito.jpeg)',
+        backgroundImage: 'linear-gradient(rgba(23, 21, 38, 0.78), rgba(23, 21, 38, 0.78)), url(/elpedrito.jpeg)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center 20%',
+        backgroundPosition: 'center 10%',
         backgroundAttachment: 'fixed'
       }}>
         
@@ -555,15 +555,15 @@ function Home() {
             position: 'absolute', 
             top: '5%', 
             right: '-10%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem 2rem', 
             borderRadius: '16px',
-            border: '1px solid rgba(230,185,92,0.4)', 
+            border: '1px solid rgba(167, 139, 250,0.4)', 
             zIndex: 10,
             '--base-rotate': '3deg',
             '--base-translate-y': '0px',
-            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(230,185,92,0.15), inset 0 1px 1px rgba(255,255,255,0.15)', 
+            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.9), 0 0 25px rgba(167, 139, 250,0.15), inset 0 1px 1px rgba(255,255,255,0.15)', 
             minWidth: '220px'
           } as React.CSSProperties}>
             {lucroMes && lucroMes.lucro > 0 ? (
@@ -592,7 +592,7 @@ function Home() {
             position: 'absolute', 
             top: '35%', 
             right: '-5%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
             backdropFilter: 'blur(10px)', 
             padding: '1.2rem', 
             borderRadius: '16px',
@@ -662,7 +662,7 @@ function Home() {
             position: 'absolute', 
             bottom: '15%', 
             left: '-20%', 
-            background: 'linear-gradient(145deg, rgba(22,22,22,0.95) 0%, rgba(8,8,8,0.98) 100%)',
+            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
             backdropFilter: 'blur(10px)', 
             padding: '1rem', 
             borderRadius: '16px',
@@ -684,8 +684,8 @@ function Home() {
                 <button
                   onClick={() => setShowImageModal(true)}
                   style={{
-                    background: 'rgba(230,185,92,0.1)',
-                    border: '1px solid rgba(230,185,92,0.3)',
+                    background: 'rgba(167, 139, 250,0.1)',
+                    border: '1px solid rgba(167, 139, 250,0.3)',
                     color: 'var(--gold-primary)',
                     padding: '0.3rem 0.6rem',
                     borderRadius: '4px',
@@ -841,7 +841,7 @@ function Home() {
             <span style={{ fontSize: '0.65rem', color: 'var(--gold-primary)', cursor: 'pointer', fontWeight: 'bold', border: '1px solid #333', padding: '0.3rem 0.6rem', borderRadius: '4px' }}>VER PROVAS</span>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: '#0a0a0a', padding: '1rem', borderRadius: '8px', border: '1px solid #222' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: '#171526', padding: '1rem', borderRadius: '8px', border: '1px solid #222' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#222', flexShrink: 0, border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <User size={20} color="#888" />
             </div>
@@ -1022,8 +1022,8 @@ function Home() {
       {/* --------------------------------------------------- */}
       <section className="promo-banner" style={{
         margin: '0 5% 4rem 5%',
-        background: 'linear-gradient(90deg, #1f180a 0%, #050505 50%, #1f180a 100%)',
-        border: '1px solid rgba(230,185,92,0.3)',
+        background: 'linear-gradient(90deg, #1c1830 0%, #100e1c 50%, #1c1830 100%)',
+        border: '1px solid rgba(167, 139, 250,0.3)',
         borderRadius: '12px',
         padding: '2.5rem 4rem',
         display: 'flex',
@@ -1031,7 +1031,7 @@ function Home() {
         alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <div style={{ background: 'rgba(230,185,92,0.1)', padding: '1rem', borderRadius: '12px' }}>
+          <div style={{ background: 'rgba(167, 139, 250,0.1)', padding: '1rem', borderRadius: '12px' }}>
             <Gift size={40} color="var(--gold-primary)" />
           </div>
           <div>

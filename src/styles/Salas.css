@@ -495,8 +495,8 @@
 
 .msg--eu {
   align-self: flex-end;
-  background: rgba(230, 185, 92, 0.09);
-  border-color: rgba(230, 185, 92, 0.28);
+  background: rgba(167, 139, 250, 0.09);
+  border-color: rgba(167, 139, 250, 0.28);
 }
 
 .msg__topo {
@@ -565,7 +565,7 @@
   border-radius: 10px;
   border: none;
   background: var(--gold-primary);
-  color: #0a0a0a;
+  color: #171526;
   cursor: pointer;
 }
 
