@@ -148,7 +148,7 @@ function Register() {
           transition: 'all 0.3s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(167, 139, 250,0.1)';
+          e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
           e.currentTarget.style.borderColor = 'var(--gold-primary)';
           e.currentTarget.style.color = 'var(--gold-primary)';
         }}
@@ -162,15 +162,15 @@ function Register() {
       </button>
 
       <div style={{
-        background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-        border: '1px solid rgba(167, 139, 250,0.3)',
+        background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+        border: '1px solid rgba(154, 98, 56,0.3)',
         borderRadius: '16px',
         padding: '3rem 2.5rem',
         maxWidth: '450px',
         width: '100%',
         maxHeight: '80vh',
         overflow: 'auto',
-        boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 40px rgba(167, 139, 250,0.1)',
+        boxShadow: '0 30px 60px rgba(74, 55, 35,0.9), 0 0 40px rgba(154, 98, 56,0.1)',
         marginTop: '4rem',
         boxSizing: 'border-box'
       }}>
@@ -205,21 +205,21 @@ function Register() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 1rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
             </div>
@@ -244,21 +244,21 @@ function Register() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 1rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box' as const
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
             </div>
@@ -285,21 +285,21 @@ function Register() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 1rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
             </div>
@@ -321,21 +321,21 @@ function Register() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 2.8rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
               <button
@@ -381,21 +381,21 @@ function Register() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 2.8rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
               <button
@@ -535,7 +535,7 @@ function Register() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.9)',
+          background: 'rgba(74, 55, 35, 0.9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -544,15 +544,15 @@ function Register() {
           padding: '2rem'
         }}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-            border: '1px solid rgba(167, 139, 250,0.3)',
+            background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+            border: '1px solid rgba(154, 98, 56,0.3)',
             borderRadius: '16px',
             padding: '2rem',
             maxWidth: '600px',
             width: '100%',
             maxHeight: '80vh',
             overflow: 'auto',
-            boxShadow: '0 30px 60px rgba(0,0,0,0.9)'
+            boxShadow: '0 30px 60px rgba(74, 55, 35,0.9)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '900', margin: 0 }}>Termos e Condições</h2>
@@ -561,7 +561,7 @@ function Register() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: '#2c2216',
                   cursor: 'pointer',
                   fontSize: '1.5rem'
                 }}
@@ -571,34 +571,34 @@ function Register() {
             </div>
 
             <div style={{ color: 'var(--text-gray)', fontSize: '0.9rem', lineHeight: '1.8' }}>
-              <h3 style={{ color: '#fff', marginTop: '1rem', marginBottom: '0.5rem' }}>1. Uso do Serviço</h3>
+              <h3 style={{ color: '#2c2216', marginTop: '1rem', marginBottom: '0.5rem' }}>1. Uso do Serviço</h3>
               <p>
                 Ao aceitar estes termos, concorda em utilizar o El Pedrito Hub apenas para fins legítimos. Proibimos a utilização do serviço de forma fraudulenta ou ilegal.
               </p>
 
-              <h3 style={{ color: '#fff', marginTop: '1rem', marginBottom: '0.5rem' }}>2. Responsabilidade</h3>
+              <h3 style={{ color: '#2c2216', marginTop: '1rem', marginBottom: '0.5rem' }}>2. Responsabilidade</h3>
               <p>
                 O El Pedrito Hub fornece análises e recomendações de apostas. No entanto, as apostas desportivas envolvem risco. Não garantimos lucros. O utilizador é responsável pelas suas decisões.
               </p>
 
-              <h3 style={{ color: '#fff', marginTop: '1rem', marginBottom: '0.5rem' }}>3. Dados Pessoais</h3>
+              <h3 style={{ color: '#2c2216', marginTop: '1rem', marginBottom: '0.5rem' }}>3. Dados Pessoais</h3>
               <p>
                 Os seus dados serão protegidos e armazenados de acordo com a GDPR. Não partilhamos informações com terceiros sem consentimento.
               </p>
 
-              <h3 style={{ color: '#fff', marginTop: '1rem', marginBottom: '0.5rem' }}>4. Contenção da Disputa</h3>
+              <h3 style={{ color: '#2c2216', marginTop: '1rem', marginBottom: '0.5rem' }}>4. Contenção da Disputa</h3>
               <p>
                 Qualquer disputa será resolvida através de arbitragem amigável. As leis portuguesas aplicam-se a todo o conteúdo.
               </p>
 
-              <h3 style={{ color: '#fff', marginTop: '1rem', marginBottom: '0.5rem' }}>5. Modificações</h3>
+              <h3 style={{ color: '#2c2216', marginTop: '1rem', marginBottom: '0.5rem' }}>5. Modificações</h3>
               <p>
                 Reservamo-nos o direito de modificar estes termos a qualquer momento. Notificaremos os utilizadores de mudanças significativas.
               </p>
 
               <div style={{ 
-                background: 'rgba(167, 139, 250,0.1)',
-                border: '1px solid rgba(167, 139, 250,0.3)',
+                background: 'rgba(154, 98, 56,0.1)',
+                border: '1px solid rgba(154, 98, 56,0.3)',
                 borderRadius: '8px',
                 padding: '1rem',
                 marginTop: '1.5rem',
@@ -635,7 +635,7 @@ function Register() {
                   borderRadius: '8px',
                   border: '1px solid var(--border-color)',
                   background: 'transparent',
-                  color: '#fff',
+                  color: '#2c2216',
                   cursor: 'pointer',
                   fontWeight: 'bold',
                   display: 'flex',

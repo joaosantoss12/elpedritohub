@@ -84,7 +84,7 @@
 .funil-video__placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.14), rgba(0, 0, 0, 0.6));
+  background: linear-gradient(135deg, rgba(154, 98, 56, 0.14), rgba(74, 55, 35, 0.6));
 }
 
 .funil-video__play {
@@ -93,13 +93,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.35);
+  color: #2c2216;
+  background: rgba(74, 55, 35, 0.35);
   transition: background 0.2s;
 }
 
 .funil-video:hover .funil-video__play {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(74, 55, 35, 0.15);
   color: var(--gold-primary);
 }
 
@@ -111,8 +111,8 @@
   font-weight: 700;
   padding: 0.12rem 0.4rem;
   border-radius: 5px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  background: rgba(74, 55, 35, 0.75);
+  color: #2c2216;
 }
 
 .funil-video strong { font-size: 0.9rem; }
@@ -132,8 +132,8 @@
   flex-wrap: wrap;
   padding: 1.3rem 1.4rem;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(167, 139, 250, 0.11), rgba(167, 139, 250, 0.02));
-  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: linear-gradient(135deg, rgba(154, 98, 56, 0.11), rgba(154, 98, 56, 0.02));
+  border: 1px solid rgba(154, 98, 56, 0.3);
 }
 
 .funil-reuniao__icone {
@@ -144,7 +144,7 @@
   height: 44px;
   flex-shrink: 0;
   border-radius: 11px;
-  background: rgba(167, 139, 250, 0.15);
+  background: rgba(154, 98, 56, 0.15);
   color: var(--gold-primary);
 }
 
@@ -173,7 +173,7 @@
   border-radius: 10px;
   border: none;
   background: var(--gold-primary);
-  color: #171526;
+  color: #e7dcc7;
   font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
@@ -207,7 +207,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.2rem;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(74, 55, 35, 0.82);
   overflow-y: auto;
 }
 
@@ -249,12 +249,12 @@
   height: 32px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(74, 55, 35, 0.6);
   color: var(--text-gray);
   cursor: pointer;
 }
 
-.funil-modal__close:hover { color: #fff; }
+.funil-modal__close:hover { color: #2c2216; }
 
 .funil-modal__player {
   position: relative;
@@ -297,8 +297,8 @@
   padding: 0.65rem 0.8rem;
   border-radius: 9px;
   border: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
+  background: rgba(74, 55, 35, 0.4);
+  color: #2c2216;
   font-size: 0.88rem;
   font-family: inherit;
   resize: vertical;
@@ -344,7 +344,7 @@
 .funil-form__enviar {
   border: none;
   background: var(--gold-primary);
-  color: #171526;
+  color: #e7dcc7;
 }
 
 .funil-form__enviar:disabled { opacity: 0.6; cursor: wait; }

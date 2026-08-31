@@ -79,7 +79,7 @@ function Login() {
           transition: 'all 0.3s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(167, 139, 250,0.1)';
+          e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)';
           e.currentTarget.style.borderColor = 'var(--gold-primary)';
           e.currentTarget.style.color = 'var(--gold-primary)';
         }}
@@ -93,15 +93,15 @@ function Login() {
       </button>
 
       <div style={{
-        background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-        border: '1px solid rgba(167, 139, 250,0.3)',
+        background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+        border: '1px solid rgba(154, 98, 56,0.3)',
         borderRadius: '16px',
         padding: '3rem 2.5rem',
         maxWidth: '450px',
         width: '100%',
         maxHeight: '80vh',
         overflow: 'auto',
-        boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 40px rgba(167, 139, 250,0.1)',
+        boxShadow: '0 30px 60px rgba(74, 55, 35,0.9), 0 0 40px rgba(154, 98, 56,0.1)',
         boxSizing: 'border-box'
       }}>
         {/* Logo */}
@@ -134,21 +134,21 @@ function Login() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 1rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
             </div>
@@ -169,21 +169,21 @@ function Login() {
                 style={{
                   width: '100%',
                   padding: '0.9rem 2.8rem 0.9rem 2.8rem',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid #333',
+                  background: 'rgba(44, 34, 22,0.05)',
+                  border: '1px solid #d3c2a5',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#2c2216',
                   fontSize: '0.95rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.08)';
                   e.currentTarget.style.borderColor = 'var(--gold-primary)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.borderColor = '#333';
+                  e.currentTarget.style.background = 'rgba(44, 34, 22,0.05)';
+                  e.currentTarget.style.borderColor = '#d3c2a5';
                 }}
               />
               <button

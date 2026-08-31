@@ -65,7 +65,7 @@
   padding: 0 0.4rem 0 0.75rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(44, 34, 22, 0.03);
   color: var(--text-gray);
 }
 
@@ -81,7 +81,7 @@
 .salas-filtros__campo select {
   border: none;
   background: transparent;
-  color: #fff;
+  color: #2c2216;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -90,7 +90,7 @@
   padding: 0.55rem 0.3rem;
 }
 
-.salas-filtros__campo select option { background: #14161c; color: #fff; }
+.salas-filtros__campo select option { background: #f5ecdd; color: #2c2216; }
 
 .salas-filtros__limpar {
   border: none;
@@ -104,7 +104,7 @@
   padding: 0.5rem;
 }
 
-.salas-filtros__limpar:hover { color: #fff; }
+.salas-filtros__limpar:hover { color: #2c2216; }
 
 @media (max-width: 768px) {
   .salas-filtros__campo { flex: 1 1 100%; }
@@ -301,7 +301,7 @@
   cursor: pointer;
 }
 
-.sala-jogo__voltar:hover { color: #fff; border-color: var(--gold-primary); }
+.sala-jogo__voltar:hover { color: #2c2216; border-color: var(--gold-primary); }
 
 /* ── Placar ──────────────────────────────────────────────────── */
 
@@ -489,14 +489,14 @@
   max-width: 88%;
   padding: 0.55rem 0.8rem;
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(44, 34, 22, 0.035);
   border: 1px solid var(--border-color);
 }
 
 .msg--eu {
   align-self: flex-end;
-  background: rgba(167, 139, 250, 0.09);
-  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(154, 98, 56, 0.09);
+  border-color: rgba(154, 98, 56, 0.28);
 }
 
 .msg__topo {
@@ -547,7 +547,7 @@
   border-radius: 10px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  color: #fff;
+  color: #2c2216;
   font-size: 0.88rem;
   font-family: inherit;
 }
@@ -565,7 +565,7 @@
   border-radius: 10px;
   border: none;
   background: var(--gold-primary);
-  color: #171526;
+  color: #e7dcc7;
   cursor: pointer;
 }
 

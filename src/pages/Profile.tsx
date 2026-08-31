@@ -258,17 +258,17 @@ function Profile() {
       {/* SUCCESS MODAL */}
       {showSuccessModal && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000,
+          position: 'fixed', inset: 0, background: 'rgba(74, 55, 35,0.85)', zIndex: 1000,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
         }}>
           <div style={{
-            background: 'linear-gradient(145deg, rgba(34, 31, 56,0.98) 0%, rgba(16, 14, 28,1) 100%)',
-            border: '1px solid rgba(167, 139, 250,0.4)',
+            background: 'linear-gradient(145deg, rgba(245, 236, 221,0.98) 0%, rgba(222, 208, 182,1) 100%)',
+            border: '1px solid rgba(154, 98, 56,0.4)',
             borderRadius: '20px', padding: '3rem 2.5rem', maxWidth: '420px', width: '100%',
-            textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+            textAlign: 'center', boxShadow: '0 20px 60px rgba(74, 55, 35,0.8)'
           }}>
             <CheckCircle size={64} color="#10b981" style={{ marginBottom: '1.5rem' }} />
-            <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#fff', marginBottom: '0.75rem' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#2c2216', marginBottom: '0.75rem' }}>
               Pagamento Confirmado!
             </h2>
             <p style={{ color: 'var(--text-gray)', fontSize: '1rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
@@ -291,7 +291,7 @@ function Profile() {
             <button
               onClick={() => setShowSuccessModal(false)}
               className="btn-outline"
-              style={{ padding: '0.7rem 2rem', fontSize: '0.9rem', display: 'block', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ padding: '0.7rem 2rem', fontSize: '0.9rem', display: 'block', margin: '0 auto', border: '1px solid rgba(44, 34, 22,0.1)' }}
             >
               CONTINUAR
             </button>
@@ -310,7 +310,7 @@ function Profile() {
       ) : (
       <div style={{ padding: '2rem 0', display: 'flex', flexDirection: 'column', margin: '0 auto', width: '80%' }}>
       <div style={{ width: '100%', alignSelf: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#fff', marginBottom: '0.5rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#2c2216', marginBottom: '0.5rem', textAlign: 'center' }}>
           O Meu <span style={{ color: 'var(--gold-primary)' }}>Perfil</span>
         </h1>
         <p style={{ textAlign: 'center', color: 'var(--text-gray)', fontSize: '0.9rem', maxWidth: '640px', margin: '0 auto 2rem auto', lineHeight: 1.6 }}>
@@ -325,15 +325,15 @@ function Profile() {
 
             {/* SECÇÃO: IMAGEM DE PERFIL */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-              border: '1px solid rgba(167, 139, 250,0.2)',
+              background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+              border: '1px solid rgba(154, 98, 56,0.2)',
               borderRadius: '16px',
               padding: '2rem',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '1rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
         }}>
           <div
             style={{
@@ -341,7 +341,7 @@ function Profile() {
               width: '120px',
               height: '120px',
               borderRadius: '50%',
-              background: '#222',
+              background: '#e3d6bf',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -366,7 +366,7 @@ function Profile() {
               bottom: 0,
               left: 0,
               right: 0,
-              background: 'rgba(0,0,0,0.7)',
+              background: 'rgba(74, 55, 35,0.7)',
               padding: '0.5rem',
               display: 'flex',
               justifyContent: 'center',
@@ -387,11 +387,11 @@ function Profile() {
 
         {/* SECÇÃO: DADOS DA CONTA */}
         <div style={{
-          background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+          border: '1px solid rgba(44, 34, 22,0.05)',
           borderRadius: '16px',
           padding: '2rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
         }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Mail size={20} color="var(--gold-primary)" /> Email
@@ -407,10 +407,10 @@ function Profile() {
                 style={{
                   width: '100%',
                   padding: '0.8rem 1rem',
-                  background: isEditingEmail && !pendingEmailChange ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.02)',
-                  border: isEditingEmail && !pendingEmailChange ? '1px solid var(--gold-primary)' : '1px solid rgba(255,255,255,0.1)',
+                  background: isEditingEmail && !pendingEmailChange ? 'rgba(74, 55, 35,0.5)' : 'rgba(44, 34, 22,0.02)',
+                  border: isEditingEmail && !pendingEmailChange ? '1px solid var(--gold-primary)' : '1px solid rgba(44, 34, 22,0.1)',
                   borderRadius: '8px',
-                  color: isEditingEmail && !pendingEmailChange ? '#fff' : 'var(--text-gray)',
+                  color: isEditingEmail && !pendingEmailChange ? '#2c2216' : 'var(--text-gray)',
                   outline: 'none',
                   cursor: isEditingEmail && !pendingEmailChange ? 'text' : 'not-allowed',
                   transition: 'all 0.3s ease'
@@ -423,7 +423,7 @@ function Profile() {
                 type="button"
                 onClick={() => setIsEditingEmail(true)}
                 className="btn-outline"
-                style={{ padding: '0.8rem', height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', cursor: pendingEmailChange ? 'not-allowed' : 'pointer', opacity: pendingEmailChange ? 0.5 : 1 }}
+                style={{ padding: '0.8rem', height: '46px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(44, 34, 22,0.1)', cursor: pendingEmailChange ? 'not-allowed' : 'pointer', opacity: pendingEmailChange ? 0.5 : 1 }}
                 title={pendingEmailChange ? "Aguarde a confirmação de email pendente" : "Editar Email"}
                 disabled={pendingEmailChange}
               >
@@ -441,7 +441,7 @@ function Profile() {
                     setEmail(user?.email || '');
                   }}
                   className="btn-outline"
-                  style={{ padding: '0.8rem 1.5rem', height: '46px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                  style={{ padding: '0.8rem 1.5rem', height: '46px', border: '1px solid rgba(44, 34, 22,0.1)', cursor: 'pointer' }}
                 >
                   Cancelar
                 </button>
@@ -498,11 +498,11 @@ function Profile() {
 
         {/* SECÇÃO: PALAVRA-PASSE */}
         <div style={{
-          background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+          border: '1px solid rgba(44, 34, 22,0.05)',
           borderRadius: '16px',
           padding: '2rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
         }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Lock size={20} color="var(--gold-primary)" /> Alterar Palavra-Passe
@@ -519,10 +519,10 @@ function Profile() {
                     width: '100%',
                     padding: '0.8rem 1rem 0.8rem 1rem',
                     paddingRight: '2.8rem',
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid #333',
+                    background: 'rgba(74, 55, 35,0.5)',
+                    border: '1px solid #d3c2a5',
                     borderRadius: '8px',
-                    color: '#fff',
+                    color: '#2c2216',
                     outline: 'none'
                   }}
                 />
@@ -550,7 +550,7 @@ function Profile() {
                 </button>
               </div>
             </div>
-            <div style={{ width: '100%', height: '1px', background: '#222', margin: '0.5rem 0' }}></div>
+            <div style={{ width: '100%', height: '1px', background: '#e3d6bf', margin: '0.5rem 0' }}></div>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-gray)' }}>Nova Palavra-Passe</label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -563,10 +563,10 @@ function Profile() {
                     width: '100%',
                     padding: '0.8rem 1rem 0.8rem 1rem',
                     paddingRight: '2.8rem',
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid #333',
+                    background: 'rgba(74, 55, 35,0.5)',
+                    border: '1px solid #d3c2a5',
                     borderRadius: '8px',
-                    color: '#fff',
+                    color: '#2c2216',
                     outline: 'none'
                   }}
                 />
@@ -606,10 +606,10 @@ function Profile() {
                     width: '100%',
                     padding: '0.8rem 1rem 0.8rem 1rem',
                     paddingRight: '2.8rem',
-                    background: 'rgba(0,0,0,0.5)',
-                    border: '1px solid #333',
+                    background: 'rgba(74, 55, 35,0.5)',
+                    border: '1px solid #d3c2a5',
                     borderRadius: '8px',
-                    color: '#fff',
+                    color: '#2c2216',
                     outline: 'none'
                   }}
                 />
@@ -649,7 +649,7 @@ function Profile() {
           border: '1px solid rgba(239, 68, 68, 0.2)',
           borderRadius: '16px',
           padding: '2rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
         }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
             <Trash2 size={20} /> Danger Zone
@@ -672,7 +672,7 @@ function Profile() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = '#ef4444';
-              e.currentTarget.style.color = '#fff';
+              e.currentTarget.style.color = '#2c2216';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -690,11 +690,11 @@ function Profile() {
 
             {/* SECÇÃO: ASSINATURAS */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-              border: '1px solid rgba(255,255,255,0.05)',
+              background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+              border: '1px solid rgba(44, 34, 22,0.05)',
               borderRadius: '16px',
               padding: '2rem',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
             }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CreditCard size={20} color="var(--gold-primary)" /> As Minhas Subscrições
@@ -713,7 +713,7 @@ function Profile() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <Shield size={24} color="#8b5cf6" />
                       <div>
-                        <p style={{ fontWeight: 'bold', color: '#fff', fontSize: '1rem' }}>Footmillion VIP</p>
+                        <p style={{ fontWeight: 'bold', color: '#2c2216', fontSize: '1rem' }}>Footmillion VIP</p>
                         <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>Acesso VIP ativo</p>
                       </div>
                     </div>
@@ -734,8 +734,8 @@ function Profile() {
                       rel="noopener noreferrer"
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                        background: 'rgba(167, 139, 250,0.1)',
-                        border: '1px solid rgba(167, 139, 250,0.4)',
+                        background: 'rgba(154, 98, 56,0.1)',
+                        border: '1px solid rgba(154, 98, 56,0.4)',
                         color: 'var(--gold-primary)',
                         padding: '0.6rem 1.2rem',
                         borderRadius: '8px',
@@ -745,8 +745,8 @@ function Profile() {
                         alignSelf: 'flex-start',
                         transition: 'all 0.2s',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(167, 139, 250,0.2)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(167, 139, 250,0.1)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(154, 98, 56,0.2)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(154, 98, 56,0.1)'; }}
                     >
                       <ExternalLink size={14} /> Entrar no Grupo VIP Telegram
                     </a>
@@ -785,8 +785,8 @@ function Profile() {
                 </div>
               ) : (
                 <div style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: '1px dashed #333',
+                  background: 'rgba(74, 55, 35,0.5)',
+                  border: '1px dashed #d3c2a5',
                   borderRadius: '8px',
                   padding: '2rem',
                   textAlign: 'center',
@@ -802,11 +802,11 @@ function Profile() {
 
             {/* SECÇÃO: CARGOS / BADGES */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-              border: '1px solid rgba(255,255,255,0.05)',
+              background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+              border: '1px solid rgba(44, 34, 22,0.05)',
               borderRadius: '16px',
               padding: '2rem',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
             }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Shield size={20} color="var(--gold-primary)" /> Badges
@@ -835,7 +835,7 @@ function Profile() {
 
                   return (
                     <div key={index} style={{
-                      background: 'rgba(167, 139, 250,0.1)',
+                      background: 'rgba(154, 98, 56,0.1)',
                       border: '1px solid var(--gold-primary)',
                       padding: '0.5rem 1rem',
                       borderRadius: '20px',
@@ -858,11 +858,11 @@ function Profile() {
 
             {/* SECÇÃO: ESTATÍSTICAS */}
             <div style={{
-              background: 'linear-gradient(145deg, rgba(34, 31, 56,0.95) 0%, rgba(16, 14, 28,0.98) 100%)',
-              border: '1px solid rgba(255,255,255,0.05)',
+              background: 'linear-gradient(145deg, rgba(245, 236, 221,0.95) 0%, rgba(222, 208, 182,0.98) 100%)',
+              border: '1px solid rgba(44, 34, 22,0.05)',
               borderRadius: '16px',
               padding: '2rem',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              boxShadow: '0 10px 30px rgba(74, 55, 35,0.5)'
             }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Award size={20} color="var(--gold-primary)" /> Minhas Estatísticas
@@ -871,39 +871,39 @@ function Profile() {
               {/* Grid de Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
                 {/* Streak */}
-                <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(74, 55, 35,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(44, 34, 22,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
                   <Flame size={28} color="#ef4444" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{membro ? membro.streak_login : '--'}</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c2216' }}>{membro ? membro.streak_login : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Streak Login</span>
                 </div>
 
                 {/* Mensagens */}
-                <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(74, 55, 35,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(44, 34, 22,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
                   <MessageCircle size={28} color="#3b82f6" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{membro ? membro.chat_messages : '--'}</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c2216' }}>{membro ? membro.chat_messages : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Mensagens</span>
                 </div>
 
                 {/* EPCoins */}
-                <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid var(--gold-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(74, 55, 35,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid var(--gold-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
                   <Coins size={28} color="var(--gold-primary)" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{membro ? membro.epcoins : '--'}</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c2216' }}>{membro ? membro.epcoins : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>EPCoins</span>
                 </div>
 
                 {/* Prémios */}
-                <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(74, 55, 35,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(44, 34, 22,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
                   <Gift size={28} color="#10b981" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{membro ? membro.prizes_claimed : '--'}</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c2216' }}>{membro ? membro.prizes_claimed : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Prémios</span>
                 </div>
 
                 {/* Simulador de Banca */}
                 <div
-                  style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}
+                  style={{ background: 'rgba(74, 55, 35,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(44, 34, 22,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}
                 >
                   <Target size={28} color="#8b5cf6" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c2216' }}>
                     {membro?.saldo_simulador != null ? Math.round(membro.saldo_simulador) : '--'}
                   </span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Banca simulada</span>

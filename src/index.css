@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap');
 
 :root {
-  --bg-main: #171526;
-  --bg-card: #221f38;
-  --bg-card-hover: #2b2745;
-  --gold-primary: #a78bfa;
-  --gold-hover: #9370f0;
-  --gold-light: #c9b8fc;
-  --text-white: #ece9f5;
-  --text-gray: #a39bc0;
-  --green-success: #22c55e;
-  --border-color: #332f4d;
+  --bg-main: #e7dcc7;
+  --bg-card: #f5ecdd;
+  --bg-card-hover: #fbf4e8;
+  --gold-primary: #9a6238;
+  --gold-hover: #82502c;
+  --gold-light: #c08a5c;
+  --text-white: #2c2216;
+  --text-gray: #6f6047;
+  --green-success: #2f8f42;
+  --border-color: #dccbae;
 }
 
 * {
@@ -37,8 +37,8 @@ html, body, #root {
 
 /* Utilitários Botões */
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold-primary), #7c5fe0);
-  color: #000;
+  background: linear-gradient(135deg, var(--gold-primary), #82502c);
+  color: #fff;
   font-weight: 700;
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
@@ -71,7 +71,7 @@ html, body, #root {
 
 /* Efeito de Gradiente para Cards Premium */
 .card-premium {
-  background: linear-gradient(180deg, rgba(20,20,20,1) 0%, rgba(23, 21, 38,1) 100%);
+  background: linear-gradient(180deg, rgba(245, 236, 221,1) 0%, rgba(231, 220, 199,1) 100%);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
@@ -97,8 +97,8 @@ html, body, #root {
   /* Levanta o cartão, anula a rotação para ficar direito e aumenta ligeiramente */
   transform: translateY(calc(var(--base-translate-y, 0px) - 15px)) rotate(0deg) scale(1.05);
   z-index: 50 !important;
-  box-shadow: 0 40px 70px -10px rgba(0,0,0,1), 0 0 30px rgba(167, 139, 250,0.3), inset 0 1px 1px rgba(255,255,255,0.4) !important;
-  border-color: rgba(167, 139, 250,0.8) !important;
+  box-shadow: 0 40px 70px -10px rgba(74, 55, 35,1), 0 0 30px rgba(154, 98, 56,0.3), inset 0 1px 1px rgba(44, 34, 22,0.4) !important;
+  border-color: rgba(154, 98, 56,0.8) !important;
 }
 
 /* Efeitos Hover - Cartões Resultados */
@@ -108,5 +108,5 @@ html, body, #root {
 .hover-scale:hover {
   transform: translateY(-8px);
   border-color: var(--gold-primary);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(167, 139, 250,0.1);
+  box-shadow: 0 20px 40px rgba(74, 55, 35,0.8), 0 0 20px rgba(154, 98, 56,0.1);
 }
