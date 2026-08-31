@@ -7,7 +7,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Navbar } from '../components/Navbar';
 import { CountingNumber } from '../components/CountingNumber';
 import { RaioXResumo } from '../components/RaioXResumo';
-import { AvisoPerfisFalsos } from '../components/AvisoPerfisFalsos';
 import SlotWinsSlider from '../components/SlotWinsSlider';
 import { supabase } from '../lib/supabase';
 import {
@@ -460,13 +459,6 @@ function Home() {
       )}
       {/* NAVBAR */}
       <Navbar />
-
-      {/* AVISO DE SEGURANÇA — roadmap 9, acima do hero de propósito.
-          É a primeira coisa que um visitante novo tem de saber, antes de
-          qualquer argumento de venda. Sem padding-top wrapper: o componente
-          devolve null quando não há perfis falsos registados, e um wrapper
-          com padding continuaria a ocupar espaço vazio por baixo da navbar. */}
-      <AvisoPerfisFalsos />
 
       {/* --------------------------------------------------- */}
       {/* HERO SECTION                                        */}
