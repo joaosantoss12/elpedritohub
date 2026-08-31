@@ -50,51 +50,65 @@
 
 .salas-filtros {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.6rem;
   margin-bottom: 1.6rem;
 }
 
-.salas-filtros__linha {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.salas-chip {
+/* Dropdowns: continente / liga */
+.salas-filtros__campo {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 20px;
+  gap: 0.45rem;
+  min-height: 42px;
+  padding: 0 0.4rem 0 0.75rem;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-gray);
+}
+
+.salas-filtros__campo > svg { flex-shrink: 0; color: var(--gold-primary); }
+
+.salas-filtros__campo-lbl {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.salas-filtros__campo select {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  max-width: 200px;
+  padding: 0.55rem 0.3rem;
+}
+
+.salas-filtros__campo select option { background: #14161c; color: #fff; }
+
+.salas-filtros__limpar {
+  border: none;
   background: transparent;
   color: var(--text-gray);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  padding: 0.5rem;
 }
 
-.salas-chip:hover { color: #fff; border-color: var(--gold-primary); }
+.salas-filtros__limpar:hover { color: #fff; }
 
-.salas-chip.ativo {
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.08);
-}
-
-.salas-chip--liga {
-  padding: 0.32rem 0.7rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.salas-chip--vivo.ativo {
-  border-color: var(--green-success);
-  color: var(--green-success);
-  background: rgba(34, 197, 94, 0.08);
+@media (max-width: 768px) {
+  .salas-filtros__campo { flex: 1 1 100%; }
+  .salas-filtros__campo select { flex: 1; max-width: none; font-size: 16px; }
 }
 
 /* ── Grupos ──────────────────────────────────────────────────── */
@@ -449,34 +463,6 @@
   letter-spacing: 0.5px;
 }
 
-/* ── Canais ──────────────────────────────────────────────────── */
-
-.sala-jogo__tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.8rem;
-}
-
-.sala-jogo__tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1rem;
-  border-radius: 9px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-gray);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.sala-jogo__tab.ativo {
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
-  background: rgba(230, 185, 92, 0.08);
-}
-
 /* ── Mensagens ───────────────────────────────────────────────── */
 
 .sala-jogo__mensagens {
@@ -589,42 +575,6 @@
   margin-top: 0.5rem;
   font-size: 0.8rem;
   color: #ef4444;
-}
-
-/* ── Bloqueio VIP ────────────────────────────────────────────── */
-
-.sala-jogo__bloqueado {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  text-align: center;
-  padding: 3rem 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(230, 185, 92, 0.3);
-  border-radius: 13px;
-  background: linear-gradient(135deg, rgba(230, 185, 92, 0.08), transparent);
-}
-
-.sala-jogo__bloqueado strong { font-size: 1.05rem; }
-
-.sala-jogo__bloqueado span {
-  font-size: 0.85rem;
-  color: var(--text-gray);
-  max-width: 420px;
-  line-height: 1.6;
-}
-
-.sala-jogo__bloqueado button {
-  margin-top: 0.4rem;
-  padding: 0.65rem 1.4rem;
-  border-radius: 10px;
-  border: none;
-  background: var(--gold-primary);
-  color: #0a0a0a;
-  font-size: 0.85rem;
-  font-weight: 800;
-  cursor: pointer;
 }
 
 @media (max-width: 640px) {

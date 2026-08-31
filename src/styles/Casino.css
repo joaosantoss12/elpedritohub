@@ -1,0 +1,96 @@
+/* Página Casino — casino patrocinador do EL PEDRITO. */
+
+.casino-page {
+  min-height: 100vh;
+  background: var(--bg-main);
+  color: #fff;
+}
+
+.casino-wrapper {
+  width: 80%;
+  margin: 0 auto;
+  padding: 3rem 0 5rem;
+}
+
+.casino-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+  background:
+    radial-gradient(130% 150% at 50% 0%, rgba(230, 185, 92, 0.22), transparent 62%),
+    var(--bg-card);
+}
+
+.casino-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  font-weight: 700;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+}
+
+.casino-hero__nome {
+  margin: 1.4rem 0 0;
+  font-family: 'Fredoka', 'Inter', system-ui, sans-serif;
+  font-size: clamp(4rem, 16vw, 9.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  background: linear-gradient(135deg, #fff4cf, #f4d78b 28%, var(--gold-primary) 52%, #a67d33);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 60px rgba(230, 185, 92, 0.55));
+}
+
+.casino-hero__tagline {
+  max-width: 46ch;
+  margin: 1.6rem auto 0;
+  color: var(--text-gray);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.casino-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.8rem;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  color: #000;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.casino-hero__cta:hover {
+  transform: scale(1.04);
+  box-shadow: 0 12px 34px rgba(230, 185, 92, 0.4);
+}
+
+.casino-hero__nota {
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  color: var(--text-gray);
+}
+
+.casino-slider {
+  margin-top: 3rem;
+}
+
+/* O slider traz padding lateral próprio para a Home; aqui já vive dentro
+   do wrapper, por isso alinha-o com o resto da página. */
+.casino-slider .slot-wins {
+  padding: 0;
+  margin-bottom: 0;
+}

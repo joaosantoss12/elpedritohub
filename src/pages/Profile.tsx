@@ -900,9 +900,7 @@ function Profile() {
 
                 {/* Simulador de Banca */}
                 <div
-                  onClick={() => navigate('/simulador')}
-                  style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center', cursor: 'pointer' }}
-                  title="Abrir o Simulador de Banca"
+                  style={{ background: 'rgba(0,0,0,0.5)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}
                 >
                   <Target size={28} color="#8b5cf6" />
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>

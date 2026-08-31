@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseSelect, supabaseInsert, supabaseUpdate } from '../_lib/supabaseAdmin';
+import { createChannelInviteLink } from '../_lib/inviteLink';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -8,6 +10,93 @@ const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Real subscription length is a number of calendar months (mirrors the bot).
+const PLAN_MONTHS: Record<string, number> = { monthly: 1, quarterly: 3, yearly: 12 };
+
+type SubscriptionRow = { id: string; expires_at: string; invite_link_id: string | null };
+
+function addCalendarMonths(start: Date, months: number): Date {
+  const d = new Date(start);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, lastDay));
+  return d;
+}
+
+function computeExpiry(current: SubscriptionRow | undefined, planId: string): Date {
+  const now = new Date();
+  const base = current
+    ? new Date(Math.max(new Date(current.expires_at).getTime(), now.getTime()))
+    : now;
+  return addCalendarMonths(base, PLAN_MONTHS[planId] ?? 0);
+}
+
+/**
+ * FOOTMILLION-style provisioning: when the checkout carried a Telegram session,
+ * mint a single-use VIP channel invite link and upsert the subscriptions row.
+ * Idempotent via invite_links.stripe_session_id. Best-effort — never throws.
+ */
+async function provisionTelegramSubscription(session: Stripe.Checkout.Session) {
+  const telegramUserId = session.metadata?.telegram_user_id;
+  const planId = session.metadata?.planId;
+  if (!telegramUserId || !planId || !PLAN_MONTHS[planId]) return;
+  if (!process.env.BOT_TOKEN || !process.env.NEW_GROUP_ID) return;
+
+  try {
+    const already = await supabaseSelect<{ id: string }>('invite_links', {
+      stripe_session_id: `eq.${session.id}`,
+      select: 'id',
+      limit: '1',
+    });
+    if (already.length) return;
+
+    const existing = await supabaseSelect<SubscriptionRow>('subscriptions', {
+      telegram_user_id: `eq.${telegramUserId}`,
+      active: 'eq.true',
+      select: 'id,expires_at,invite_link_id',
+      order: 'expires_at.desc',
+      limit: '1',
+    });
+    const current = existing[0];
+    const expiresAt = computeExpiry(current, planId);
+    const email = session.customer_details?.email ?? '';
+
+    const { id: inviteLinkId } = await createChannelInviteLink({
+      planId,
+      subscriptionExpiresAt: expiresAt.toISOString(),
+      sessionId: session.id,
+      email,
+    });
+
+    if (current) {
+      await supabaseUpdate(
+        'subscriptions',
+        { id: `eq.${current.id}` },
+        {
+          plan: planId,
+          expires_at: expiresAt.toISOString(),
+          invite_link_id: inviteLinkId,
+          renewal_notified_at: null,
+        }
+      );
+    } else {
+      await supabaseInsert('subscriptions', {
+        telegram_user_id: Number(telegramUserId),
+        telegram_username: session.metadata?.telegram_username ?? null,
+        telegram_name: session.metadata?.telegram_name ?? '',
+        plan: planId,
+        expires_at: expiresAt.toISOString(),
+        invite_link_id: inviteLinkId,
+        active: true,
+      });
+    }
+  } catch (err) {
+    console.error('Telegram subscription provisioning failed:', err);
+  }
+}
 
 // Necessário para ler o raw body e validar a assinatura do Stripe
 export const config = { api: { bodyParser: false } };
@@ -68,6 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             })
             .eq('id', userId);
         }
+        await provisionTelegramSubscription(session);
         break;
       }
 

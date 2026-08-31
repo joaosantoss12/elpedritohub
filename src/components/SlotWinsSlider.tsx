@@ -105,13 +105,13 @@ export default function SlotWinsSlider() {
   const resume = () => { pausedRef.current = false; };
 
   return (
-    <section className="slot-wins" aria-label="Ganhos recentes na CapitansBet">
+    <section className="slot-wins" aria-label="Ganhos recentes na CaptainsBet">
       <div className="slot-wins__head">
         <div>
           <h2 className="slot-wins__title">
             <span>🎰</span> Ganhos recentes
           </h2>
-          <p className="slot-wins__subtitle">Slots que estão a pagar agora na CapitansBet.</p>
+          <p className="slot-wins__subtitle">Slots que estão a pagar agora na CaptainsBet.</p>
         </div>
         <span className="slot-wins__live">Ao vivo</span>
       </div>

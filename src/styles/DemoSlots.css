@@ -1,0 +1,298 @@
+/* Slots em modo demo — grelha + modal com o jogo em iframe. */
+
+.demo-slots {
+  margin-top: 3.5rem;
+}
+
+.demo-slots__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.demo-slots__title {
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  font-weight: 900;
+  margin: 0;
+}
+
+.demo-slots__subtitle {
+  margin: 0.4rem 0 0;
+  max-width: 52ch;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.demo-slots__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-gray);
+}
+
+.demo-slots__search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  min-width: 180px;
+  padding: 0.5rem 0;
+}
+
+.demo-slots__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.demo-slot-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.6rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.demo-slot-card:hover,
+.demo-slot-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--gold-primary);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+
+.demo-slot-card__thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(230, 185, 92, 0.18), transparent 55%),
+    #1c1c1c;
+}
+
+.demo-slot-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.demo-slot-card__thumb[data-fallback="1"] img {
+  display: none;
+}
+
+.demo-slot-card__play {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-primary), #b38b3b);
+  color: #000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.demo-slot-card:hover .demo-slot-card__play,
+.demo-slot-card:focus-visible .demo-slot-card__play {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.demo-slot-card__name {
+  font-weight: 800;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  padding: 0 0.15rem;
+}
+
+.demo-slot-card__tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+  padding: 0 0.15rem;
+  margin-top: auto;
+}
+
+.demo-slots__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.demo-slots__pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: #fff;
+  cursor: pointer;
+  transition: border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.demo-slots__pager-btn:hover:not(:disabled) {
+  border-color: var(--gold-primary);
+}
+
+.demo-slots__pager-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.demo-slots__pager-info {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  min-width: 8.5rem;
+  text-align: center;
+}
+
+.demo-slots__vazio {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  padding: 1.5rem 0;
+}
+
+.demo-slots__disclaimer {
+  margin-top: 1.2rem;
+  font-size: 0.72rem;
+  color: var(--text-gray);
+}
+
+/* ── Modal ─────────────────────────────────────────────────────── */
+
+.demo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.demo-modal__box {
+  width: min(1100px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+.demo-modal__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.demo-modal__bar strong {
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.demo-modal__ext {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.demo-modal__ext:hover { color: #fff; border-color: var(--gold-primary); }
+
+.demo-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.demo-modal__close:hover { background: rgba(255, 255, 255, 0.08); }
+
+.demo-modal__frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #000;
+}
+
+.demo-modal__frame iframe {
+  width: 100%;
+  height: 78vh;
+  max-height: calc(92vh - 52px);
+  border: 0;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .demo-modal { padding: 0; }
+  .demo-modal__box { max-height: 100vh; height: 100vh; border-radius: 0; }
+  .demo-modal__frame iframe { height: calc(100vh - 52px); max-height: none; }
+  .demo-modal__ext { display: none; }
+}

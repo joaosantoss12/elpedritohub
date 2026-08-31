@@ -1,25 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { verifySession, SESSION_COOKIE } from '../_lib/session';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const PLANS: Record<string, { name: string; amount: number; telegramLink: string }> = {
   monthly: {
-    name: 'Footmillion VIP — 1 Mês',
-    amount: 1999,
+    name: 'EL PEDRITO VIP — 1 Mês',
+    amount: 2459,
     telegramLink: 'https://t.me/+mgN-Uonc-g4yNjE0',
   },
   quarterly: {
-    name: 'Footmillion VIP — 3 Meses',
-    amount: 4999,
+    name: 'EL PEDRITO VIP — 3 Meses',
+    amount: 6149,
     telegramLink: 'https://t.me/+BXD7gmFf9OZjNDc0',
   },
   yearly: {
-    name: 'Footmillion VIP — 1 Ano',
-    amount: 18999,
+    name: 'EL PEDRITO VIP — 1 Ano',
+    amount: 24599,
     telegramLink: 'https://t.me/+yvMIUb8B01wzMTM8',
   },
 };
+
+// The Telegram-login gate is enforced only once it's configured. Until the env
+// vars are set (see .env.example), checkout works with member login alone.
+const TELEGRAM_GATE_ENABLED = Boolean(
+  process.env.SESSION_SECRET && process.env.TELEGRAM_CLIENT_ID
+);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -39,6 +46,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const plan = PLANS[planId];
+
+  // Telegram session (optional member gate → mandatory once configured).
+  const tgSession = verifySession(req.cookies?.[SESSION_COOKIE]);
+  if (TELEGRAM_GATE_ENABLED && !tgSession) {
+    return res
+      .status(401)
+      .json({ error: 'Tens de iniciar sessão com o Telegram antes de comprar.' });
+  }
+
+  const telegramMetadata: Record<string, string> = {};
+  if (tgSession) {
+    telegramMetadata.telegram_user_id = String(tgSession.id);
+    telegramMetadata.telegram_name = tgSession.first_name;
+    if (tgSession.username) telegramMetadata.telegram_username = tgSession.username;
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -63,6 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         planId,
         planName: plan.name,
         telegramLink: plan.telegramLink,
+        ...telegramMetadata,
       },
     });
 

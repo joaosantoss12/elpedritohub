@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Radio, MessageSquare, Loader2, ArrowLeft, Send, Lock,
-  Crown, Users, Trash2, RefreshCw, Target, Square, ArrowLeftRight,
+  Radio, MessageSquare, Loader2, ArrowLeft, Send,
+  Trash2, RefreshCw, Target, Square, ArrowLeftRight,
+  Globe, Trophy,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,10 +41,7 @@ export default function Salas() {
   const [aberto, setAberto] = useState<JogoAoVivo | null>(null);
   const [continente, setContinente] = useState<string>('todos');
   const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
-  const [apenasAoVivo, setApenasAoVivo] = useState(false);
 
-  const isVip = membro?.subscription_status === 'active'
-    || (membro?.badges?.some(b => ['vip', 'administrador'].includes(b.toLowerCase())) ?? false);
   const isAdmin = membro?.badges?.includes('Administrador') ?? false;
 
   useEffect(() => {
@@ -75,16 +73,20 @@ export default function Salas() {
   );
 
   // Trocar de continente pode deixar a liga escolhida sem jogos — volta a "todas".
-  useEffect(() => { setLigaFiltro('todas'); }, [continente]);
+  const escolherContinente = (c: string) => { setContinente(c); setLigaFiltro('todas'); };
+  const limparFiltros = () => { setContinente('todos'); setLigaFiltro('todas'); };
+
+  // A página mostra só o que está a decorrer agora; os filtros derivam daí.
+  const jogosVivos = useMemo(() => jogos.filter(estaAoVivo), [jogos]);
 
   const continentesDisponiveis = useMemo(
-    () => ORDEM_CONTINENTES.filter(c => jogos.some(j => continenteDaLiga(j.ligaSlug) === c)),
-    [jogos],
+    () => ORDEM_CONTINENTES.filter(c => jogosVivos.some(j => continenteDaLiga(j.ligaSlug) === c)),
+    [jogosVivos],
   );
 
   const jogosDoContinente = useMemo(
-    () => (continente === 'todos' ? jogos : jogos.filter(j => continenteDaLiga(j.ligaSlug) === continente)),
-    [jogos, continente],
+    () => (continente === 'todos' ? jogosVivos : jogosVivos.filter(j => continenteDaLiga(j.ligaSlug) === continente)),
+    [jogosVivos, continente],
   );
 
   const ligasDisponiveis = useMemo(() => {
@@ -93,14 +95,12 @@ export default function Salas() {
     return [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [jogosDoContinente]);
 
-  const jogosFiltrados = useMemo(
+  const aoVivo = useMemo(
     () => (ligaFiltro === 'todas' ? jogosDoContinente : jogosDoContinente.filter(j => j.ligaSlug === ligaFiltro)),
     [jogosDoContinente, ligaFiltro],
   );
 
-  const aoVivo = jogosFiltrados.filter(estaAoVivo);
-  const proximos = apenasAoVivo ? [] : jogosFiltrados.filter(j => j.estado === 'agendado');
-  const acabados = apenasAoVivo ? [] : jogosFiltrados.filter(j => j.estado === 'terminado' || j.estado === 'adiado');
+  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas';
 
   if (jogoAberto) {
     return (
@@ -108,7 +108,6 @@ export default function Salas() {
         <Navbar />
         <SalaJogo
           jogo={jogoAberto}
-          isVip={isVip}
           isAdmin={isAdmin}
           userId={user?.id ?? ''}
           username={membro?.username || membro?.nome || 'Membro'}
@@ -127,9 +126,8 @@ export default function Salas() {
           <div className="salas-header__eyebrow"><Radio size={14} /> SALAS POR JOGO</div>
           <h1>Jogo a <span>jogo</span></h1>
           <p>
-            Cada jogo tem a sua sala, com o placar ao vivo e um chat só sobre
-            aquele jogo. O canal geral é para todos os membros; o VIP é para
-            quem tem subscrição.
+            Só os jogos a decorrer agora. Cada um tem a sua sala, com o placar
+            ao vivo e um chat de comunidade só sobre aquele jogo.
           </p>
         </header>
 
@@ -138,96 +136,65 @@ export default function Salas() {
             <Loader2 size={26} className="salas-spin" color="var(--gold-primary)" />
             <span>A carregar os jogos de hoje…</span>
           </div>
-        ) : jogos.length === 0 ? (
+        ) : jogosVivos.length === 0 ? (
           <div className="salas-vazio">
             <Radio size={30} color="var(--text-gray)" />
-            <strong>Não há jogos hoje nas ligas seguidas</strong>
-            <span>As competições acompanhadas configuram-se em Admin › Salas.</span>
+            <strong>Sem jogos a decorrer neste momento</strong>
+            <span>Volta quando houver bola em campo — as salas abrem sozinhas.</span>
             <button onClick={puxarJogos}><RefreshCw size={14} /> Atualizar</button>
           </div>
         ) : (
           <>
-            <div className="salas-filtros">
-              <div className="salas-filtros__linha">
-                <button
-                  className={!apenasAoVivo ? 'salas-chip ativo' : 'salas-chip'}
-                  onClick={() => setApenasAoVivo(false)}
-                >
-                  Todos
-                </button>
-                <button
-                  className={apenasAoVivo ? 'salas-chip salas-chip--vivo ativo' : 'salas-chip salas-chip--vivo'}
-                  onClick={() => setApenasAoVivo(true)}
-                >
-                  <span className="salas-dot" /> A decorrer
-                </button>
+            {(continentesDisponiveis.length > 1 || ligasDisponiveis.length > 1 || temFiltro) && (
+              <div className="salas-filtros">
+                {continentesDisponiveis.length > 1 && (
+                  <label className="salas-filtros__campo">
+                    <Globe size={14} />
+                    <span className="salas-filtros__campo-lbl">Continente</span>
+                    <select value={continente} onChange={e => escolherContinente(e.target.value)}>
+                      <option value="todos">Todos</option>
+                      {continentesDisponiveis.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                {ligasDisponiveis.length > 1 && (
+                  <label className="salas-filtros__campo">
+                    <Trophy size={14} />
+                    <span className="salas-filtros__campo-lbl">Liga</span>
+                    <select value={ligaFiltro} onChange={e => setLigaFiltro(e.target.value)}>
+                      <option value="todas">Todas</option>
+                      {ligasDisponiveis.map(([slug, nome]) => (
+                        <option key={slug} value={slug}>{nome}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                {temFiltro && (
+                  <button className="salas-filtros__limpar" onClick={limparFiltros}>
+                    Limpar filtros
+                  </button>
+                )}
               </div>
+            )}
 
-              {continentesDisponiveis.length > 1 && (
-                <div className="salas-filtros__linha">
-                  <button
-                    className={continente === 'todos' ? 'salas-chip ativo' : 'salas-chip'}
-                    onClick={() => setContinente('todos')}
-                  >
-                    Todos os continentes
-                  </button>
-                  {continentesDisponiveis.map(c => (
-                    <button
-                      key={c}
-                      className={continente === c ? 'salas-chip ativo' : 'salas-chip'}
-                      onClick={() => setContinente(c)}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {ligasDisponiveis.length > 1 && (
-                <div className="salas-filtros__linha">
-                  <button
-                    className={ligaFiltro === 'todas' ? 'salas-chip salas-chip--liga ativo' : 'salas-chip salas-chip--liga'}
-                    onClick={() => setLigaFiltro('todas')}
-                  >
-                    Todas as ligas
-                  </button>
-                  {ligasDisponiveis.map(([slug, nome]) => (
-                    <button
-                      key={slug}
-                      className={ligaFiltro === slug ? 'salas-chip salas-chip--liga ativo' : 'salas-chip salas-chip--liga'}
-                      onClick={() => setLigaFiltro(slug)}
-                    >
-                      {nome}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {aoVivo.length === 0 && proximos.length === 0 && acabados.length === 0 ? (
+            {aoVivo.length === 0 ? (
               <div className="salas-vazio">
                 <Radio size={30} color="var(--text-gray)" />
                 <strong>Sem jogos para este filtro</strong>
                 <span>Experimenta outro continente ou liga.</span>
               </div>
             ) : (
-              <>
-                {aoVivo.length > 0 && (
-                  <GrupoJogos
-                    titulo="A decorrer"
-                    aoVivo
-                    jogos={aoVivo}
-                    contagens={contagens}
-                    onAbrir={setAberto}
-                  />
-                )}
-                {proximos.length > 0 && (
-                  <GrupoJogos titulo="Hoje, mais logo" jogos={proximos} contagens={contagens} onAbrir={setAberto} />
-                )}
-                {acabados.length > 0 && (
-                  <GrupoJogos titulo="Já terminados" jogos={acabados} contagens={contagens} onAbrir={setAberto} />
-                )}
-              </>
+              <GrupoJogos
+                titulo="A decorrer"
+                aoVivo
+                jogos={aoVivo}
+                contagens={contagens}
+                onAbrir={setAberto}
+              />
             )}
           </>
         )}
@@ -295,17 +262,15 @@ function GrupoJogos({
 // ─── SALA ─────────────────────────────────────────────────────
 
 function SalaJogo({
-  jogo, isVip, isAdmin, userId, username, onVoltar,
+  jogo, isAdmin, userId, username, onVoltar,
 }: {
   jogo: JogoAoVivo;
-  isVip: boolean;
   isAdmin: boolean;
   userId: string;
   username: string;
   onVoltar: () => void;
 }) {
-  const navigate = useNavigate();
-  const [canal, setCanal] = useState<CanalSala>('geral');
+  const canal: CanalSala = 'geral';
   const [mensagens, setMensagens] = useState<MensagemSala[]>([]);
   const [carregado, setCarregado] = useState(false);
   const [texto, setTexto] = useState('');
@@ -313,8 +278,6 @@ function SalaJogo({
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [] });
   const fundoRef = useRef<HTMLDivElement | null>(null);
-
-  const podeVer = canal === 'geral' || isVip;
 
   useEffect(() => {
     let vivo = true;
@@ -330,8 +293,6 @@ function SalaJogo({
   }, [jogo.id, jogo.ligaSlug]);
 
   useEffect(() => {
-    if (!podeVer) { setMensagens([]); setCarregado(true); return; }
-
     let vivo = true;
     setCarregado(false);
     carregarMensagens(jogo.id, canal).then(ms => {
@@ -346,7 +307,7 @@ function SalaJogo({
     });
 
     return () => { vivo = false; limpar(); };
-  }, [jogo.id, canal, podeVer]);
+  }, [jogo.id]);
 
   useEffect(() => {
     fundoRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -450,36 +411,8 @@ function SalaJogo({
         </div>
       )}
 
-      {/* ── Canais ── */}
-      <nav className="sala-jogo__tabs">
-        <button
-          className={canal === 'geral' ? 'sala-jogo__tab ativo' : 'sala-jogo__tab'}
-          onClick={() => setCanal('geral')}
-        >
-          <Users size={14} /> Geral
-        </button>
-        <button
-          className={canal === 'vip' ? 'sala-jogo__tab ativo' : 'sala-jogo__tab'}
-          onClick={() => setCanal('vip')}
-        >
-          {isVip ? <Crown size={14} /> : <Lock size={14} />} VIP
-        </button>
-      </nav>
-
       {/* ── Chat ── */}
-      {!podeVer ? (
-        <div className="sala-jogo__bloqueado">
-          <Lock size={26} color="var(--gold-primary)" />
-          <strong>Sala VIP</strong>
-          <span>
-            O canal VIP deste jogo é para subscritores. O canal geral fica
-            aberto e continua a dar-te o placar e a conversa da comunidade.
-          </span>
-          <button onClick={() => navigate('/plans')}>Ver planos</button>
-        </div>
-      ) : (
-        <>
-          <div className="sala-jogo__mensagens">
+      <div className="sala-jogo__mensagens">
             {!carregado ? (
               <div className="salas-loading">
                 <Loader2 size={22} className="salas-spin" color="var(--gold-primary)" />
@@ -520,7 +453,7 @@ function SalaJogo({
             <input
               value={texto}
               maxLength={500}
-              placeholder={canal === 'vip' ? 'Comentar no canal VIP…' : 'Comentar este jogo…'}
+              placeholder="Comentar este jogo…"
               onChange={e => setTexto(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') enviar(); }}
             />
@@ -528,8 +461,6 @@ function SalaJogo({
               {enviando ? <Loader2 size={15} className="salas-spin" /> : <Send size={15} />}
             </button>
           </div>
-        </>
-      )}
     </div>
   );
 }

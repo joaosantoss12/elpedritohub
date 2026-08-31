@@ -6,13 +6,9 @@ import { User, SquareArrowRight } from 'lucide-react';
 // authOnly: páginas que redirecionam para /login ou ficam bloqueadas sem conta —
 // não faz sentido mostrá-las no menu a quem ainda não tem sessão iniciada.
 const NAV_LINKS: { label: string; path: string; authOnly?: boolean }[] = [
-  { label: 'RAIO-X',         path: '/passaporte' },
-  { label: 'SALA DE COMANDO', path: '/sala' },
   { label: 'SALAS DE JOGO', path: '/salas', authOnly: true },
   { label: 'BANCA',          path: '/banca', authOnly: true },
-  { label: 'RANKING ROI',    path: '/ranking', authOnly: true },
-  { label: 'SIMULADOR',      path: '/simulador', authOnly: true },
-  { label: 'PRÉMIOS',        path: '/premios' },
+  { label: 'CASINO',         path: '/casino' },
   { label: 'PLANOS',         path: '/plans' },
   { label: 'SUPORTE',        path: '/suporte', authOnly: true },
 ];

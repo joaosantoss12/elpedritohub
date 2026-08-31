@@ -1380,3 +1380,227 @@
   }
   .banca-canal__tip-vert { grid-column: 1 / -1; }
 }
+
+/* ── Refactor: PLANILHAS-style drill-down ─────────────────────────── */
+
+.banca-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+}
+
+.banca-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  color: var(--text-gray);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.banca-btn-ghost:hover:not(:disabled) {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+.banca-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.banca-balance-card__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-gray);
+  cursor: pointer;
+}
+.banca-balance-card__edit-btn:hover { color: var(--gold-primary); border-color: var(--gold-primary); }
+
+/* Scope toolbar */
+.banca-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin: 1.4rem 0 1rem;
+}
+.banca-scope__btn {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  color: var(--text-gray);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.banca-scope__btn.active,
+.banca-scope__field.active {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+.banca-scope__field {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  font-size: 0.8rem;
+  color: var(--text-gray);
+}
+.banca-scope__field.disabled { opacity: 0.45; }
+.banca-scope__field span { font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.7rem; }
+.banca-scope__field select {
+  background: transparent;
+  border: none;
+  color: var(--text-light, #fff);
+  font-size: 0.82rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+.banca-scope__field select option { background: var(--bg-card); color: #fff; }
+
+/* Stat grid */
+.banca-statgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.banca-statcard {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.banca-statcard__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-gray);
+}
+.banca-statcard__label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.banca-statcard__icon { opacity: 0.5; }
+.banca-statcard__value { font-size: 1.5rem; font-weight: 800; margin-top: 0.4rem; color: var(--text-light, #fff); }
+.banca-statcard__value.pos { color: #4ade80; }
+.banca-statcard__value.neg { color: #f87171; }
+.banca-statcard__value.gold { color: var(--gold-primary); }
+.banca-statcard__hint { font-size: 0.76rem; color: var(--text-gray); margin-top: 0.25rem; }
+
+.banca-ministats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1.6rem;
+}
+.banca-ministats > div {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.banca-ministats span { font-size: 0.68rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.02em; }
+.banca-ministats strong { font-size: 0.95rem; color: var(--text-light, #fff); }
+.banca-ministats strong.pos { color: #4ade80; }
+.banca-ministats strong.neg { color: #f87171; }
+
+.banca-month-chart__total { font-weight: 800; font-size: 1.05rem; }
+.banca-month-chart__total.pos { color: #4ade80; }
+.banca-month-chart__total.neg { color: #f87171; }
+.banca-detail__caption {
+  margin: 0.8rem 0 0;
+  font-size: 0.76rem;
+  color: var(--text-gray);
+  line-height: 1.4;
+}
+.banca-detail__pnl.pos { color: #4ade80; }
+.banca-detail__pnl.neg { color: #f87171; }
+
+/* Bets table */
+.banca-table-section { margin-top: 2rem; }
+.banca-table-section__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-light, #fff);
+  margin: 0 0 0.8rem;
+}
+.banca-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+.banca-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 640px; }
+.banca-table th {
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-gray);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.banca-table th.r { text-align: right; }
+.banca-table td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-light, #fff);
+  white-space: nowrap;
+}
+.banca-table tr:last-child td { border-bottom: none; }
+.banca-table td.r { text-align: right; }
+.banca-table td.dim { color: var(--text-gray); }
+.banca-table td.gold { color: var(--gold-primary); }
+.banca-table td.strong { font-weight: 700; }
+.banca-table td.pos { color: #4ade80; }
+.banca-table td.neg { color: #f87171; }
+.banca-table td em { color: var(--text-gray); font-style: normal; font-size: 0.78rem; }
+
+.banca-tooltip__mercado { font-size: 0.76rem; color: var(--text-gray); margin-bottom: 0.3rem; }
+.banca-tooltip__grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.15rem 0.7rem;
+  font-size: 0.78rem;
+  margin: 0.3rem 0;
+}
+.banca-tooltip__grid span { color: var(--text-gray); }
+.banca-tooltip__grid strong { text-align: right; color: var(--text-light, #fff); }
+.banca-tooltip__grid strong.pos { color: #4ade80; }
+.banca-tooltip__grid strong.neg { color: #f87171; }
+.banca-tooltip__result {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+.banca-tooltip__result--ganha { color: #4ade80; }
+.banca-tooltip__result--perdida { color: #f87171; }
+.banca-tooltip__result--pendente { color: #94a3b8; }
+.banca-tooltip__cumulative { font-size: 0.74rem; margin-top: 0.3rem; color: var(--text-gray); }
+.banca-tooltip__cumulative.pos { color: #4ade80; }
+.banca-tooltip__cumulative.neg { color: #f87171; }
+.banca-tooltip__value.neutral { color: #94a3b8; }
+
+@media (max-width: 900px) {
+  .banca-statgrid { grid-template-columns: repeat(2, 1fr); }
+  .banca-ministats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 500px) {
+  .banca-ministats { grid-template-columns: repeat(2, 1fr); }
+}

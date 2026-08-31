@@ -873,7 +873,7 @@ function Home() {
         <div id="ofertas-section" className="card-premium">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 'bold' }}>MELHOR CASINO PARA TI</h3>
-            <img src="/capitansbet.png" alt="CapitansBet" style={{ height: '40px', objectFit: 'contain' }} />
+            <img src="/capitansbet.png" alt="CaptainsBet" style={{ height: '40px', objectFit: 'contain' }} />
           </div>
 
           <div style={{ overflowY: 'auto', maxHeight: '340px', display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '4px' }}>
@@ -1063,7 +1063,7 @@ function Home() {
           <button
             className="btn-outline"
             style={{ fontSize: '0.8rem', padding: '0.6rem 1.2rem' }}
-            onClick={() => navigate('/passaporte')}
+            onClick={() => navigate('/register')}
           >
             VER TODOS
           </button>
