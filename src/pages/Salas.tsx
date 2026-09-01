@@ -523,7 +523,8 @@ function CampoAoVivo(
 
   // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
   // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
-  // senão a fase corrente.
+  // senão a fase corrente — que também mostra o escudo + nome de quem tem a
+  // posse, como se fosse um evento ("Melgar · Ataque").
   const time = terminado ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
   const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
@@ -534,7 +535,7 @@ function CampoAoVivo(
       ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
       : destaque
         ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
-        : { texto: fase || 'Bola em jogo', nota: '', time: null };
+        : { texto: fase || 'Bola em jogo', nota: '', time };
 
   const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
 
