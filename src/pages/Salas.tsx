@@ -410,6 +410,53 @@ function SeletorDia({ dia, onEscolher }: {
 
 // ─── LISTA ────────────────────────────────────────────────────
 
+/** Agrupa os jogos por competição, mantendo a ordem por que já vêm (o
+ *  `ordenarJogos` do placar já põe primeiro o que mais interessa). */
+function agruparPorLiga(jogos: JogoAoVivo[]) {
+  const ordem: string[] = [];
+  const mapa = new Map<string, JogoAoVivo[]>();
+  for (const j of jogos) {
+    if (!mapa.has(j.ligaSlug)) { mapa.set(j.ligaSlug, []); ordem.push(j.ligaSlug); }
+    mapa.get(j.ligaSlug)!.push(j);
+  }
+  return ordem.map(slug => ({ slug, nome: mapa.get(slug)![0].liga, jogos: mapa.get(slug)! }));
+}
+
+function JogoCard({ jogo: j, contagens, onAbrir }: {
+  jogo: JogoAoVivo;
+  contagens: Record<string, number>;
+  onAbrir: (j: JogoAoVivo) => void;
+}) {
+  return (
+    <button className="jogo-card" onClick={() => onAbrir(j)}>
+      <div className="jogo-card__topo">
+        <span className={estaAoVivo(j) ? 'jogo-card__relogio vivo' : 'jogo-card__relogio'}>
+          {estaAoVivo(j) && <span className="salas-dot" />}
+          {j.relogio}
+        </span>
+      </div>
+
+      <div className="jogo-card__equipa">
+        {j.logoCasa && <img src={j.logoCasa} alt="" loading="lazy" />}
+        <span>{j.casa}</span>
+        <strong>{j.golosCasa ?? '–'}</strong>
+      </div>
+      <div className="jogo-card__equipa">
+        {j.logoFora && <img src={j.logoFora} alt="" loading="lazy" />}
+        <span>{j.fora}</span>
+        <strong>{j.golosFora ?? '–'}</strong>
+      </div>
+
+      <div className="jogo-card__rodape">
+        <MessageSquare size={13} />
+        {contagens[j.id]
+          ? `${contagens[j.id]} ${contagens[j.id] === 1 ? 'comentário' : 'comentários'}`
+          : 'Abrir sala'}
+      </div>
+    </button>
+  );
+}
+
 function GrupoJogos({
   titulo, jogos, contagens, onAbrir, aoVivo = false,
 }: {
@@ -419,43 +466,30 @@ function GrupoJogos({
   onAbrir: (j: JogoAoVivo) => void;
   aoVivo?: boolean;
 }) {
+  const ligas = agruparPorLiga(jogos);
   return (
     <section className="salas-grupo">
       <h2 className={aoVivo ? 'salas-grupo__t salas-grupo__t--vivo' : 'salas-grupo__t'}>
         {aoVivo && <span className="salas-dot" />}
         {titulo}
       </h2>
-      <div className="salas-grelha">
-        {jogos.map(j => (
-          <button key={j.id} className="jogo-card" onClick={() => onAbrir(j)}>
-            <div className="jogo-card__liga">
-              {bandeiraDaLiga(j.ligaSlug) && (
-                <img className="liga-bandeira" src={bandeiraDaLiga(j.ligaSlug)!} alt="" loading="lazy" />
+      {/* Colunas estilo mosaico: cada competição é um bloco que quebra onde
+          calhar — uma competição curta deixa a seguinte subir logo por baixo. */}
+      <div className="salas-ligas">
+        {ligas.map(g => (
+          <div key={g.slug} className="salas-liga">
+            <div className="salas-liga__cab">
+              {bandeiraDaLiga(g.slug) && (
+                <img className="liga-bandeira" src={bandeiraDaLiga(g.slug)!} alt="" loading="lazy" />
               )}
-              <span>{j.liga}</span>
-              <span className={estaAoVivo(j) ? 'jogo-card__relogio vivo' : 'jogo-card__relogio'}>
-                {j.relogio}
-              </span>
+              <span>{g.nome}</span>
             </div>
-
-            <div className="jogo-card__equipa">
-              {j.logoCasa && <img src={j.logoCasa} alt="" loading="lazy" />}
-              <span>{j.casa}</span>
-              <strong>{j.golosCasa ?? '–'}</strong>
+            <div className="salas-liga__jogos">
+              {g.jogos.map(j => (
+                <JogoCard key={j.id} jogo={j} contagens={contagens} onAbrir={onAbrir} />
+              ))}
             </div>
-            <div className="jogo-card__equipa">
-              {j.logoFora && <img src={j.logoFora} alt="" loading="lazy" />}
-              <span>{j.fora}</span>
-              <strong>{j.golosFora ?? '–'}</strong>
-            </div>
-
-            <div className="jogo-card__rodape">
-              <MessageSquare size={13} />
-              {contagens[j.id]
-                ? `${contagens[j.id]} ${contagens[j.id] === 1 ? 'comentário' : 'comentários'}`
-                : 'Abrir sala'}
-            </div>
-          </button>
+          </div>
         ))}
       </div>
     </section>

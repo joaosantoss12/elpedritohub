@@ -155,10 +155,49 @@
   50% { opacity: 0.25; }
 }
 
-.salas-grelha {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
-  gap: 0.9rem;
+/* Mosaico de competições: até 5 colunas, cada bloco de competição quebra
+   onde acaba para a seguinte encostar por baixo (sem alinhar em linhas). */
+.salas-ligas {
+  columns: 5 210px;
+  column-gap: 0.9rem;
+}
+
+.salas-liga {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 1.4rem;
+}
+
+.salas-liga__cab {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--text-white);
+}
+
+.salas-liga__cab .liga-bandeira {
+  width: 18px;
+  height: 13px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.salas-liga__cab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.salas-liga__jogos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 /* ── Cartão de jogo ──────────────────────────────────────────── */
@@ -182,16 +221,19 @@
   transform: translateY(-2px);
 }
 
-.jogo-card__liga {
+.jogo-card__topo {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.68rem;
+  justify-content: flex-end;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   color: var(--text-gray);
+}
+
+.jogo-card__relogio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .jogo-card__relogio.vivo { color: var(--green-success); }
