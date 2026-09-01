@@ -519,15 +519,17 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
           </div>
         )}
 
-        <div className="campo-live__evento">
+        <div className="campo-live__evento-wrap">
           {evento.time && (
             <span className="campo-live__evento-eq">
               {evento.time.logo && <img src={evento.time.logo} alt="" />}
-              {evento.time.nome}
+              <span>{evento.time.nome}</span>
             </span>
           )}
-          <strong>{evento.texto}</strong>
-          {evento.nota && <em>{evento.nota}</em>}
+          <div className="campo-live__evento">
+            <strong>{evento.texto}</strong>
+            {evento.nota && <em>{evento.nota}</em>}
+          </div>
         </div>
       </div>
 
