@@ -12,7 +12,6 @@ import {
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
-import { idJogoSofa, urlWidgetSofa } from '../lib/sofascore';
 import {
   carregarSalasConfig, carregarMensagens, contarPorEvento, enviarMensagem,
   apagarMensagem, subscreverSala,
@@ -529,71 +528,6 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
   );
 }
 
-/**
- * Painel do widget oficial do SofaScore — mapa do jogo, momentum e estatísticas
- * deles, ao lado do nosso. O id do evento é descoberto no browser do visitante
- * (ver `sofascore.ts`); se a Cloudflare barrar ou não houver correspondência,
- * o painel não aparece de todo.
- */
-function PainelSofascore({ jogo }: { jogo: JogoAoVivo }) {
-  const [id, setId] = useState<number | null>(null);
-
-  useEffect(() => {
-    let vivo = true;
-    setId(null);
-    idJogoSofa(jogo.casa, jogo.fora, jogo.inicio).then(r => {
-      if (vivo) setId(r);
-    });
-    return () => { vivo = false; };
-  }, [jogo.casa, jogo.fora, jogo.inicio]);
-
-  if (id === null) return null;
-
-  return (
-    <div className="painel-sofa">
-      <div className="painel-sofa__topo">
-        <span>Mapa do jogo</span>
-        <span className="painel-sofa__fonte">SofaScore</span>
-      </div>
-      <iframe
-        className="painel-sofa__frame"
-        src={urlWidgetSofa(id)}
-        title="Mapa do jogo (SofaScore)"
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
-    </div>
-  );
-}
-
-/**
- * Feed de vídeo do Scorebat — golos e melhores momentos das principais
- * competições, com direitos tratados. É o feed geral (não filtra por este
- * jogo — o Scorebat só deixa filtrar por competição com token), aparece uns
- * minutos depois de cada lance. Mais um painel, não substitui nada.
- */
-const SCOREBAT_EMBED = 'https://www.scorebat.com/embed/';
-
-function PainelVideos() {
-  return (
-    <div className="painel-video">
-      <div className="painel-video__topo">
-        <span>Golos e melhores momentos</span>
-        <span className="painel-video__fonte">Scorebat</span>
-      </div>
-      <iframe
-        className="painel-video__frame"
-        src={SCOREBAT_EMBED}
-        title="Golos e melhores momentos (Scorebat)"
-        loading="lazy"
-        allowFullScreen
-        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
-    </div>
-  );
-}
-
 // ─── SALA ─────────────────────────────────────────────────────
 
 function SalaJogo({
@@ -762,12 +696,6 @@ function SalaJogo({
               <PainelPrevisoes perguntas={perguntas} />
             </div>
           )}
-
-          {/* Widget do SofaScore — só aparece se o jogo for encontrado lá. */}
-          <PainelSofascore jogo={jogo} />
-
-          {/* Golos e melhores momentos (feed geral do Scorebat). */}
-          <PainelVideos />
 
           {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
           <DropWidget eventoId={jogo.id} />
