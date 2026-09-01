@@ -273,6 +273,9 @@ export interface PatchVivo {
   golosFora: number | null;
   estado: EstadoJogo;
   relogio: string;
+  /** Resultado ao intervalo (1.ª parte). `null` até o jogo lá chegar. */
+  htCasa: number | null;
+  htFora: number | null;
 }
 
 export interface DetalhesJogo {
@@ -591,7 +594,22 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
   else if (estado === 'ao_vivo') relogio = txt(st.displayClock) ?? txt(st.clock) ?? detail;
   else relogio = detail;
 
-  return { golosCasa: golo(casa), golosFora: golo(fora), estado, relogio };
+  // Resultado ao intervalo: o 1.º valor dos linescores de cada equipa. Só se
+  // mostra depois de o jogo passar o intervalo — antes disso ainda muda.
+  const primeiroLinescore = (c: Bruto) => {
+    const ls = lista(c.linescores).map(obj);
+    const n = Number(txt(ls[0]?.value ?? ls[0]?.displayValue));
+    return Number.isFinite(n) ? n : null;
+  };
+  const periodo = Number(txt(st.period));
+  const passouIntervalo = estado === 'intervalo' || estado === 'terminado'
+    || (Number.isFinite(periodo) && periodo >= 2);
+  const htCasa = passouIntervalo ? primeiroLinescore(casa) : null;
+  const htFora = passouIntervalo ? primeiroLinescore(fora) : null;
+
+  return {
+    golosCasa: golo(casa), golosFora: golo(fora), estado, relogio, htCasa, htFora,
+  };
 }
 
 /** Estatísticas + eventos + momentum de um jogo. Falha em silêncio (devolve

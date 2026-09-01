@@ -826,6 +826,12 @@ function SalaJogo({
                 <strong>{jx.fora}</strong>
               </div>
             </div>
+
+            {detalhes.vivo?.htCasa != null && detalhes.vivo?.htFora != null && (
+              <p className="placar__ht">
+                Intervalo <span>{detalhes.vivo.htCasa} : {detalhes.vivo.htFora}</span>
+              </p>
+            )}
           </div>
 
           {estaAoVivo(jx) && jx.momento && (

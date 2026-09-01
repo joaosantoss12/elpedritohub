@@ -490,6 +490,21 @@
   color: var(--text-gray);
 }
 
+.placar__ht {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.placar__ht span {
+  color: var(--text-gray);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Estatísticas + eventos ──────────────────────────────────── */
 
 .jogo-detalhes {

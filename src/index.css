@@ -31,6 +31,68 @@
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
+/* ── Temas alternativos ───────────────────────────────────────────
+   O tema base (:root, "castanho") é preto/ardósia + castanho mate. Cada
+   bloco abaixo só recalcula os tokens que mudam de cor; tudo o resto da
+   app herda. `data-tema` é posto em <html> pelo seletor de tema (e por um
+   script inline no index.html, para não piscar). */
+:root[data-tema="oceano"] {
+  --bg-deep: #0a1420;
+  --bg-main: #0e1a28;
+  --bg-card: #16283a;
+  --bg-card-hover: #1d3550;
+  --bg-elevated: #244463;
+  --gold-primary: #3fa9c9;
+  --gold-hover: #2f89a5;
+  --gold-light: #7fd0e6;
+  --border-color: #1f3a52;
+  --border-strong: #2f5273;
+  --gold-tint: rgba(63, 169, 201, 0.14);
+  --card-gradient: linear-gradient(145deg, #17293b 0%, #101d2b 100%);
+}
+:root[data-tema="esmeralda"] {
+  --bg-deep: #0a1712;
+  --bg-main: #0e1d17;
+  --bg-card: #163025;
+  --bg-card-hover: #1d4131;
+  --bg-elevated: #245140;
+  --gold-primary: #35b57e;
+  --gold-hover: #2a9366;
+  --gold-light: #74dcae;
+  --border-color: #1f4133;
+  --border-strong: #2f5e49;
+  --gold-tint: rgba(53, 181, 126, 0.14);
+  --card-gradient: linear-gradient(145deg, #163026 0%, #0f2019 100%);
+}
+:root[data-tema="ameixa"] {
+  --bg-deep: #150d1c;
+  --bg-main: #1c1226;
+  --bg-card: #2a1c38;
+  --bg-card-hover: #3a2850;
+  --bg-elevated: #4a3563;
+  --gold-primary: #a97cd8;
+  --gold-hover: #8f62be;
+  --gold-light: #c9a8ec;
+  --border-color: #3a2850;
+  --border-strong: #4f3a70;
+  --gold-tint: rgba(169, 124, 216, 0.14);
+  --card-gradient: linear-gradient(145deg, #291b37 0%, #1c1226 100%);
+}
+:root[data-tema="carvao"] {
+  --bg-deep: #0f0f11;
+  --bg-main: #16161a;
+  --bg-card: #202027;
+  --bg-card-hover: #2a2a33;
+  --bg-elevated: #35353f;
+  --gold-primary: #9aa3b2;
+  --gold-hover: #7d8697;
+  --gold-light: #c4cbd6;
+  --border-color: #2c2c34;
+  --border-strong: #3c3c46;
+  --gold-tint: rgba(154, 163, 178, 0.14);
+  --card-gradient: linear-gradient(145deg, #212128 0%, #17171b 100%);
+}
+
 * {
   margin: 0;
   padding: 0;

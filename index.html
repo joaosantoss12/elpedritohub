@@ -12,6 +12,13 @@
     <meta name="apple-mobile-web-app-title" content="El Pedrito" />
     <link rel="apple-touch-icon" href="/icon-192.svg" />
     <title>El Pedrito HUB</title>
+    <script>
+      // Aplica o tema guardado antes do primeiro paint, senão pisca.
+      try {
+        var t = localStorage.getItem('ep-tema');
+        if (t && t !== 'castanho') document.documentElement.setAttribute('data-tema', t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
