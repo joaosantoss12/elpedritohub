@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { User, SquareArrowRight } from 'lucide-react';
+import { SinoNotificacoes } from './SinoNotificacoes';
 
 // A ordem aqui é a ordem da IA do Hub. Ver EPC Personal Desk · Execução.
 // authOnly: páginas que redirecionam para /login ou ficam bloqueadas sem conta —
@@ -169,6 +170,7 @@ export function Navbar() {
           </>
         ) : (
           <>
+          <SinoNotificacoes />
           {membro?.badges?.includes('Administrador') && (
             <button
               style={{

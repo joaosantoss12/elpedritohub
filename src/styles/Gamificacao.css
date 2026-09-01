@@ -926,3 +926,173 @@
   border-color: var(--gold-primary);
   color: var(--bg-deep);
 }
+
+/* ─── Canais por clube ─────────────────────────────────────── */
+
+.cc-canais { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+
+.cc-canal {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-gray);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.cc-canal:hover { color: var(--text-white); }
+
+.cc-canal.ativo {
+  color: var(--gold-primary);
+  border-color: var(--gold-primary);
+}
+
+.cc-icone { font-size: 0.95rem; }
+
+.cc-descricao {
+  font-size: 0.8rem;
+  color: var(--text-gray);
+  margin-bottom: 12px;
+}
+
+/* Altura fixa de propósito: um chat que cresce empurra a caixa de escrita
+   para fora do ecra, e a caixa de escrita e a razao de o chat existir. */
+.cc-chat {
+  height: 420px;
+  overflow-y: auto;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cc-msg { max-width: 78%; }
+.cc-msg.minha { align-self: flex-end; text-align: right; }
+
+.cc-msg-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--text-gray);
+  margin-bottom: 3px;
+}
+
+.cc-msg.minha .cc-msg-topo { justify-content: flex-end; }
+.cc-msg-topo strong { color: var(--gold-primary); font-weight: 800; }
+
+.cc-apagar {
+  background: transparent;
+  border: none;
+  color: var(--text-gray);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  opacity: 0.55;
+}
+
+.cc-apagar:hover { opacity: 1; color: var(--text-white); }
+
+.cc-msg-texto {
+  background: var(--bg-card-hover);
+  border-radius: 11px;
+  padding: 9px 13px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-white);
+  word-break: break-word;
+  display: inline-block;
+  text-align: left;
+}
+
+.cc-escrever { display: flex; gap: 10px; margin-top: 14px; }
+
+.cc-escrever input {
+  flex: 1;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--text-white);
+  font-family: inherit;
+  font-size: 0.86rem;
+  outline: none;
+}
+
+.cc-escrever input:focus { border-color: var(--gold-primary); }
+
+/* ─── EPC Jackpot ──────────────────────────────────────────── */
+
+.jk-pote {
+  text-align: center;
+  padding: 26px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.jk-pote-valor {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--gold-primary);
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.jk-pote-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  margin-top: 8px;
+}
+
+.jk-numeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.jk-numero {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.jk-numero strong {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text-white);
+}
+
+.jk-numero span {
+  font-size: 0.7rem;
+  color: var(--text-gray);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.jk-nota {
+  font-size: 0.78rem;
+  color: var(--text-gray);
+  line-height: 1.6;
+  border-left: 2px solid var(--border-strong);
+  padding-left: 12px;
+  margin-top: 16px;
+}

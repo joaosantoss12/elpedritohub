@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Loader2, LogOut, Shield, Users } from 'lucide-react';
+import { Crown, Loader2, LogOut, MessagesSquare, Shield, Users } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
+import { CanaisClube } from '../components/CanaisClube';
 import { useAuth } from '../contexts/AuthContext';
 import {
   carregarCla, carregarRankingClas, criarCla, entrarNoCla, sairDoCla,
@@ -23,6 +24,7 @@ export default function Clas() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
+  const [aba, setAba] = useState<'clas' | 'canais'>('clas');
   const [meuCla, setMeuCla] = useState<Cla | null>(null);
   const [ranking, setRanking] = useState<LinhaRankingClas[]>([]);
   const [carregado, setCarregado] = useState(false);
@@ -113,10 +115,23 @@ export default function Clas() {
           </div>
         </div>
 
-        {erro && <div className='gm-erro'>{erro}</div>}
-        {!carregado && <div className='gm-vazio'><Loader2 className='animate-spin' size={22} /></div>}
+        <div className='gm-tabs'>
+          <button className={`gm-tab ${aba === 'clas' ? 'ativo' : ''}`} onClick={() => setAba('clas')}>
+            <Shield size={15} /> Clãs
+          </button>
+          <button className={`gm-tab ${aba === 'canais' ? 'ativo' : ''}`} onClick={() => setAba('canais')}>
+            <MessagesSquare size={15} /> Canais
+          </button>
+        </div>
 
-        {carregado && meuCla && (
+        {aba === 'canais' && <CanaisClube />}
+
+        {aba === 'clas' && erro && <div className='gm-erro'>{erro}</div>}
+        {aba === 'clas' && !carregado && (
+          <div className='gm-vazio'><Loader2 className='animate-spin' size={22} /></div>
+        )}
+
+        {aba === 'clas' && carregado && meuCla && (
           <div className='gm-card'>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
               <div>
@@ -169,7 +184,7 @@ export default function Clas() {
           </div>
         )}
 
-        {carregado && !meuCla && (
+        {aba === 'clas' && carregado && !meuCla && (
           <div className='gm-card'>
             <h2>Cria o teu clã</h2>
             <p className='gm-sub'>Ou entra num que esteja aberto, na lista abaixo.</p>
@@ -203,7 +218,7 @@ export default function Clas() {
           </div>
         )}
 
-        {carregado && (
+        {aba === 'clas' && carregado && (
           <div className='gm-card'>
             <h2>Ranking de clãs · este mês</h2>
             <p className='gm-sub'>EPCoins ganhas pelos membros desde o dia 1.</p>

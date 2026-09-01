@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Coins, Gift, Loader2, ListChecks, ShoppingBag, Copy, Check, UserPlus, History,
+  Coins, Gift, Loader2, ListChecks, ShoppingBag, Copy, Check, Ticket, UserPlus, History,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
+import { PainelJackpot } from '../components/PainelJackpot';
 import { useAuth } from '../contexts/AuthContext';
 import {
   carregarCatalogo, carregarExtrato, carregarMissoes, carregarSegmentosRoda,
@@ -15,7 +16,7 @@ import {
 } from '../lib/comunidade';
 import '../styles/Gamificacao.css';
 
-type Aba = 'missoes' | 'roda' | 'loja' | 'convites' | 'extrato';
+type Aba = 'missoes' | 'roda' | 'loja' | 'jackpot' | 'convites' | 'extrato';
 
 /**
  * Recompensas — tudo o que se faz com as EPCoins.
@@ -169,6 +170,9 @@ export default function Recompensas() {
           </button>
           <button className={`gm-tab ${aba === 'loja' ? 'ativo' : ''}`} onClick={() => setAba('loja')}>
             <ShoppingBag size={15} /> Loja
+          </button>
+          <button className={`gm-tab ${aba === 'jackpot' ? 'ativo' : ''}`} onClick={() => setAba('jackpot')}>
+            <Ticket size={15} /> Jackpot
           </button>
           <button className={`gm-tab ${aba === 'convites' ? 'ativo' : ''}`} onClick={() => setAba('convites')}>
             <UserPlus size={15} /> Convites
@@ -337,6 +341,9 @@ export default function Recompensas() {
         )}
 
         {/* ─── Convites ────────────────────────────────────── */}
+        {/* ─── Jackpot ─────────────────────────────────────── */}
+        {aba === 'jackpot' && <PainelJackpot />}
+
         {carregado && aba === 'convites' && (
           <div className='gm-card'>
             <h2>Convida a malta</h2>

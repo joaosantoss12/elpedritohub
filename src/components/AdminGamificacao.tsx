@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Gift, Plus, MessageCircleQuestion, Check, Loader2 } from 'lucide-react';
+import { Bell, Gift, Plus, MessageCircleQuestion, Check, Loader2, Ticket } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { lancarDrop } from '../lib/drops';
+import {
+  abrirJackpot, carregarJackpot, difundirNotificacao, sortearJackpot,
+  type JackpotAtual,
+} from '../lib/hub';
 import {
   carregarBoletimDeHoje, fecharBoletim, resolverPergunta,
   type Boletim, type Pergunta,
@@ -26,6 +30,8 @@ export function SectionGamificacao({ showToast }: { showToast: Toast }) {
   return (
     <div className='admin-section-content'>
       <BlocoDrops showToast={showToast} />
+      <BlocoJackpot showToast={showToast} />
+      <BlocoAviso showToast={showToast} />
       <BlocoBoletim showToast={showToast} />
     </div>
   );
@@ -296,6 +302,159 @@ function BlocoBoletim({ showToast }: { showToast: Toast }) {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+// ─── JACKPOT ──────────────────────────────────────────────────
+
+/**
+ * Abrir e sortear o EPC Jackpot.
+ *
+ * O pote alimenta-se sozinho — 5% de cada crédito de EPCoins — por isso o
+ * campo do pote inicial serve só para arrancar com um valor de cortesia. Não
+ * há forma de comprar bilhetes, nem aqui nem em lado nenhum: seria isso que
+ * transformava o sorteio numa aposta.
+ */
+function BlocoJackpot({ showToast }: { showToast: Toast }) {
+  const [atual, setAtual] = useState<JackpotAtual | null>(null);
+  const [carregado, setCarregado] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+
+  const [titulo, setTitulo] = useState('EPC JACKPOT');
+  const [sorteiaEm, setSorteiaEm] = useState('');
+  const [pote, setPote] = useState(0);
+
+  const carregar = useCallback(async () => {
+    setAtual(await carregarJackpot());
+    setCarregado(true);
+  }, []);
+
+  useEffect(() => { void carregar(); }, [carregar]);
+
+  async function abrir() {
+    if (!sorteiaEm) { showToast('Define a data do sorteio', 'error'); return; }
+    setOcupado(true);
+    try {
+      await abrirJackpot({ titulo, sorteiaEm, pote });
+      showToast('Jackpot aberto.');
+      void carregar();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Não foi possível abrir', 'error');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  async function sortear() {
+    if (!atual) return;
+    setOcupado(true);
+    try {
+      const vencedor = await sortearJackpot(atual.id);
+      showToast(vencedor ? 'Sorteado e creditado.' : 'Sem participantes — nada a sortear.');
+      void carregar();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Não foi possível sortear', 'error');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  if (!carregado) {
+    return <div className='gm-vazio'><Loader2 className='animate-spin' size={20} /></div>;
+  }
+
+  return (
+    <div className='gm-card' style={{ marginBottom: 18 }}>
+      <h2><Ticket size={17} style={{ verticalAlign: '-3px', marginRight: 7 }} /> EPC Jackpot</h2>
+
+      {atual ? (
+        <>
+          <p className='gm-sub'>
+            <strong>{atual.titulo}</strong> — {atual.pote.toLocaleString('pt-PT')} EPC no pote,
+            {' '}{atual.total_bilhetes} bilhetes de {atual.participantes} participantes.
+          </p>
+          <button className='gm-btn' onClick={sortear} disabled={ocupado}>
+            {ocupado ? 'A sortear…' : 'Sortear agora e creditar'}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className='gm-sub'>
+            Não há nenhum aberto. Só pode existir um de cada vez — o pote do
+            seguinte começa a encher assim que este for sorteado.
+          </p>
+          <div style={{ display: 'grid', gap: 12, maxWidth: 460 }}>
+            <input className='admin-input' value={titulo}
+                   onChange={(e) => setTitulo(e.target.value)} placeholder='Título' />
+            <div style={{ display: 'flex', gap: 12 }}>
+              <input className='admin-input' type='datetime-local' value={sorteiaEm}
+                     onChange={(e) => setSorteiaEm(e.target.value)} />
+              <input className='admin-input' type='number' min={0} max={100000} value={pote}
+                     onChange={(e) => setPote(Number(e.target.value))} placeholder='Pote inicial' />
+            </div>
+            <button className='gm-btn' onClick={abrir} disabled={ocupado || !titulo.trim()}>
+              <Plus size={15} /> Abrir jackpot
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── AVISO A TODOS ────────────────────────────────────────────
+
+/**
+ * Notificação para todos os membros não banidos.
+ *
+ * Vale a pena resistir à tentação de usar isto: o sino só continua a ser
+ * lido enquanto raramente tiver lá coisas que não interessam.
+ */
+function BlocoAviso({ showToast }: { showToast: Toast }) {
+  const [titulo, setTitulo] = useState('');
+  const [corpo, setCorpo] = useState('');
+  const [url, setUrl] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+
+  async function enviar() {
+    setOcupado(true);
+    try {
+      const n = await difundirNotificacao({
+        tipo: 'aviso',
+        titulo: titulo.trim(),
+        corpo: corpo.trim() || null,
+        url: url.trim() || null,
+      });
+      showToast(`Aviso enviado a ${n} ${n === 1 ? 'membro' : 'membros'}.`);
+      setTitulo(''); setCorpo(''); setUrl('');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Não foi possível enviar', 'error');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <div className='gm-card' style={{ marginBottom: 18 }}>
+      <h2><Bell size={17} style={{ verticalAlign: '-3px', marginRight: 7 }} /> Avisar toda a gente</h2>
+      <p className='gm-sub'>
+        Cai no sino de todos os membros. Usa com conta — um sino cheio de
+        ruído é um sino que ninguém abre.
+      </p>
+
+      <div style={{ display: 'grid', gap: 12, maxWidth: 460 }}>
+        <input className='admin-input' value={titulo}
+               onChange={(e) => setTitulo(e.target.value)} placeholder='Título' />
+        <textarea className='admin-input' rows={3} value={corpo}
+                  onChange={(e) => setCorpo(e.target.value)} placeholder='Corpo (opcional)' />
+        <input className='admin-input' value={url}
+               onChange={(e) => setUrl(e.target.value)}
+               placeholder='Para onde levar, ex.: /arena (opcional)' />
+        <button className='gm-btn' onClick={enviar} disabled={ocupado || !titulo.trim()}>
+          {ocupado ? 'A enviar…' : 'Enviar aviso'}
+        </button>
+      </div>
     </div>
   );
 }
