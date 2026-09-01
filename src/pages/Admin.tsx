@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SectionGamificacao } from '../components/AdminGamificacao';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -36,7 +37,7 @@ import '../styles/Admin.css';
 
 // ─── TYPES ──────────────────────────────────────────────────────
 
-type Section = 'membros' | 'raiox' | 'canais' | 'ranking' | 'funil-vip' | 'salas' | 'live' | 'premios' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'mundial-bets' | 'suporte';
+type Section = 'membros' | 'raiox' | 'canais' | 'ranking' | 'funil-vip' | 'salas' | 'live' | 'premios' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'mundial-bets' | 'gamificacao' | 'suporte';
 
 interface SupportTicket {
   id: string;
@@ -164,6 +165,7 @@ const NAV_ITEMS: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: 'lucro-semana',  label: 'Lucro da Semana', icon: <TrendingUp size={15} /> },
   { key: 'top-aposta',    label: 'Top Aposta',     icon: <Star size={15} /> },
   { key: 'mundial-bets',  label: 'Mundial Bets',   icon: <Globe size={15} /> },
+  { key: 'gamificacao',   label: 'Gamificação',    icon: <Gift size={15} /> },
   { key: 'suporte',        label: 'Suporte',         icon: <MessageSquare size={15} /> },
 ];
 
@@ -3109,6 +3111,7 @@ export default function Admin() {
           {section === 'lucro-semana' && <SectionLucroSemana showToast={showToast} />}
           {section === 'top-aposta'   && <SectionTopAposta showToast={showToast} />}
           {section === 'mundial-bets' && <SectionMundialBets showToast={showToast} />}
+          {section === 'gamificacao'  && <SectionGamificacao showToast={showToast} />}
           {section === 'suporte'       && <SectionSuporte showToast={showToast} />}
         </main>
       </div>

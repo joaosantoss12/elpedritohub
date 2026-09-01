@@ -16,6 +16,11 @@ import {
   apagarMensagem, subscreverSala,
   type CanalSala, type MensagemSala,
 } from '../lib/salasJogo';
+import { PainelPrevisoes } from '../components/PainelPrevisoes';
+import { DropWidget } from '../components/DropWidget';
+import { carregarPerguntasDoEvento, type Pergunta } from '../lib/previsoes';
+import { registarAtividadeNaSala } from '../lib/drops';
+import '../styles/Gamificacao.css';
 import '../styles/Salas.css';
 
 /** De quanto em quanto tempo se volta a pedir o placar à ESPN. */
@@ -277,7 +282,19 @@ function SalaJogo({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [] });
+  const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const fundoRef = useRef<HTMLDivElement | null>(null);
+
+  // Perguntas de previsão presas a este jogo. São as mesmas da Arena, com o
+  // mesmo painel — o que muda é de onde vêm.
+  useEffect(() => {
+    let vivo = true;
+    void carregarPerguntasDoEvento(jogo.id).then(qs => { if (vivo) setPerguntas(qs); });
+    // Entrar na sala já conta para a missão "participa em N salas", mesmo
+    // sem escrever nada.
+    void registarAtividadeNaSala(jogo.id, false);
+    return () => { vivo = false; };
+  }, [jogo.id]);
 
   useEffect(() => {
     let vivo = true;
@@ -324,6 +341,9 @@ function SalaJogo({
         texto: conteudo, jogoLabel: labelJogo(jogo),
       });
       setTexto('');
+      // Depois do envio, e de propósito: se isto falhar, o pior que acontece
+      // é a missão não avançar — a mensagem já está entregue.
+      void registarAtividadeNaSala(jogo.id, true);
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível enviar.');
     } finally {
@@ -410,6 +430,20 @@ function SalaJogo({
           )}
         </div>
       )}
+
+      {/* ── Previsões do jogo ── */}
+      {perguntas.length > 0 && (
+        <div className="gm-card" style={{ marginBottom: 18 }}>
+          <h2>Prevê o jogo</h2>
+          <p className="gm-sub">
+            Grátis. Acertas, ganhas EPCoins — não há dinheiro envolvido.
+          </p>
+          <PainelPrevisoes perguntas={perguntas} />
+        </div>
+      )}
+
+      {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
+      <DropWidget eventoId={jogo.id} />
 
       {/* ── Chat ── */}
       <div className="sala-jogo__mensagens">

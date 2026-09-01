@@ -10,6 +10,11 @@ import Casino from './pages/Casino';
 import BancaManagement from './pages/BancaManagement';
 import Admin from './pages/Admin';
 import Support from './pages/Support';
+import Arena from './pages/Arena';
+import Recompensas from './pages/Recompensas';
+import Clas from './pages/Clas';
+import PerfilPublico from './pages/PerfilPublico';
+import { DropWidget } from './components/DropWidget';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -27,6 +32,10 @@ function App() {
         <Route path='/banca' element={<BancaManagement />} />
         <Route path='/admin' element={<Admin />} />
         <Route path='/suporte' element={<Support />} />
+        <Route path='/arena' element={<Arena />} />
+        <Route path='/recompensas' element={<Recompensas />} />
+        <Route path='/clas' element={<Clas />} />
+        <Route path='/u/:username' element={<PerfilPublico />} />
 
         {/* Rotas antigas / retiradas — redirecionam para a Home para não
             partir links já partilhados. */}
@@ -36,6 +45,11 @@ function App() {
         ))}
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
+
+      {/* Os EPC DROPs aparecem em qualquer página com sessão iniciada — o
+          objectivo é apanhar quem está no Hub, não quem está numa página
+          concreta. Dentro da sala, o widget filtra pelo jogo. */}
+      <DropWidget />
     </AuthProvider>
   );
 }

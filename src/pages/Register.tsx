@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, AtSign, ArrowRight, ArrowLeft, Check, X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { guardarConvitePendente } from '../lib/comunidade';
 import '../index.css';
 
 function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const convite = (searchParams.get('convite') ?? '').trim().toUpperCase();
+
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -110,6 +114,10 @@ function Register() {
         }
       }
 
+      // O convite fica guardado e é resgatado na primeira sessão: com
+      // confirmação de email, aqui ainda não há `auth.uid()` para o aplicar.
+      if (convite) guardarConvitePendente(convite);
+
       navigate('/login'); // Redirect after registration
     } catch (err: any) {
       console.error('Error during registration:', err);
@@ -187,6 +195,23 @@ function Register() {
           </div>
           <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem', margin: '1rem 0 0 0' }}>Crie sua conta agora</p>
         </div>
+
+        {/* Quem chega por um link de convite deve ver que o convite ficou
+            registado — senão parece que o link não fez nada. */}
+        {convite && (
+          <div style={{
+            background: 'var(--gold-tint)',
+            border: '1px solid var(--border-strong)',
+            borderRadius: 10,
+            padding: '10px 14px',
+            marginBottom: '1.2rem',
+            fontSize: '0.85rem',
+            color: 'var(--text-gray)',
+          }}>
+            Vieste com o convite <strong style={{ color: 'var(--gold-light)' }}>{convite}</strong>.
+            Os EPCoins de boas-vindas entram na tua primeira sessão.
+          </div>
+        )}
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
           {/* Nome */}

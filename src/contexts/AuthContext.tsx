@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { registarLogin } from '../lib/epcoins';
+import { resgatarConvitePendente } from '../lib/comunidade';
 
 export interface MembroData {
   id: string;
@@ -93,48 +95,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       if (data) {
-        // LÓGICA DE STREAK DE LOGIN
-        const today = formatLocalDate(new Date());
-        const lastLogin = normalizeStoredDate(data.last_login_date);
-        
-        let newStreak = data.streak_login ?? 0;
-        let requiresUpdate = false;
+        // O streak e o bónus diário passaram para o servidor (migração 007).
+        // Estavam aqui, no cliente, e por isso bastava mexer no relógio do
+        // computador — ou abrir a consola — para os inflacionar. A RPC decide
+        // a data em Europe/Lisbon e credita pelo ledger, com chave de
+        // idempotência: correr duas vezes no mesmo dia não credita a dobrar.
+        // Se veio de um link de convite, é agora — na primeira sessão — que
+        // esse convite se aplica.
+        void resgatarConvitePendente();
 
-        if (lastLogin !== today) {
-          const todayMs = new Date(today).getTime();
-          const lastMs = lastLogin ? new Date(lastLogin).getTime() : 0;
-          const daysDiff = Math.round((todayMs - lastMs) / (1000 * 60 * 60 * 24));
+        const hoje = formatLocalDate(new Date());
+        const ultimo = normalizeStoredDate(data.last_login_date);
 
-          if (daysDiff === 1) {
-            newStreak += 1; // continua streak
-          } else {
-            newStreak = 1; // perdeu streak, recomeça
-          }
-          requiresUpdate = true;
-        }
-
-        if (requiresUpdate) {
-          const isVip = (data.badges ?? []).some((b: string) =>
-            b.toLowerCase() === 'vip' || b.toLowerCase() === 'administrador'
-          );
-          const epcBonus = isVip ? newStreak * 5 : newStreak;
-          const { data: updatedData, error: updateError } = await supabase
-            .from('membros')
-            .update({
-              streak_login: newStreak,
-              last_login_date: today,
-              epcoins: (data.epcoins ?? 0) + epcBonus,
-            })
-            .eq('id', currentUser.id)
-            .select()
-            .single();
-
-          if (!updateError && updatedData) {
-            setMembro(normalizeMembroData(updatedData as MembroData));
+        if (ultimo !== hoje) {
+          const registo = await registarLogin();
+          if (registo) {
+            setMembro(normalizeMembroData({
+              ...(data as MembroData),
+              epcoins: registo.saldo,
+              streak_login: registo.streak,
+              last_login_date: hoje,
+            }));
             return;
           }
+          // Se a 007 ainda não correu, fica-se pelos dados como vieram —
+          // sem streak, mas sem partir o arranque da sessão.
         }
-        
+
         setMembro(normalizeMembroData(data as MembroData));
       }
     } catch (err) {
