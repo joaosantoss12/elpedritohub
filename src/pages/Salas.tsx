@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft, Send,
   Trash2, RefreshCw, Target, Square, ArrowLeftRight,
-  Globe, Trophy, Clock, Calendar,
+  Globe, Trophy, Clock, Calendar, Search, X,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,6 +74,7 @@ export default function Salas() {
   const [continente, setContinente] = useState<string>('todos');
   const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('todos');
+  const [busca, setBusca] = useState('');
   const [dia, setDia] = useState<DiaFiltro>('hoje');
 
   const isAdmin = membro?.badges?.includes('Administrador') ?? false;
@@ -119,6 +120,7 @@ export default function Salas() {
   };
   const limparFiltros = () => {
     setContinente('todos'); setLigaFiltro('todas'); setEstadoFiltro('todos');
+    setBusca('');
   };
 
   // Que fatia da janela em cache mostrar. "Hoje" traz o que está a decorrer,
@@ -157,23 +159,30 @@ export default function Salas() {
     [jogosDoContinente, ligaFiltro],
   );
 
+  // Pesquisa livre por equipa ou liga, aplicada por cima dos selectores.
+  const jogosVisiveis = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return jogosDaLiga;
+    return jogosDaLiga.filter(j => `${j.casa} ${j.fora} ${j.liga}`.toLowerCase().includes(q));
+  }, [jogosDaLiga, busca]);
+
   // Os dois grupos derivam da liga escolhida e não do interruptor: assim as
   // contagens nos botões continuam a dizer a verdade sobre o grupo que está
   // escondido, que é a única razão para as mostrar ali.
-  const aoVivo = useMemo(() => jogosDaLiga.filter(estaAoVivo), [jogosDaLiga]);
+  const aoVivo = useMemo(() => jogosVisiveis.filter(estaAoVivo), [jogosVisiveis]);
 
   const porComecar = useMemo(
-    () => jogosDaLiga
+    () => jogosVisiveis
       .filter(j => !estaAoVivo(j) && j.estado === 'agendado')
       .sort((a, b) => a.inicio.localeCompare(b.inicio)),
-    [jogosDaLiga],
+    [jogosVisiveis],
   );
 
   const terminados = useMemo(
-    () => jogosDaLiga
+    () => jogosVisiveis
       .filter(j => j.estado === 'terminado')
       .sort((a, b) => b.inicio.localeCompare(a.inicio)),
-    [jogosDaLiga],
+    [jogosVisiveis],
   );
 
   // O separador "Terminados" só faz sentido em "Hoje" — amanhã ainda não
@@ -186,7 +195,8 @@ export default function Salas() {
     + (mostraPreLive ? porComecar.length : 0)
     + (mostraTerminados ? terminados.length : 0);
 
-  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas' || estadoFiltro !== 'todos';
+  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas'
+    || estadoFiltro !== 'todos' || busca.trim() !== '';
 
   if (jogoAberto) {
     return (
@@ -269,6 +279,24 @@ export default function Salas() {
               </div>
             )}
 
+            <div className="bt-busca salas-busca">
+              <Search size={15} />
+              <input
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+                placeholder="Procurar equipa ou liga"
+              />
+              {busca && (
+                <button
+                  className="salas-busca__x"
+                  onClick={() => setBusca('')}
+                  aria-label="Limpar pesquisa"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
             {(continentesDisponiveis.length > 1 || ligasDisponiveis.length > 1 || temFiltro) && (
               <div className="salas-filtros">
                 {continentesDisponiveis.length > 1 && (
@@ -309,7 +337,11 @@ export default function Salas() {
               <div className="salas-vazio">
                 <Radio size={30} color="var(--text-gray)" />
                 <strong>Sem jogos para este filtro</strong>
-                <span>Experimenta outro estado, continente ou liga.</span>
+                <span>
+                  {busca.trim()
+                    ? 'Nada bate com essa pesquisa — tenta outro nome ou limpa os filtros.'
+                    : 'Experimenta outro estado, continente ou liga.'}
+                </span>
               </div>
             ) : (
               <>
@@ -440,20 +472,25 @@ function GrupoJogos({
 function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo }) {
   const { casa, fora, lance, minuto, posse, fase } = momento;
 
-  const time = posse === 'casa'
-    ? { nome: jogo.casa, logo: jogo.logoCasa }
-    : posse === 'fora'
-      ? { nome: jogo.fora, logo: jogo.logoFora }
-      : null;
+  const equipaDe = (lado: 'casa' | 'fora' | null) =>
+    lado === 'casa'
+      ? { nome: jogo.casa, logo: jogo.logoCasa }
+      : lado === 'fora'
+        ? { nome: jogo.fora, logo: jogo.logoFora }
+        : null;
 
   // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
-  // depois o destaque fresco do feed, senão a fase corrente.
+  // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
+  // senão a fase corrente.
+  const time = equipaDe(posse);
+  // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
+  const destaque = typeof momento.destaque === 'object' ? momento.destaque : null;
   const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
   const evento = compensacao
-    ? { texto: 'Tempo de compensação', nota: compensacao }
-    : momento.destaque
-      ? { texto: momento.destaque, nota: minuto }
-      : { texto: fase || 'Bola em jogo', nota: '' };
+    ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
+    : destaque
+      ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
+      : { texto: fase || 'Bola em jogo', nota: '', time: null };
 
   const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
 
@@ -483,6 +520,12 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         )}
 
         <div className="campo-live__evento">
+          {evento.time && (
+            <span className="campo-live__evento-eq">
+              {evento.time.logo && <img src={evento.time.logo} alt="" />}
+              {evento.time.nome}
+            </span>
+          )}
           <strong>{evento.texto}</strong>
           {evento.nota && <em>{evento.nota}</em>}
         </div>

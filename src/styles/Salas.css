@@ -48,6 +48,19 @@
 
 /* ── Filtros ─────────────────────────────────────────────────── */
 
+/* Reaproveita o visual de `.bt-busca` da Arena; só ajusta o espaçamento
+   e acomoda o botão de limpar. */
+.salas-busca { margin-bottom: 0.9rem; }
+.salas-busca__x {
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: var(--text-gray);
+  cursor: pointer;
+}
+.salas-busca__x:hover { color: var(--text-white); }
+
 .salas-filtros {
   display: flex;
   flex-wrap: wrap;
@@ -851,21 +864,37 @@
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 }
 
-/* Cápsula do evento ao centro: "Golo", "Cartão amarelo", "Tempo de compensação"… */
+/* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
+   o evento — "Golo", "Remate à baliza", "Cartão amarelo", "Tempo de compensação"… */
 .campo-live__evento {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 9px;
-  padding: 9px 16px;
+  gap: 5px;
+  padding: 10px 18px;
   border-radius: 10px;
   background: rgba(17, 23, 38, 0.85);
   border: 1px solid var(--border-strong);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
+  text-align: center;
+}
+.campo-live__evento-eq {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: rgba(220, 227, 238, 0.9);
+}
+.campo-live__evento-eq img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 .campo-live__evento strong {
   font-size: 0.9rem;

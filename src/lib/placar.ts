@@ -252,8 +252,9 @@ export interface MomentoJogo {
   /** Palavra-estado ao centro do campo, estilo AiScore: "Ataque", "Canto"… */
   fase: string;
   /** Evento recente para mostrar em destaque ao centro (golo, cartão, canto,
-   *  fora de jogo, substituição). `null` quando não há nada fresco. */
-  destaque: string | null;
+   *  fora de jogo, substituição), com a equipa a que pertence. `null` quando
+   *  não há nada fresco. */
+  destaque: { texto: string; equipa: 'casa' | 'fora' | null } | null;
   /** Texto curto do último lance, ex. "Canto · Coritiba". */
   lance: string;
   minuto: string;
@@ -301,12 +302,12 @@ const FASE_LANCE: Record<string, string> = {
   'substitution': 'Substituição',
 };
 
-/** Lances que valem um destaque ao centro do campo — não os remates soltos
- *  nem as faltas de rotina. */
+/** Lances que valem um destaque ao centro do campo — tudo o que não seja
+ *  falta de rotina ou fim de posse sem nada de jeito. */
 const EVENTO_NOTAVEL = new Set([
   'goal', 'own-goal', 'penalty---scored', 'penalty---saved', 'penalty---missed',
-  'shot-hit-woodwork', 'corner-awarded', 'offside',
-  'yellow-card', 'red-card', 'substitution',
+  'shot-on-target', 'shot-off-target', 'shot-blocked', 'shot-hit-woodwork',
+  'corner-awarded', 'offside', 'yellow-card', 'red-card', 'substitution',
 ]);
 
 /** Rótulo em PT para o último lance mostrado por baixo do campo. */
@@ -474,10 +475,10 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
 
   // Destaque ao centro: um evento marcante acabado de acontecer (~100s de
-  // relógio). É o que a sala mostra em vez da bola.
+  // relógio). É o que a sala mostra em vez da bola, com a equipa do lance.
   const notavel = [...lances].reverse().find(l => EVENTO_NOTAVEL.has(l.slug));
-  const destaque = notavel && agora - notavel.t <= 100
-    ? FASE_LANCE[notavel.slug] ?? null
+  const destaque = notavel && agora - notavel.t <= 100 && FASE_LANCE[notavel.slug]
+    ? { texto: FASE_LANCE[notavel.slug], equipa: notavel.equipa }
     : null;
 
   const ultimo = [...lances].reverse().find(l => l.slug in ROTULO_LANCE);
