@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Gift, Plus, Swords, Check, Loader2 } from 'lucide-react';
+import { Gift, Plus, MessageCircleQuestion, Check, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { lancarDrop } from '../lib/drops';
 import {
@@ -11,8 +11,13 @@ import '../styles/Gamificacao.css';
 type Toast = (msg: string, type?: 'success' | 'error') => void;
 
 /**
- * A secção de gamificação do painel Admin: lançar drops e gerir o boletim
- * de previsões do dia.
+ * A secção de gamificação do painel Admin: lançar drops e escrever as
+ * perguntas editoriais do dia.
+ *
+ * A Batalha de Prognósticos deixou de passar por aqui: cada membro monta o
+ * seu próprio boletim a partir dos jogos da API e o resultado é resolvido
+ * pelo servidor. O que sobra para o admin são as perguntas do Pedrito —
+ * aquelas que precisam de alguém a decidir o que perguntar.
  *
  * Vive num ficheiro à parte porque o Admin.tsx já tem três mil linhas e esta
  * secção não partilha estado com nenhuma das outras.
@@ -200,10 +205,12 @@ function BlocoBoletim({ showToast }: { showToast: Toast }) {
 
   return (
     <div className='gm-card'>
-      <h2><Swords size={17} style={{ verticalAlign: '-3px', marginRight: 7 }} /> Batalha de Prognósticos</h2>
+      <h2><MessageCircleQuestion size={17} style={{ verticalAlign: '-3px', marginRight: 7 }} /> Perguntas do Pedrito</h2>
       <p className='gm-sub'>
-        As perguntas do dia. Com um ID de jogo preenchido, a pergunta sai do
-        boletim e passa a aparecer dentro da sala desse jogo.
+        As perguntas escritas por ti, que alimentam o Pedrito vs Comunidade.
+        Com um ID de jogo preenchido, a pergunta sai do boletim e passa a
+        aparecer dentro da sala desse jogo. Não têm nada a ver com a Batalha
+        de Prognósticos, essa é montada por cada membro.
       </p>
 
       {!boletim ? (

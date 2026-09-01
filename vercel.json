@@ -1,7 +1,19 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/batalha/resolver",
+      "schedule": "20 * * * *"
+    }
   ]
 }

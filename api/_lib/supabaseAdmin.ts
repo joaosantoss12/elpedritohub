@@ -67,3 +67,26 @@ export async function supabaseUpdate(
     throw new Error(`Supabase update ${table} failed: ${res.status} ${await res.text()}`);
   }
 }
+
+/**
+ * Chama uma função RPC com a service role.
+ *
+ * Existe para as funções que recusam quem tem `auth.uid()` — a resolução da
+ * Batalha, por exemplo. Com a service role não há utilizador autenticado, e
+ * é exactamente isso que distingue o servidor de um membro a tentar declarar
+ * o resultado do jogo em que apostou.
+ */
+export async function supabaseRpc<T>(
+  fn: string,
+  args: Record<string, unknown> = {}
+): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: headers({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) {
+    throw new Error(`Supabase rpc ${fn} failed: ${res.status} ${await res.text()}`);
+  }
+  return res.json() as Promise<T>;
+}

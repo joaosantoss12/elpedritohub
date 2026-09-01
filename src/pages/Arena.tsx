@@ -2,12 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coins, Loader2, Swords, Trophy, Users } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
-import { PainelPrevisoes } from '../components/PainelPrevisoes';
+import { BatalhaBoletim } from '../components/BatalhaBoletim';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  carregarBoletimDeHoje, carregarPedritoVsComunidade, carregarRankingPrevisoes,
-  type Boletim, type LinhaRankingPrevisoes, type PedritoVsComunidade, type Pergunta,
-} from '../lib/previsoes';
+import { carregarPedritoVsComunidade, type PedritoVsComunidade } from '../lib/previsoes';
+import { carregarRankingBatalha, type LinhaRankingBatalha } from '../lib/batalha';
 import '../styles/Gamificacao.css';
 
 type Aba = 'batalha' | 'duelo' | 'ranking';
@@ -15,9 +13,9 @@ type Aba = 'batalha' | 'duelo' | 'ranking';
 /**
  * A Arena — previsões gratuitas.
  *
- * Três leituras da mesma coisa: a Batalha de Prognósticos (as perguntas do
- * dia), o Pedrito vs Comunidade (o resultado agregado dessas perguntas) e o
- * ranking de quem acerta mais.
+ * Três separadores: a Batalha de Prognósticos (o boletim de cinco jogos que
+ * cada um monta sozinho), o Pedrito vs Comunidade (sobre as perguntas
+ * editoriais, essas sim escritas pelo Pedrito) e o ranking do mês.
  *
  * Aqui não se aposta nada. Responder é grátis, o que se ganha são EPCoins, e
  * as EPCoins não se convertem em dinheiro.
@@ -27,10 +25,8 @@ export default function Arena() {
   const { user, membro, loading: authLoading, refreshMembro } = useAuth();
 
   const [aba, setAba] = useState<Aba>('batalha');
-  const [boletim, setBoletim] = useState<Boletim | null>(null);
-  const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [duelo, setDuelo] = useState<PedritoVsComunidade | null>(null);
-  const [ranking, setRanking] = useState<LinhaRankingPrevisoes[]>([]);
+  const [ranking, setRanking] = useState<LinhaRankingBatalha[]>([]);
   const [carregado, setCarregado] = useState(false);
 
   useEffect(() => {
@@ -38,13 +34,10 @@ export default function Arena() {
   }, [authLoading, user, navigate]);
 
   const carregar = useCallback(async () => {
-    const [b, d, r] = await Promise.all([
-      carregarBoletimDeHoje(),
+    const [d, r] = await Promise.all([
       carregarPedritoVsComunidade(),
-      carregarRankingPrevisoes(inicioDoMes(), 50),
+      carregarRankingBatalha(50),
     ]);
-    setBoletim(b.boletim);
-    setPerguntas(b.perguntas);
     setDuelo(d);
     setRanking(r);
     setCarregado(true);
@@ -96,18 +89,8 @@ export default function Arena() {
 
         {!carregado && <div className='gm-vazio'><Loader2 className='animate-spin' size={22} /></div>}
 
-        {carregado && aba === 'batalha' && (
-          <div className='gm-card'>
-            <h2>{boletim?.titulo ?? 'Batalha de Prognósticos'}</h2>
-            <p className='gm-sub'>
-              {boletim?.descricao ??
-                'As perguntas do dia. Fecham antes do apito inicial de cada jogo.'}
-            </p>
-            <PainelPrevisoes
-              perguntas={perguntas}
-              onResposta={() => { void refreshMembro(); }}
-            />
-          </div>
+        {aba === 'batalha' && (
+          <BatalhaBoletim onGuardado={() => { void refreshMembro(); void carregar(); }} />
         )}
 
         {carregado && aba === 'duelo' && (
@@ -153,14 +136,14 @@ export default function Arena() {
 
         {carregado && aba === 'ranking' && (
           <div className='gm-card'>
-            <h2>Ranking de acertos · este mês</h2>
+            <h2>Ranking da Batalha · este mês</h2>
             <p className='gm-sub'>
-              Ordenado por acertos; empates desempatam pela taxa. Precisas de pelo
-              menos três previsões resolvidas para entrar.
+              Um ponto por acerto, mais três por boletim perfeito. Quem tem o
+              ranking oculto no perfil não aparece aqui.
             </p>
 
             {ranking.length === 0 ? (
-              <div className='gm-vazio'>Ainda não há previsões resolvidas este mês.</div>
+              <div className='gm-vazio'>Ainda não há boletins resolvidos este mês.</div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table className='gm-tabela'>
@@ -168,15 +151,15 @@ export default function Arena() {
                     <tr>
                       <th>#</th>
                       <th>Membro</th>
-                      <th className='num'>Respostas</th>
+                      <th className='num'>Boletins</th>
                       <th className='num'>Acertos</th>
-                      <th className='num'>Taxa</th>
+                      <th className='num'>Pontos</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {ranking.map((l, i) => (
-                      <tr key={l.user_id}>
-                        <td className='gm-pos'>{i + 1}</td>
+                    {ranking.map((l) => (
+                      <tr key={l.username}>
+                        <td className='gm-pos'>{l.posicao}</td>
                         <td>
                           <a
                             href={`/u/${encodeURIComponent(l.username)}`}
@@ -185,9 +168,9 @@ export default function Arena() {
                             {l.username}
                           </a>
                         </td>
-                        <td className='num'>{l.respondidas}</td>
+                        <td className='num'>{l.boletins}</td>
                         <td className='num'>{l.acertos}</td>
-                        <td className='num'>{l.taxa ?? 0}%</td>
+                        <td className='num'>{l.pontos}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -199,10 +182,4 @@ export default function Arena() {
       </div>
     </div>
   );
-}
-
-/** Primeiro dia do mês corrente, em ISO curto — o filtro do ranking mensal. */
-function inicioDoMes(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }

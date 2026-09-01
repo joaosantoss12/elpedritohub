@@ -6,8 +6,8 @@ import { Navbar } from '../components/Navbar';
 import { Toast } from '../components/Toast';
 import {
   User, Mail, Lock, Camera, Trash2, Loader2, AlertTriangle, CreditCard, Edit2,
-  Flame, MessageCircle, Coins, Gift, Shield, Award, Eye, EyeOff, CheckCircle,
-  XCircle, ExternalLink, Target,
+  Flame, MessageCircle, Coins, Shield, Award, Eye, EyeOff, CheckCircle,
+  XCircle, ExternalLink,
 } from 'lucide-react';
 import '../index.css';
 
@@ -889,24 +889,6 @@ function Profile() {
                   <Coins size={28} color="var(--gold-primary)" />
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-white)' }}>{membro ? membro.epcoins : '--'}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>EPCoins</span>
-                </div>
-
-                {/* Prémios */}
-                <div style={{ background: 'rgba(0, 0, 0, 0.1)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.052)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
-                  <Gift size={28} color="#10b981" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-white)' }}>{membro ? membro.prizes_claimed : '--'}</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Prémios</span>
-                </div>
-
-                {/* Simulador de Banca */}
-                <div
-                  style={{ background: 'rgba(0, 0, 0, 0.1)', padding: '1.5rem 1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.052)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}
-                >
-                  <Target size={28} color="#818cf8" />
-                  <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-white)' }}>
-                    {membro?.saldo_simulador != null ? Math.round(membro.saldo_simulador) : '--'}
-                  </span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Banca simulada</span>
                 </div>
               </div>
             </div>

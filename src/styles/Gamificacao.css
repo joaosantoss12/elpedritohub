@@ -711,8 +711,218 @@
 }
 
 @media (max-width: 640px) {
-  .gm-page { padding: 88px 14px 60px; }
+  .gm-wrap { width: 92%; padding: 1.6rem 0; }
   .gm-topo h1 { font-size: 1.6rem; }
   .gm-duelo { grid-template-columns: 1fr; gap: 10px; }
   .gm-roda-disco { width: 180px; height: 180px; }
+  .bt-pick { grid-template-columns: 1fr auto; }
+  .bt-jogo-topo { grid-template-columns: 1fr auto; }
+  .bt-jogo-meta { grid-column: 1 / -1; }
+}
+
+/* ─── Batalha de Prognósticos: boletim do membro ──────────── */
+
+/* O contador e a primeira coisa que se le no cartao: diz quantos jogos
+   faltam antes de valer a pena olhar para a lista de baixo. */
+.bt-contador {
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  margin: 4px 0 16px;
+}
+
+.bt-contador strong {
+  color: var(--gold-primary);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.bt-contador-res { margin-left: 4px; }
+
+.bt-lista { display: grid; gap: 10px; }
+
+/* Tres colunas: o jogo, a escolha e o estado (ou o botao de tirar). Ambas
+   as variantes — trancada e editavel — partilham a mesma grelha para as
+   linhas nao dancarem quando um jogo comeca. */
+.bt-pick {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.bt-pick.trancada { opacity: 0.86; }
+.bt-pick.certa { border-color: var(--gold-primary); }
+.bt-pick.errada { border-color: var(--border-strong); opacity: 0.6; }
+
+.bt-pick-jogo { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.bt-pick-jogo strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bt-pick-jogo span { font-size: 0.74rem; color: var(--text-gray); }
+
+.bt-pick-escolha {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  background: var(--bg-card-hover);
+  border-radius: 8px;
+  padding: 6px 11px;
+  white-space: nowrap;
+}
+
+.bt-pick-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  white-space: nowrap;
+}
+
+.bt-pick.certa .bt-pick-estado { color: var(--gold-primary); }
+
+.bt-remover {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-gray);
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.bt-remover:hover { color: var(--text-white); border-color: var(--border-strong); }
+
+/* ─── Escolher jogos ──────────────────────────────────────── */
+
+.bt-busca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 14px;
+  color: var(--text-gray);
+}
+
+.bt-busca input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-white);
+  font-size: 0.86rem;
+  font-family: inherit;
+}
+
+.bt-jogos { display: grid; gap: 9px; }
+
+.bt-jogo {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bt-jogo-topo {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 13px 14px;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  transition: background 0.16s ease;
+}
+
+.bt-jogo-topo:hover:not(:disabled) { background: var(--bg-card-hover); }
+.bt-jogo-topo:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bt-jogo-nomes {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: var(--text-white);
+}
+
+.bt-jogo-nomes strong {
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bt-x { color: var(--text-gray); font-size: 0.75rem; }
+
+.bt-jogo-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 0.72rem;
+  color: var(--text-gray);
+  white-space: nowrap;
+}
+
+.bt-mais { color: var(--gold-primary); flex-shrink: 0; }
+
+/* O painel de mercados so existe para o jogo aberto — mostrar todos de uma
+   vez daria uma parede de botoes sem hierarquia nenhuma. */
+.bt-mercados {
+  border-top: 1px solid var(--border-color);
+  padding: 13px 14px;
+  display: grid;
+  gap: 13px;
+}
+
+.bt-mercado-nome {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-gray);
+  margin-bottom: 7px;
+}
+
+.bt-opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.bt-opcao {
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  color: var(--text-white);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 13px;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.bt-opcao:hover {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--bg-deep);
 }
