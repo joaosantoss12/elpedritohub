@@ -30,6 +30,10 @@ export interface JogoAoVivo {
   /** '67'' ', 'Intervalo', '18:45' — o que faz sentido mostrar naquele estado. */
   relogio: string;
   inicio: string;
+  /** Só preenchido enquanto o jogo decorre: o cron anexa a partir do summary
+   *  da ESPN e a sala volta a calcular por cima, mais depressa que o cron. */
+  stats?: EstatisticaJogo[];
+  momento?: MomentoJogo;
 }
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -234,12 +238,50 @@ export interface EventoJogo {
   descricao: string;
 }
 
+/**
+ * O "momentum de ataque" — quem está a carregar agora e onde anda a bola.
+ * Vem do feed de `commentary` da ESPN: cada lance traz tipo, equipa e, muitas
+ * vezes, coordenadas reais no relvado (`fieldPositionX/Y`).
+ */
+export interface MomentoJogo {
+  /** 0..100 — quota da pressão nos últimos minutos. casa + fora = 100. */
+  casa: number;
+  fora: number;
+  /** Posição da bola no relvado, com a casa a atacar sempre para x=100. */
+  bolaX: number;
+  bolaY: number;
+  /** Texto curto do último lance, ex. "Canto · Coritiba". */
+  lance: string;
+  minuto: string;
+}
+
 export interface DetalhesJogo {
   estatisticas: EstatisticaJogo[];
   eventos: EventoJogo[];
+  momento: MomentoJogo | null;
 }
 
-const DETALHES_VAZIO: DetalhesJogo = { estatisticas: [], eventos: [] };
+const DETALHES_VAZIO: DetalhesJogo = { estatisticas: [], eventos: [], momento: null };
+
+/** Quanto vale cada tipo de lance para o cálculo da pressão. */
+const PESO_LANCE: Record<string, number> = {
+  'goal': 10, 'own-goal': 10, 'penalty---scored': 10,
+  'penalty---saved': 6, 'penalty---missed': 6, 'penalty-won': 5,
+  'shot-on-target': 5, 'shot-hit-woodwork': 4,
+  'shot-blocked': 3, 'shot-off-target': 3,
+  'corner-awarded': 2.5, 'offside': 1, 'free-kick-won': 1,
+};
+
+/** Rótulo em PT para o último lance mostrado por baixo do campo. */
+const ROTULO_LANCE: Record<string, string> = {
+  'goal': 'Golo', 'own-goal': 'Autogolo',
+  'penalty---scored': 'Penálti', 'penalty---saved': 'Penálti defendido',
+  'penalty---missed': 'Penálti falhado',
+  'shot-on-target': 'Remate à baliza', 'shot-off-target': 'Remate para fora',
+  'shot-blocked': 'Remate bloqueado', 'shot-hit-woodwork': 'Bola ao poste',
+  'corner-awarded': 'Canto', 'offside': 'Fora de jogo', 'foul': 'Falta',
+  'yellow-card': 'Amarelo', 'red-card': 'Vermelho', 'substitution': 'Substituição',
+};
 
 const LABELS_ESTATISTICA: Record<string, string> = {
   possessionPct: 'Posse de bola',
@@ -312,16 +354,126 @@ function mapearEventos(json: Bruto): EventoJogo[] {
   }).filter(e => e.descricao !== '');
 }
 
-/** Estatísticas + eventos de um jogo específico. Falha em silêncio (devolve vazio) —
- *  a ESPN nem sempre publica isto, sobretudo antes do jogo começar. */
+/** Nomes canónicos das duas equipas, tal como aparecem no `commentary`. */
+function nomesDoSummary(json: Bruto): { casa: string; fora: string } {
+  const comp = obj(lista(obj(json.header).competitions)[0]);
+  const cs = lista(comp.competitors).map(obj);
+  const casa = obj((cs.find(c => c.homeAway === 'home') ?? cs[0] ?? {}).team);
+  const fora = obj((cs.find(c => c.homeAway === 'away') ?? cs[1] ?? {}).team);
+  return {
+    casa: txt(casa.displayName) ?? txt(casa.shortDisplayName) ?? '',
+    fora: txt(fora.displayName) ?? txt(fora.shortDisplayName) ?? '',
+  };
+}
+
+/**
+ * Lê o `commentary` e devolve o momentum: quem pressiona (janela de ~6 min de
+ * relógio, com decaimento) e onde está a bola (coordenadas reais do último
+ * lance, orientadas para a casa atacar à direita).
+ */
+function mapearMomento(json: Bruto, casaNome: string, foraNome: string): MomentoJogo | null {
+  const coment = lista(json.commentary).map(obj);
+  if (coment.length === 0 || !casaNome || !foraNome) return null;
+
+  const casaBaixo = casaNome.toLowerCase();
+  const foraBaixo = foraNome.toLowerCase();
+  const ladoDe = (nome: string | null): 'casa' | 'fora' | null => {
+    if (!nome) return null;
+    const n = nome.toLowerCase();
+    const eCasa = n.includes(casaBaixo) || casaBaixo.includes(n);
+    const eFora = n.includes(foraBaixo) || foraBaixo.includes(n);
+    if (eCasa && !eFora) return 'casa';
+    if (eFora && !eCasa) return 'fora';
+    return null;
+  };
+
+  interface Lance {
+    t: number; slug: string; equipa: 'casa' | 'fora' | null;
+    x: number | null; y: number | null; minuto: string;
+  }
+
+  const lances: Lance[] = [];
+  for (const c of coment) {
+    const play = obj(c.play);
+    const t = Number(txt(obj(play.clock).value) ?? txt(obj(c.time).value));
+    if (!Number.isFinite(t)) continue;
+    lances.push({
+      t,
+      slug: txt(obj(play.type).type) ?? '',
+      equipa: ladoDe(txt(obj(play.team).displayName)),
+      x: typeof play.fieldPositionX === 'number' ? play.fieldPositionX : null,
+      y: typeof play.fieldPositionY === 'number' ? play.fieldPositionY : null,
+      minuto: txt(obj(c.time).displayValue) ?? '',
+    });
+  }
+  if (lances.length === 0) return null;
+
+  const agora = Math.max(...lances.map(l => l.t));
+  const JANELA = 6 * 60;
+
+  let presCasa = 0;
+  let presFora = 0;
+  for (const l of lances) {
+    const idade = agora - l.t;
+    if (idade > JANELA || !l.equipa) continue;
+    const recencia = 1 - idade / JANELA;
+    if (l.slug === 'foul') {
+      // A falta tira balanço a quem a cometeu.
+      if (l.equipa === 'casa') presCasa -= 0.5 * recencia;
+      else presFora -= 0.5 * recencia;
+      continue;
+    }
+    const peso = (PESO_LANCE[l.slug] ?? 0.8) * recencia;
+    if (l.equipa === 'casa') presCasa += peso;
+    else presFora += peso;
+  }
+  presCasa = Math.max(0, presCasa);
+  presFora = Math.max(0, presFora);
+  const total = presCasa + presFora;
+  const casa = total > 0 ? Math.round((presCasa / total) * 100) : 50;
+  const fora = 100 - casa;
+
+  // A bola vai para o último lance com coordenadas. O `fieldPositionX` da ESPN
+  // é relativo a quem ataca (0 = baliza própria, 100 = baliza adversária), por
+  // isso o lado de fora entra espelhado para a casa atacar sempre à direita.
+  const comXY = [...lances].reverse().find(l => l.x !== null && l.equipa);
+  let bolaX: number;
+  let bolaY: number;
+  if (comXY && comXY.x !== null) {
+    const x = comXY.equipa === 'casa' ? comXY.x : 100 - comXY.x;
+    const y = comXY.y === null ? 50 : comXY.equipa === 'casa' ? comXY.y : 100 - comXY.y;
+    bolaX = Math.min(96, Math.max(4, x));
+    bolaY = Math.min(92, Math.max(8, y));
+  } else {
+    bolaX = Math.min(85, Math.max(15, 50 + (casa - fora) * 0.35));
+    bolaY = 50;
+  }
+
+  const ultimo = [...lances].reverse().find(l => l.slug in ROTULO_LANCE);
+  const nome = (lado: 'casa' | 'fora' | null) =>
+    lado === 'casa' ? casaNome : lado === 'fora' ? foraNome : '';
+  const lance = ultimo
+    ? `${ROTULO_LANCE[ultimo.slug]}${ultimo.equipa ? ` · ${nome(ultimo.equipa)}` : ''}`
+    : '';
+
+  return {
+    casa, fora, bolaX, bolaY, lance,
+    minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
+  };
+}
+
+/** Estatísticas + eventos + momentum de um jogo. Falha em silêncio (devolve
+ *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
   try {
     const res = await fetch(`${BASE}/${ligaSlug}/summary?event=${eventoId}`);
     if (!res.ok) return DETALHES_VAZIO;
     const json = obj(await res.json());
+    const { casa, fora } = nomesDoSummary(json);
     return {
       estatisticas: mapearEstatisticas(json),
       eventos: mapearEventos(json),
+      momento: mapearMomento(json, casa, fora),
     };
   } catch {
     return DETALHES_VAZIO;

@@ -698,3 +698,127 @@
   vertical-align: -1px;
   box-shadow: 0 0 0 1px var(--overlay, rgba(0, 0, 0, 0.15));
 }
+
+/* ── Campo ao vivo (momentum estilo AiScore) ──────────────────── */
+/* A bola anda pelas coordenadas reais que a ESPN publica em cada lance; a
+   transicao trata do deslize. O relvado e um verde dessaturado — presenca
+   suficiente para se ler como campo sem gritar no tema escuro. */
+.campo-live {
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--card-gradient);
+}
+
+.campo-live__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+}
+
+.campo-live__eq {
+  font-weight: 800;
+  color: var(--text-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+.campo-live__eq--dir { text-align: right; }
+
+.campo-live__min {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-primary);
+}
+
+.campo-live__relva {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #26382c 0 12.5%,
+      #223328 12.5% 25%
+    );
+  box-shadow: inset 0 0 0 2px rgba(220, 227, 238, 0.12);
+}
+
+.campo-live__meio {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(220, 227, 238, 0.14);
+}
+
+.campo-live__circulo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(220, 227, 238, 0.14);
+  border-radius: 50%;
+}
+
+.campo-live__area {
+  position: absolute;
+  top: 50%;
+  width: 15%;
+  height: 52%;
+  transform: translateY(-50%);
+  border: 2px solid rgba(220, 227, 238, 0.14);
+}
+.campo-live__area--esq { left: 0; border-left: none; border-radius: 0 6px 6px 0; }
+.campo-live__area--dir { right: 0; border-right: none; border-radius: 6px 0 0 6px; }
+
+.campo-live__bola {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 0 0 3px rgba(201, 165, 130, 0.28), 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: left 0.9s ease, top 0.9s ease;
+}
+
+.campo-live__momentum {
+  display: flex;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+
+.campo-live__pres {
+  transition: width 0.6s ease;
+}
+.campo-live__pres--casa { background: var(--gold-primary); }
+.campo-live__pres--fora { background: var(--border-strong); }
+
+.campo-live__lance {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campo-live__bola,
+  .campo-live__pres { transition: none; }
+}

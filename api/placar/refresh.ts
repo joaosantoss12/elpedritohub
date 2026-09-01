@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { LIGAS_TODAS } from '../../src/lib/ligas.js';
-import { carregarJogos, ordenarJogos, type JogoAoVivo } from '../../src/lib/placar.js';
+import {
+  carregarJogos, ordenarJogos, carregarDetalhesJogo, type JogoAoVivo,
+} from '../../src/lib/placar.js';
 import { supabaseSelect, supabaseUpdate } from '../_lib/supabaseAdmin.js';
 
 // A varredura das ~140 competicoes nao cabe nos 10s por omissao.
@@ -45,6 +47,28 @@ function estaQuente(j: JogoAoVivo, agora: number): boolean {
   return false;
 }
 
+/**
+ * Cola stats + momentum aos jogos que estão a decorrer. É o que alimenta o
+ * mini-campo da sala sem obrigar cada visitante a puxar o summary da ESPN.
+ */
+async function anexarLive(jogos: JogoAoVivo[]): Promise<void> {
+  const vivos = jogos
+    .filter(j => j.estado === 'ao_vivo' || j.estado === 'intervalo')
+    .slice(0, 60);
+  const LOTE = 8;
+  for (let i = 0; i < vivos.length; i += LOTE) {
+    await Promise.all(vivos.slice(i, i + LOTE).map(async j => {
+      try {
+        const d = await carregarDetalhesJogo(j.ligaSlug, j.id);
+        if (d.estatisticas.length) j.stats = d.estatisticas;
+        if (d.momento) j.momento = d.momento;
+      } catch {
+        // Um jogo sem detalhe não trava a escrita dos outros.
+      }
+    }));
+  }
+}
+
 function autenticado(req: VercelRequest): boolean {
   const segredo = process.env.CRON_SECRET;
   if (!segredo) return true;
@@ -81,6 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (jogos.length === 0) {
         return res.status(200).json({ ok: true, escopo: 'completo', jogos: 0, escrito: false });
       }
+      await anexarLive(jogos);
       await supabaseUpdate('placar_cache', { id: 'eq.1' }, {
         jogos,
         ligas: new Set(jogos.map(j => j.ligaSlug)).size,
@@ -110,6 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         && agora - new Date(j.inicio).getTime() > VALIDADE_TERMINADO_MS),
     );
     const jogos = ordenarJogos([...mantidos, ...frescos]);
+    await anexarLive(jogos);
 
     await supabaseUpdate('placar_cache', { id: 'eq.1' }, {
       jogos,

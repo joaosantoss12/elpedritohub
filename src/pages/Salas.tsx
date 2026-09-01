@@ -9,7 +9,7 @@ import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
   carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal, bandeiraDaLiga,
-  ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo,
+  ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
 import {
@@ -426,6 +426,45 @@ function GrupoJogos({
   );
 }
 
+// ─── CAMPO AO VIVO ────────────────────────────────────────────
+
+/**
+ * Mini-campo estilo AiScore. A bola salta para as coordenadas reais do último
+ * lance da ESPN (`fieldPositionX/Y`) — a transição CSS trata do deslize — e a
+ * barra por baixo mostra quem está a carregar. A casa ataca sempre para a
+ * direita; o lado de fora já vem espelhado de `mapearMomento`.
+ */
+function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo }) {
+  const { casa, fora, bolaX, bolaY, lance, minuto } = momento;
+  return (
+    <div className="campo-live">
+      <div className="campo-live__topo">
+        <span className="campo-live__eq">{jogo.casa}</span>
+        <span className="campo-live__min">{minuto || jogo.relogio}</span>
+        <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
+      </div>
+
+      <div className="campo-live__relva" aria-hidden="true">
+        <span className="campo-live__meio" />
+        <span className="campo-live__circulo" />
+        <span className="campo-live__area campo-live__area--esq" />
+        <span className="campo-live__area campo-live__area--dir" />
+        <span
+          className="campo-live__bola"
+          style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+        />
+      </div>
+
+      <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
+        <span className="campo-live__pres campo-live__pres--casa" style={{ width: `${casa}%` }} />
+        <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
+      </div>
+
+      <p className="campo-live__lance">{lance || 'Bola em jogo'}</p>
+    </div>
+  );
+}
+
 // ─── SALA ─────────────────────────────────────────────────────
 
 function SalaJogo({
@@ -443,7 +482,7 @@ function SalaJogo({
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [] });
+  const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [], momento: null });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const fundoRef = useRef<HTMLDivElement | null>(null);
 
@@ -557,6 +596,11 @@ function SalaJogo({
           </div>
         </div>
       </div>
+
+      {/* ── Campo ao vivo (momentum) ── */}
+      {estaAoVivo(jogo) && (detalhes.momento ?? jogo.momento) && (
+        <CampoAoVivo jogo={jogo} momento={(detalhes.momento ?? jogo.momento)!} />
+      )}
 
       {/* ── Estatísticas + eventos ── */}
       {(detalhes.eventos.length > 0 || detalhes.estatisticas.length > 0) && (
