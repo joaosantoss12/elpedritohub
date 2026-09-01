@@ -566,6 +566,34 @@ function PainelSofascore({ jogo }: { jogo: JogoAoVivo }) {
   );
 }
 
+/**
+ * Feed de vídeo do Scorebat — golos e melhores momentos das principais
+ * competições, com direitos tratados. É o feed geral (não filtra por este
+ * jogo — o Scorebat só deixa filtrar por competição com token), aparece uns
+ * minutos depois de cada lance. Mais um painel, não substitui nada.
+ */
+const SCOREBAT_EMBED = 'https://www.scorebat.com/embed/';
+
+function PainelVideos() {
+  return (
+    <div className="painel-video">
+      <div className="painel-video__topo">
+        <span>Golos e melhores momentos</span>
+        <span className="painel-video__fonte">Scorebat</span>
+      </div>
+      <iframe
+        className="painel-video__frame"
+        src={SCOREBAT_EMBED}
+        title="Golos e melhores momentos (Scorebat)"
+        loading="lazy"
+        allowFullScreen
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
+  );
+}
+
 // ─── SALA ─────────────────────────────────────────────────────
 
 function SalaJogo({
@@ -737,6 +765,9 @@ function SalaJogo({
 
           {/* Widget do SofaScore — só aparece se o jogo for encontrado lá. */}
           <PainelSofascore jogo={jogo} />
+
+          {/* Golos e melhores momentos (feed geral do Scorebat). */}
+          <PainelVideos />
 
           {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
           <DropWidget eventoId={jogo.id} />
