@@ -449,9 +449,10 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
   // Trilho dos últimos lances. A bola caminha por ele, um ponto de cada vez —
   // é o que dá a sensação de fluxo, já que o feed da ESPN só traz um ponto
   // novo quando há um lance.
-  const trilho = momento.trilho.length
+  // `trilho`/`posse`/`fase` podem faltar em `momento` vindo da cache antiga.
+  const trilho = momento.trilho?.length
     ? momento.trilho
-    : [{ x: momento.bolaX, y: momento.bolaY }];
+    : [{ x: momento.bolaX ?? 50, y: momento.bolaY ?? 50 }];
   const assinatura = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|');
   const [idx, setIdx] = useState(trilho.length - 1);
 
@@ -499,7 +500,7 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         <div
           className={`campo-live__fase campo-live__fase--${posse ?? 'neutro'}`}
         >
-          <strong>{fase}</strong>
+          <strong>{fase || 'Bola em jogo'}</strong>
           {time && (
             <span className="campo-live__posse">
               {time.logo && <img src={time.logo} alt="" />}
