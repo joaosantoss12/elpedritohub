@@ -15,6 +15,7 @@ import Recompensas from './pages/Recompensas';
 import Clas from './pages/Clas';
 import PerfilPublico from './pages/PerfilPublico';
 import { DropWidget } from './components/DropWidget';
+import { LeitorMusica } from './components/LeitorMusica';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -50,6 +51,10 @@ function App() {
           objectivo é apanhar quem está no Hub, não quem está numa página
           concreta. Dentro da sala, o widget filtra pelo jogo. */}
       <DropWidget />
+
+      {/* Barra de música estilo Spotify — vive aqui, fora do <Routes>, para a
+          reprodução não parar ao mudar de página. */}
+      <LeitorMusica />
     </AuthProvider>
   );
 }
