@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Crown, Loader2, LogOut, MessagesSquare, Shield, Users } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
-import { CanaisClube } from '../components/CanaisClube';
+import { CanaisComunidade } from '../components/CanaisComunidade';
 import { useAuth } from '../contexts/AuthContext';
 import {
   carregarCla, carregarRankingClas, criarCla, entrarNoCla, sairDoCla,
@@ -107,10 +107,10 @@ export default function Clas() {
         <div className='gm-topo'>
           <div>
             <div className='gm-eyebrow'><Shield size={14} /> COMUNIDADE</div>
-            <h1>Os <span>clãs</span></h1>
+            <h1>O lado <span>social</span></h1>
             <p>
-              Junta 5 a 20 amigos e somem EPCoins juntos. O ranking conta o que o
-              clã ganhou este mês.
+              Junta 5 a 20 amigos num clã e somem EPCoins juntos — e fala com o
+              Hub no chat geral ou só com o teu clã, à parte.
             </p>
           </div>
         </div>
@@ -120,11 +120,11 @@ export default function Clas() {
             <Shield size={15} /> Clãs
           </button>
           <button className={`gm-tab ${aba === 'canais' ? 'ativo' : ''}`} onClick={() => setAba('canais')}>
-            <MessagesSquare size={15} /> Canais
+            <MessagesSquare size={15} /> Chat
           </button>
         </div>
 
-        {aba === 'canais' && <CanaisClube />}
+        {aba === 'canais' && <CanaisComunidade />}
 
         {aba === 'clas' && erro && <div className='gm-erro'>{erro}</div>}
         {aba === 'clas' && !carregado && (

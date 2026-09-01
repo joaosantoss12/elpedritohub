@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, Lock, Send, Trash2 } from 'lucide-react';
+import { Loader2, Lock, Send, Trash2, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   apagarMensagemCanal, carregarCanaisComunidade, carregarMensagensCanal,
@@ -8,13 +8,17 @@ import {
 } from '../lib/hub';
 
 /**
- * Os canais por clube.
+ * O chat do Hub.
  *
  * As salas de jogo morrem com o apito final — de propósito, porque uma sala
- * de jogo sem jogo é um cemitério. Estes canais são o contrário: existem
- * sempre, e são onde a conversa vive entre jogos.
+ * de jogo sem jogo é um cemitério. Isto é o contrário: existe sempre.
+ *
+ * Há dois tipos de canal e a diferença importa. O geral é aberto a todos os
+ * membros. Os de clã são privados — nascem com o clã, só aparecem a quem está
+ * lá dentro, e é a base de dados que o garante (migração 015), não este
+ * componente: a lista já chega filtrada.
  */
-export function CanaisClube() {
+export function CanaisComunidade() {
   const { user, membro } = useAuth();
 
   const [canais, setCanais] = useState<CanalComunidade[]>([]);
@@ -98,16 +102,23 @@ export function CanaisClube() {
 
   const trancado = Boolean(ativo?.requer_vip && !eVip);
 
+  // Separados na lista de propósito: um canal privado de clã e o chat aberto
+  // do Hub não são a mesma coisa, e quem escreve tem de perceber num relance
+  // quem o vai ler.
+  const gerais = canais.filter((c) => !c.cla_id);
+  const deCla = canais.filter((c) => c.cla_id);
+
   return (
     <div className='gm-card'>
-      <h2>Canais da comunidade</h2>
+      <h2>Chat</h2>
       <p className='gm-sub'>
-        Um canal por clube, sempre aberto. A primeira mensagem do dia conta
-        para a missão — e conta uma vez só, escrevas aqui ou numa sala de jogo.
+        O geral é para toda a gente. O do teu clã só o vêem os membros dele. A
+        primeira mensagem do dia conta para a missão — e conta uma vez só,
+        escrevas aqui ou numa sala de jogo.
       </p>
 
       <div className='cc-canais'>
-        {canais.map((c) => (
+        {gerais.map((c) => (
           <button key={c.id}
                   className={`cc-canal ${ativo?.id === c.id ? 'ativo' : ''}`}
                   onClick={() => setAtivo(c)}>
@@ -116,7 +127,23 @@ export function CanaisClube() {
             {c.requer_vip && <Lock size={11} />}
           </button>
         ))}
+        {deCla.map((c) => (
+          <button key={c.id}
+                  className={`cc-canal cla ${ativo?.id === c.id ? 'ativo' : ''}`}
+                  onClick={() => setAtivo(c)}>
+            <span className='cc-icone'>{c.icone ?? '🛡️'}</span>
+            {c.nome}
+            <Users size={11} />
+          </button>
+        ))}
       </div>
+
+      {deCla.length === 0 && (
+        <div className='cc-dica'>
+          Ainda não estás num clã — entra ou cria um no separador ao lado e
+          ganhas um canal privado só para os membros.
+        </div>
+      )}
 
       {ativo?.descricao && <div className='cc-descricao'>{ativo.descricao}</div>}
       {erro && <div className='gm-erro'>{erro}</div>}

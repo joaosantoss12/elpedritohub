@@ -927,7 +927,7 @@
   color: var(--bg-deep);
 }
 
-/* ─── Canais por clube ─────────────────────────────────────── */
+/* ─── Canais da comunidade ─────────────────────────────────── */
 
 .cc-canais { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
 
@@ -1095,4 +1095,20 @@
   border-left: 2px solid var(--border-strong);
   padding-left: 12px;
   margin-top: 16px;
+}
+
+/* Um canal de clã lê-se de relance como diferente do chat aberto: o traço à
+   esquerda é o que separa "isto vê o Hub inteiro" de "isto vê só o teu clã". */
+.cc-canal.cla {
+  border-left: 2px solid var(--gold-primary);
+}
+
+.cc-dica {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-gray);
 }

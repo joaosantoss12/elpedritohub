@@ -10,6 +10,8 @@
 
 // ─── TIPOS ────────────────────────────────────────────────────
 
+import { LIGAS_NUCLEO } from './ligas';
+
 export type EstadoJogo = 'agendado' | 'ao_vivo' | 'intervalo' | 'terminado' | 'adiado';
 
 export interface JogoAoVivo {
@@ -30,46 +32,11 @@ export interface JogoAoVivo {
   inicio: string;
 }
 
-export const LIGAS_PADRAO = [
-  // Europa — topo
-  'por.1', 'eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1',
-  'uefa.champions', 'uefa.champions_qual',
-  'uefa.europa', 'uefa.europa_qual',
-  'uefa.europa.conf', 'uefa.europa.conf_qual',
-  // Europa — restantes (jogam no verão, quando as "top 5" ainda não começaram)
-  'ned.1', 'bel.1', 'sco.1', 'den.1', 'swe.1', 'nor.1', 'tur.1', 'sui.1', 'aut.1',
-  // América do Sul
-  'bra.1', 'arg.1', 'conmebol.libertadores', 'conmebol.sudamericana',
-  // Estados Unidos
-  'usa.1',
-  // Ásia
-  'ksa.1', 'jpn.1', 'kor.1',
-  // Seleções — grandes torneios internacionais
-  'fifa.world', 'uefa.euro', 'conmebol.america',
-] as const;
-
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
-/** Continente de cada liga, para os separadores de filtro na Sala de Jogos. */
-export const CONTINENTE_LIGA: Record<string, string> = {
-  'por.1': 'Europa', 'eng.1': 'Europa', 'esp.1': 'Europa', 'ita.1': 'Europa', 'ger.1': 'Europa', 'fra.1': 'Europa',
-  'uefa.champions': 'Europa', 'uefa.champions_qual': 'Europa',
-  'uefa.europa': 'Europa', 'uefa.europa_qual': 'Europa',
-  'uefa.europa.conf': 'Europa', 'uefa.europa.conf_qual': 'Europa',
-  'ned.1': 'Europa', 'bel.1': 'Europa', 'sco.1': 'Europa', 'den.1': 'Europa', 'swe.1': 'Europa',
-  'nor.1': 'Europa', 'tur.1': 'Europa', 'sui.1': 'Europa', 'aut.1': 'Europa',
-  'bra.1': 'América do Sul', 'arg.1': 'América do Sul',
-  'conmebol.libertadores': 'América do Sul', 'conmebol.sudamericana': 'América do Sul',
-  'usa.1': 'Estados Unidos',
-  'ksa.1': 'Ásia', 'jpn.1': 'Ásia', 'kor.1': 'Ásia',
-  'fifa.world': 'Seleções', 'uefa.euro': 'Seleções', 'conmebol.america': 'Seleções',
-};
-
-export const ORDEM_CONTINENTES = ['Europa', 'América do Sul', 'Estados Unidos', 'Ásia', 'Seleções'] as const;
-
-export function continenteDaLiga(slug: string): string {
-  return CONTINENTE_LIGA[slug] ?? 'Outras';
-}
+// O catálogo vive em `ligas.ts` porque também é preciso do lado do servidor,
+// onde nada disto — fetch a 140 competições — pode acontecer no browser.
+export { ORDEM_CONTINENTES, continenteDaLiga, nomeDaLiga, LIGAS_TODAS, LIGAS_NUCLEO } from './ligas';
 
 /** Sempre com dois jogos: o rótulo que fica congelado na sala. */
 export function labelJogo(j: JogoAoVivo): string {
@@ -200,15 +167,26 @@ const ORDEM_ESTADO: Record<EstadoJogo, number> = {
  * acontecer, depois o que está para vir, e por fim o que já acabou.
  */
 export async function carregarJogos(
-  ligas: readonly string[] = LIGAS_PADRAO,
+  ligas: readonly string[] = LIGAS_NUCLEO,
+  lote = 12,
 ): Promise<JogoAoVivo[]> {
-  const listas = await Promise.all(ligas.map(carregarLiga));
-  return listas
-    .flat()
-    .sort((a, b) => {
-      const d = ORDEM_ESTADO[a.estado] - ORDEM_ESTADO[b.estado];
-      return d !== 0 ? d : a.inicio.localeCompare(b.inicio);
-    });
+  // Em lotes, e não tudo de uma vez: com o catálogo completo são ~140 pedidos,
+  // e disparados em simultâneo esgotam os sockets da função e fazem a ESPN
+  // começar a recusar. Doze de cada vez varre tudo em poucos segundos.
+  const todos: JogoAoVivo[] = [];
+  for (let i = 0; i < ligas.length; i += lote) {
+    const parte = await Promise.all(ligas.slice(i, i + lote).map(carregarLiga));
+    todos.push(...parte.flat());
+  }
+  return ordenarJogos(todos);
+}
+
+/** Primeiro o que está a acontecer, depois o que vem, e por fim o que acabou. */
+export function ordenarJogos(jogos: JogoAoVivo[]): JogoAoVivo[] {
+  return [...jogos].sort((a, b) => {
+    const d = ORDEM_ESTADO[a.estado] - ORDEM_ESTADO[b.estado];
+    return d !== 0 ? d : a.inicio.localeCompare(b.inicio);
+  });
 }
 
 // ─── ESTATÍSTICAS + EVENTOS (estilo flashscore) ───────────────

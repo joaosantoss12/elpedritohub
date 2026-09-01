@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseRpc } from '../_lib/supabaseAdmin';
+import { LIGAS_TODAS } from '../../src/lib/ligas';
 
 /**
  * Resolvedor da Batalha de Prognósticos.
@@ -17,19 +18,10 @@ import { supabaseRpc } from '../_lib/supabaseAdmin';
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
-// As mesmas ligas que o Hub mostra. Manter em sincronia com LIGAS_PADRAO em
-// src/lib/placar.ts — um jogo de uma liga que não esteja aqui nunca chega a
-// poder ser escolhido, por isso também nunca precisa de ser resolvido.
-const LIGAS = [
-  'por.1', 'eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1',
-  'uefa.champions', 'uefa.champions_qual',
-  'uefa.europa', 'uefa.europa_qual',
-  'uefa.europa.conf', 'uefa.europa.conf_qual',
-  'ned.1', 'bel.1', 'sco.1', 'den.1', 'swe.1', 'nor.1', 'tur.1', 'sui.1', 'aut.1',
-  'bra.1', 'arg.1', 'conmebol.libertadores', 'conmebol.sudamericana',
-  'usa.1', 'ksa.1', 'jpn.1', 'kor.1',
-  'fifa.world', 'uefa.euro', 'conmebol.america',
-];
+// O mesmo catálogo que o Hub mostra — importado, não copiado: um jogo só
+// pode ser escolhido se a liga estiver na lista, e uma cópia desactualizada
+// deixaria boletins por resolver sem que nada avisasse.
+const LIGAS = LIGAS_TODAS;
 
 interface Pendente { evento_id: string; inicio: string; escolhas: number }
 

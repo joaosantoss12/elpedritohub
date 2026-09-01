@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { traduzErro } from './epcoins';
-import { carregarJogos, type JogoAoVivo } from './placar';
+import { type JogoAoVivo } from './placar';
+import { carregarPlacar } from './placarCache';
 
 // Batalha de Prognósticos.
 //
@@ -73,7 +74,7 @@ export const MAX_JOGOS = 5;
 const MARGEM_MS = 3 * 60 * 1000;
 
 export async function carregarJogosElegiveis(): Promise<JogoAoVivo[]> {
-  const jogos = await carregarJogos();
+  const { jogos } = await carregarPlacar();
   const limite = Date.now() + MARGEM_MS;
   return jogos
     .filter((j) => j.estado === 'agendado' && j.inicio)

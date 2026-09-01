@@ -8,9 +8,10 @@ import {
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  carregarJogos, carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga,
+  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga,
   ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo,
 } from '../lib/placar';
+import { carregarPlacar } from '../lib/placarCache';
 import {
   carregarSalasConfig, carregarMensagens, contarPorEvento, enviarMensagem,
   apagarMensagem, subscreverSala,
@@ -64,7 +65,11 @@ export default function Salas() {
   const puxarJogos = useCallback(async () => {
     const cfg = await carregarSalasConfig();
     if (!cfg.ativo) { setJogos([]); setCarregado(true); return; }
-    const lista = await carregarJogos(cfg.ligas);
+    // A varredura já foi feita pelo cron; aqui só se lê e, se o admin tiver
+    // restringido as ligas, se corta o que sobra.
+    const { jogos: todos } = await carregarPlacar();
+    const permitidas = new Set(cfg.ligas);
+    const lista = cfg.ligas.length ? todos.filter(j => permitidas.has(j.ligaSlug)) : todos;
     setJogos(lista);
     setCarregado(true);
     setContagens(await contarPorEvento(lista.map(j => j.id)));

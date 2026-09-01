@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { LIGAS_PADRAO } from './placar';
+import { LIGAS_TODAS } from './ligas';
 
 // ─── TIPOS ────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ export interface SalasConfig {
 
 export const SALAS_CONFIG_PADRAO: SalasConfig = {
   ativo: true,
-  ligas: [...LIGAS_PADRAO],
+  ligas: [...LIGAS_TODAS],
   janela_horas: 6,
 };
 

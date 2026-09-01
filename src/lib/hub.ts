@@ -86,6 +86,8 @@ export interface CanalComunidade {
   cor: string | null;
   ordem: number;
   requer_vip: boolean;
+  /** Preenchido só nos canais privados de clã. Null é o chat aberto a todos. */
+  cla_id: string | null;
 }
 
 export interface MensagemCanal {
@@ -100,7 +102,7 @@ export interface MensagemCanal {
 export async function carregarCanaisComunidade(): Promise<CanalComunidade[]> {
   const { data, error } = await supabase
     .from('comunidade_canais')
-    .select('id, slug, nome, descricao, icone, cor, ordem, requer_vip')
+    .select('id, slug, nome, descricao, icone, cor, ordem, requer_vip, cla_id')
     .eq('ativo', true)
     .order('ordem');
   if (error) {

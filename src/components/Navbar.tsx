@@ -10,7 +10,7 @@ const NAV_LINKS: { label: string; path: string; authOnly?: boolean }[] = [
   { label: 'SALAS DE JOGO', path: '/salas', authOnly: true },
   { label: 'ARENA',          path: '/arena', authOnly: true },
   { label: 'RECOMPENSAS',    path: '/recompensas', authOnly: true },
-  { label: 'CLÃS',           path: '/clas', authOnly: true },
+  { label: 'SOCIAL',         path: '/clas', authOnly: true },
   { label: 'BANCA',          path: '/banca', authOnly: true },
   { label: 'CASINO',         path: '/casino' },
   { label: 'PLANOS',         path: '/plans' },

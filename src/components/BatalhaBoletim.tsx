@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, Lock, Plus, Save, Search, X } from 'lucide-react';
+import { Check, Globe, Loader2, Lock, Plus, Save, Search, Trophy, X } from 'lucide-react';
 import {
   MAX_JOGOS, carregarJogosElegiveis, carregarMercados, carregarMeuBoletim,
   estaTrancada, guardarBoletim, rotularOpcao,
   type Escolha, type EscolhaGuardada, type Mercado, type MeuBoletim,
 } from '../lib/batalha';
 import type { JogoAoVivo } from '../lib/placar';
+import { ORDEM_CONTINENTES, continenteDaLiga } from '../lib/ligas';
+// Reutiliza a barra de filtros da Sala de Jogos — mesmos filtros, mesmo aspecto.
+import '../styles/Salas.css';
 
 /**
  * O construtor do boletim do dia.
@@ -25,6 +28,8 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
   const [rascunho, setRascunho] = useState<Escolha[]>([]);
   const [aberto, setAberto] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [continente, setContinente] = useState<string>('todos');
+  const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
   const [erro, setErro] = useState('');
   const [aGuardar, setAGuardar] = useState(false);
   const [guardadoEm, setGuardadoEm] = useState<number | null>(null);
@@ -66,12 +71,43 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
     [trancadas, rascunho],
   );
 
+  // Os mesmos filtros da Sala de Jogos, e pela mesma razão: com o catálogo
+  // completo há centenas de jogos por dia, e procurar por texto só serve a
+  // quem já sabe o que quer. Não há filtro de estado aqui — na Batalha só
+  // entram jogos por começar, que é a condição para a escolha ser justa.
+  const semEscolhidos = useMemo(
+    () => jogos.filter((j) => !escolhidos.has(j.id)),
+    [jogos, escolhidos],
+  );
+
+  const continentesDisponiveis = useMemo(
+    () => ORDEM_CONTINENTES.filter((c) => semEscolhidos.some((j) => continenteDaLiga(j.ligaSlug) === c)),
+    [semEscolhidos],
+  );
+
+  const jogosDoContinente = useMemo(
+    () => (continente === 'todos'
+      ? semEscolhidos
+      : semEscolhidos.filter((j) => continenteDaLiga(j.ligaSlug) === continente)),
+    [semEscolhidos, continente],
+  );
+
+  const ligasDisponiveis = useMemo(() => {
+    const mapa = new Map<string, string>();
+    jogosDoContinente.forEach((j) => mapa.set(j.ligaSlug, j.liga));
+    return [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [jogosDoContinente]);
+
   const disponiveis = useMemo(() => {
     const q = busca.trim().toLowerCase();
-    return jogos
-      .filter((j) => !escolhidos.has(j.id))
+    return jogosDoContinente
+      .filter((j) => ligaFiltro === 'todas' || j.ligaSlug === ligaFiltro)
       .filter((j) => !q || `${j.casa} ${j.fora} ${j.liga}`.toLowerCase().includes(q));
-  }, [jogos, escolhidos, busca]);
+  }, [jogosDoContinente, ligaFiltro, busca]);
+
+  const escolherContinente = (c: string) => { setContinente(c); setLigaFiltro('todas'); };
+  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas' || busca.trim() !== '';
+  const limparFiltros = () => { setContinente('todos'); setLigaFiltro('todas'); setBusca(''); };
 
   function escolher(jogo: JogoAoVivo, mercado: Mercado, opcao: { chave: string; label: string }) {
     setErro('');
@@ -198,6 +234,32 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
           <input value={busca} onChange={(ev) => setBusca(ev.target.value)}
                  placeholder='Procurar equipa ou liga' />
         </div>
+
+        {(continentesDisponiveis.length > 1 || ligasDisponiveis.length > 1 || temFiltro) && (
+          <div className='salas-filtros'>
+            {continentesDisponiveis.length > 1 && (
+              <label className='salas-filtros__campo'>
+                <Globe size={14} />
+                <select value={continente} onChange={(ev) => escolherContinente(ev.target.value)}>
+                  <option value='todos'>Todos os continentes</option>
+                  {continentesDisponiveis.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </label>
+            )}
+            {ligasDisponiveis.length > 1 && (
+              <label className='salas-filtros__campo'>
+                <Trophy size={14} />
+                <select value={ligaFiltro} onChange={(ev) => setLigaFiltro(ev.target.value)}>
+                  <option value='todas'>Todas as ligas</option>
+                  {ligasDisponiveis.map(([slug, nome]) => <option key={slug} value={slug}>{nome}</option>)}
+                </select>
+              </label>
+            )}
+            {temFiltro && (
+              <button className='salas-filtros__limpar' onClick={limparFiltros}>Limpar</button>
+            )}
+          </div>
+        )}
 
         {disponiveis.length === 0 ? (
           <div className='gm-vazio'>

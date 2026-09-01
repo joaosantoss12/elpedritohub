@@ -73,6 +73,20 @@ export async function usarConvite(codigo: string): Promise<void> {
   if (error) throw new Error(traduzErro(error.message));
 }
 
+/**
+ * O que a RPC devolve. Só `OK` credita; o resto diz porque não.
+ *
+ * A distinção que interessa é entre um "ainda não" e um "nunca":
+ * `EMAIL_POR_CONFIRMAR` e `SEM_PERFIL` resolvem-se sozinhos quando a pessoa
+ * confirmar a conta, e por isso o código tem de ficar guardado para a próxima.
+ */
+type ResultadoConvite =
+  | 'OK' | 'JA_USADO' | 'SEM_CODIGO' | 'SEM_SESSAO'
+  | 'EMAIL_POR_CONFIRMAR' | 'SEM_PERFIL'
+  | 'CODIGO_INVALIDO' | 'CODIGO_PROPRIO' | 'FORA_DE_PRAZO';
+
+const A_REPETIR: ResultadoConvite[] = ['EMAIL_POR_CONFIRMAR', 'SEM_PERFIL', 'SEM_SESSAO'];
+
 export function linkDeConvite(codigo: string): string {
   return `${window.location.origin}/register?convite=${encodeURIComponent(codigo)}`;
 }
@@ -94,25 +108,40 @@ export function guardarConvitePendente(codigo: string): void {
   }
 }
 
-/** Resgata o convite guardado, se houver. Nunca lança. */
+/**
+ * Resgata o convite na primeira sessão em que ele possa mesmo contar.
+ *
+ * Corre a cada arranque, de propósito. O crédito exige email confirmado e
+ * perfil criado, e nenhuma dessas coisas está garantida no primeiro login —
+ * por isso o código só sai da gaveta quando o servidor der uma resposta
+ * definitiva. Nunca lança: um convite que falha não pode estragar o arranque.
+ *
+ * Se o browser não tiver o código (registo noutro dispositivo), a RPC vai
+ * buscá-lo aos metadados da conta sozinha.
+ */
 export async function resgatarConvitePendente(): Promise<void> {
   let codigo: string | null = null;
   try {
     codigo = localStorage.getItem(CHAVE_CONVITE);
   } catch {
+    // Storage inacessível: a RPC ainda tem os metadados da conta.
+  }
+
+  const { data, error } = await supabase.rpc('referral_resgatar', {
+    p_codigo: codigo ?? null,
+  });
+
+  if (error) {
+    console.warn('Convite não aplicado:', error.message);
     return;
   }
-  if (!codigo) return;
 
-  try {
-    await usarConvite(codigo);
-  } catch (e) {
-    console.warn('Convite não aplicado:', e instanceof Error ? e.message : e);
-  } finally {
-    // Sai da gaveta em qualquer dos casos: um código inválido ou fora de
-    // prazo não melhora com tentativas, e ficaria a tentar em cada arranque.
-    try { localStorage.removeItem(CHAVE_CONVITE); } catch { /* ignorado */ }
-  }
+  const r = data as ResultadoConvite;
+  if (A_REPETIR.includes(r)) return;
+
+  // Definitivo — bom ou mau. Um código inválido ou fora de prazo não melhora
+  // com tentativas, e ficaria a bater no servidor em cada arranque.
+  try { localStorage.removeItem(CHAVE_CONVITE); } catch { /* ignorado */ }
 }
 
 // ─── CLÃS ─────────────────────────────────────────────────────

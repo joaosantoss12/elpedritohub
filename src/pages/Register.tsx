@@ -89,6 +89,10 @@ function Register() {
           data: {
             full_name: formData.name,
             username: usernameClean,
+            // O código também viaja com a conta, e não só no localStorage:
+            // quem se regista no telemóvel e confirma o email no portátil
+            // perdia o convite se ele vivesse só neste browser.
+            ...(convite ? { convite } : {}),
           }
         }
       });
@@ -114,14 +118,15 @@ function Register() {
         }
       }
 
-      // O convite fica guardado e é resgatado na primeira sessão: com
-      // confirmação de email, aqui ainda não há `auth.uid()` para o aplicar.
+      // O convite fica guardado e só se resgata na primeira sessão: com
+      // confirmação de email, aqui ainda não há `auth.uid()` para o aplicar —
+      // e é de propósito que só conta depois de a pessoa entrar mesmo.
       if (convite) guardarConvitePendente(convite);
 
       navigate('/login'); // Redirect after registration
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error during registration:', err);
-      setError(err.message || 'Erro ao efetuar registo. Tente novamente.');
+      setError(err instanceof Error ? err.message : 'Erro ao efetuar registo. Tente novamente.');
     } finally {
       setLoading(false);
     }
