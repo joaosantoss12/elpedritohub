@@ -28,13 +28,8 @@ import '../styles/Salas.css';
 const INTERVALO_PLACAR = 45_000;
 
 /** Dentro de uma sala aberta o ritmo é apertado: marcador, estatísticas e
- *  mini-campo têm de parecer ao vivo, e é só um jogo a ser lido. O feed da
- *  ESPN em si não muda a cada 3s — o que muda a esse ritmo é a bola a andar
- *  pelo trilho de lances do lado do cliente. */
+ *  mini-campo têm de parecer ao vivo, e é só um jogo a ser lido. */
 const INTERVALO_LIVE = 3_000;
-
-/** De quanto em quanto tempo a bola avança um lance no trilho. */
-const PASSO_BOLA_MS = 1_100;
 
 /**
  * O interruptor de estado. 'todos' não é um terceiro estado do jogo — é a
@@ -438,46 +433,27 @@ function GrupoJogos({
 // ─── CAMPO AO VIVO ────────────────────────────────────────────
 
 /**
- * Mini-campo estilo AiScore. A bola salta para as coordenadas reais do último
- * lance da ESPN (`fieldPositionX/Y`) — a transição CSS trata do deslize — e a
- * barra por baixo mostra quem está a carregar. A casa ataca sempre para a
- * direita; o lado de fora já vem espelhado de `mapearMomento`.
+ * Mini-campo estilo AiScore, sem bola. Sombreia o meio-campo da equipa com
+ * posse (com escudo + nome) e mostra ao centro o último evento marcante —
+ * golo, cartão, canto, fora de jogo, tempo de compensação…
  */
 function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo }) {
   const { casa, fora, lance, minuto, posse, fase } = momento;
-
-  // Trilho dos últimos lances. A bola caminha por ele, um ponto de cada vez —
-  // é o que dá a sensação de fluxo, já que o feed da ESPN só traz um ponto
-  // novo quando há um lance.
-  // `trilho`/`posse`/`fase` podem faltar em `momento` vindo da cache antiga.
-  const trilho = momento.trilho?.length
-    ? momento.trilho
-    : [{ x: momento.bolaX ?? 50, y: momento.bolaY ?? 50 }];
-  const assinatura = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('|');
-  const [idx, setIdx] = useState(trilho.length - 1);
-
-  useEffect(() => {
-    // Recomeça uns lances atrás e volta a caminhar até ao mais recente.
-    const inicio = Math.max(0, trilho.length - 4);
-    setIdx(inicio);
-    if (trilho.length - 1 <= inicio) return;
-    const t = window.setInterval(() => {
-      setIdx(i => {
-        if (i >= trilho.length - 1) { window.clearInterval(t); return i; }
-        return i + 1;
-      });
-    }, PASSO_BOLA_MS);
-    return () => window.clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assinatura]);
-
-  const ponto = trilho[Math.min(idx, trilho.length - 1)];
 
   const time = posse === 'casa'
     ? { nome: jogo.casa, logo: jogo.logoCasa }
     : posse === 'fora'
       ? { nome: jogo.fora, logo: jogo.logoFora }
       : null;
+
+  // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
+  // depois o destaque fresco do feed, senão a fase corrente.
+  const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
+  const evento = compensacao
+    ? { texto: 'Tempo de compensação', nota: compensacao }
+    : momento.destaque
+      ? { texto: momento.destaque, nota: minuto }
+      : { texto: fase || 'Bola em jogo', nota: '' };
 
   const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
 
@@ -497,25 +473,19 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         <span className="campo-live__area campo-live__area--esq" aria-hidden="true" />
         <span className="campo-live__area campo-live__area--dir" aria-hidden="true" />
 
-        <div
-          className={`campo-live__fase campo-live__fase--${posse ?? 'neutro'}`}
-        >
-          <strong>{fase || 'Bola em jogo'}</strong>
-          {time && (
-            <span className="campo-live__posse">
-              {time.logo && <img src={time.logo} alt="" />}
-              {time.nome}
-            </span>
-          )}
-        </div>
+        {/* Meio-campo com posse: a casa ataca para a direita, o fora para a
+            esquerda — sombreia-se o lado para onde a equipa carrega. */}
+        {time && (
+          <div className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}>
+            {time.logo && <img src={time.logo} alt="" />}
+            <span>{time.nome}</span>
+          </div>
+        )}
 
-        <span
-          className="campo-live__bola"
-          style={{ left: `${ponto.x}%`, top: `${ponto.y}%` }}
-          aria-hidden="true"
-        >
-          <span className="campo-live__bola-i" />
-        </span>
+        <div className="campo-live__evento">
+          <strong>{evento.texto}</strong>
+          {evento.nota && <em>{evento.nota}</em>}
+        </div>
       </div>
 
       <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>

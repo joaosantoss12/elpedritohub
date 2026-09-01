@@ -239,25 +239,21 @@ export interface EventoJogo {
 }
 
 /**
- * O "momentum de ataque" — quem está a carregar agora e onde anda a bola.
- * Vem do feed de `commentary` da ESPN: cada lance traz tipo, equipa e, muitas
- * vezes, coordenadas reais no relvado (`fieldPositionX/Y`).
+ * O "momentum de ataque" — quem está a carregar agora, estilo AiScore.
+ * Vem do feed de `commentary` da ESPN: cada lance traz tipo e equipa. Não há
+ * bola a mexer; mostra-se antes o lado com posse e o último evento marcante.
  */
 export interface MomentoJogo {
   /** 0..100 — quota da pressão nos últimos minutos. casa + fora = 100. */
   casa: number;
   fora: number;
-  /** Posição da bola no relvado, com a casa a atacar sempre para x=100. */
-  bolaX: number;
-  bolaY: number;
-  /** Os últimos lances com coordenadas, do mais antigo para o mais recente.
-   *  A sala anda a bola por eles um a um, para se ver o fluxo do jogo em vez
-   *  de um salto seco para o último ponto. */
-  trilho: Array<{ x: number; y: number }>;
   /** Quem tem a bola agora — casa, fora, ou indefinido (bola parada/neutra). */
   posse: 'casa' | 'fora' | null;
   /** Palavra-estado ao centro do campo, estilo AiScore: "Ataque", "Canto"… */
   fase: string;
+  /** Evento recente para mostrar em destaque ao centro (golo, cartão, canto,
+   *  fora de jogo, substituição). `null` quando não há nada fresco. */
+  destaque: string | null;
   /** Texto curto do último lance, ex. "Canto · Coritiba". */
   lance: string;
   minuto: string;
@@ -301,8 +297,17 @@ const FASE_LANCE: Record<string, string> = {
   'shot-off-target': 'Remate', 'shot-blocked': 'Remate',
   'corner-awarded': 'Canto', 'free-kick-won': 'Livre',
   'offside': 'Fora de jogo', 'foul': 'Falta',
-  'yellow-card': 'Amarelo', 'red-card': 'Vermelho', 'substitution': 'Substituição',
+  'yellow-card': 'Cartão amarelo', 'red-card': 'Cartão vermelho',
+  'substitution': 'Substituição',
 };
+
+/** Lances que valem um destaque ao centro do campo — não os remates soltos
+ *  nem as faltas de rotina. */
+const EVENTO_NOTAVEL = new Set([
+  'goal', 'own-goal', 'penalty---scored', 'penalty---saved', 'penalty---missed',
+  'shot-hit-woodwork', 'corner-awarded', 'offside',
+  'yellow-card', 'red-card', 'substitution',
+]);
 
 /** Rótulo em PT para o último lance mostrado por baixo do campo. */
 const ROTULO_LANCE: Record<string, string> = {
@@ -400,8 +405,7 @@ function nomesDoSummary(json: Bruto): { casa: string; fora: string } {
 
 /**
  * Lê o `commentary` e devolve o momentum: quem pressiona (janela de ~6 min de
- * relógio, com decaimento) e onde está a bola (coordenadas reais do último
- * lance, orientadas para a casa atacar à direita).
+ * relógio, com decaimento), quem tem a posse e o último evento marcante.
  */
 function mapearMomento(json: Bruto, casaNome: string, foraNome: string): MomentoJogo | null {
   const coment = lista(json.commentary).map(obj);
@@ -420,8 +424,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   };
 
   interface Lance {
-    t: number; slug: string; equipa: 'casa' | 'fora' | null;
-    x: number | null; y: number | null; minuto: string;
+    t: number; slug: string; equipa: 'casa' | 'fora' | null; minuto: string;
   }
 
   const lances: Lance[] = [];
@@ -433,8 +436,6 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
       t,
       slug: txt(obj(play.type).type) ?? '',
       equipa: ladoDe(txt(obj(play.team).displayName)),
-      x: typeof play.fieldPositionX === 'number' ? play.fieldPositionX : null,
-      y: typeof play.fieldPositionY === 'number' ? play.fieldPositionY : null,
       minuto: txt(obj(c.time).displayValue) ?? '',
     });
   }
@@ -465,37 +466,19 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const casa = total > 0 ? Math.round((presCasa / total) * 100) : 50;
   const fora = 100 - casa;
 
-  // Orienta um lance para a casa atacar sempre à direita. O `fieldPositionX`
-  // da ESPN é relativo a quem ataca (0 = baliza própria, 100 = adversária),
-  // por isso o lado de fora entra espelhado.
-  const orientar = (l: Lance) => ({
-    x: Math.min(96, Math.max(4, l.equipa === 'casa' ? l.x! : 100 - l.x!)),
-    y: l.y === null
-      ? 50
-      : Math.min(92, Math.max(8, l.equipa === 'casa' ? l.y : 100 - l.y)),
-  });
-
-  // Trilho: os últimos 6 lances com coordenadas, do mais antigo para o mais
-  // recente — a sala anda a bola por eles para se ver o fluxo.
-  const comXY = lances.filter(l => l.x !== null && l.equipa);
-  const trilho = comXY.slice(-6).map(orientar);
-
-  let bolaX: number;
-  let bolaY: number;
-  if (trilho.length > 0) {
-    ({ x: bolaX, y: bolaY } = trilho[trilho.length - 1]);
-  } else {
-    bolaX = Math.min(85, Math.max(15, 50 + (casa - fora) * 0.35));
-    bolaY = 50;
-  }
-
   // Quem tem a bola e em que fase — a falta passa a posse a quem a sofreu.
-  const refPosse = comXY[comXY.length - 1]
-    ?? [...lances].reverse().find(l => l.equipa);
-  let posse: 'casa' | 'fora' | null = refPosse?.equipa ?? null;
+  let posse: 'casa' | 'fora' | null =
+    [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
   const ultimoFase = [...lances].reverse().find(l => l.slug in FASE_LANCE);
   if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
   const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
+
+  // Destaque ao centro: um evento marcante acabado de acontecer (~100s de
+  // relógio). É o que a sala mostra em vez da bola.
+  const notavel = [...lances].reverse().find(l => EVENTO_NOTAVEL.has(l.slug));
+  const destaque = notavel && agora - notavel.t <= 100
+    ? FASE_LANCE[notavel.slug] ?? null
+    : null;
 
   const ultimo = [...lances].reverse().find(l => l.slug in ROTULO_LANCE);
   const nome = (lado: 'casa' | 'fora' | null) =>
@@ -505,7 +488,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     : '';
 
   return {
-    casa, fora, bolaX, bolaY, trilho, posse, fase, lance,
+    casa, fora, posse, fase, destaque, lance,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
   };
 }
