@@ -258,6 +258,12 @@ export interface MomentoJogo {
   /** Texto curto do último lance, ex. "Canto · Coritiba". */
   lance: string;
   minuto: string;
+  /** Onde foi a última jogada, em % do campo (a casa ataca para a direita, por
+   *  isso x≈100 é a baliza adversária). `null` quando o feed não dá posição.
+   *  Não é a bola em tempo real — a ESPN só dá coordenada por evento — mas
+   *  salta pelo campo a acompanhar o jogo. */
+  bolaX: number | null;
+  bolaY: number | null;
 }
 
 /** Placar/relógio lidos do mesmo summary, para a sala não mostrar dois
@@ -426,6 +432,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
 
   interface Lance {
     t: number; slug: string; equipa: 'casa' | 'fora' | null; minuto: string;
+    x: number | null; y: number | null; wall: number;
   }
 
   const lances: Lance[] = [];
@@ -433,11 +440,17 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     const play = obj(c.play);
     const t = Number(txt(obj(play.clock).value) ?? txt(obj(c.time).value));
     if (!Number.isFinite(t)) continue;
+    const x = Number(txt(play.fieldPositionX));
+    const y = Number(txt(play.fieldPositionY));
+    const wall = Date.parse(txt(play.wallclock) ?? '');
     lances.push({
       t,
       slug: txt(obj(play.type).type) ?? '',
       equipa: ladoDe(txt(obj(play.team).displayName)),
       minuto: txt(obj(c.time).displayValue) ?? '',
+      x: Number.isFinite(x) ? x : null,
+      y: Number.isFinite(y) ? y : null,
+      wall: Number.isFinite(wall) ? wall : 0,
     });
   }
   if (lances.length === 0) return null;
@@ -484,8 +497,11 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   // Comentário congelado: o cronómetro já foi bem para a frente e o último
   // lance é história. Não repetimos o evento antigo, mas continuamos a marcar
   // o lado dominante pela pressão recente — é o que dá a sensação de a bola
-  // andar de um lado para o outro entre atualizações.
-  const feedParado = relogioAgora - agora > 150;
+  // andar de um lado para o outro entre atualizações. O `wallclock` de cada
+  // lance é a hora real e é o sinal mais fiável de que o feed secou.
+  const wallRecente = Math.max(0, ...lances.map(l => l.wall));
+  const feedParado = relogioAgora - agora > 150
+    || (wallRecente > 0 && Date.now() - wallRecente > 150_000);
 
   // Quem tem a bola: com feed vivo é a equipa do último lance; com feed
   // parado, o lado com mais pressão na janela. A falta passa a posse a quem
@@ -496,16 +512,25 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   } else {
     posse = [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
   }
+  // A `fase` é só o estado corrente (Ataque, Canto, Livre, Falta…). Os
+  // momentos grandes — golo, cartão, penálti — passam sempre pelo `destaque`,
+  // nunca por aqui, senão ficavam a mostrar "Golo" sem equipa depois de a
+  // cápsula fechar.
   const ultimoFase = feedParado
     ? undefined
-    : [...lances].reverse().find(l => l.slug in FASE_LANCE);
+    : [...lances].reverse().find(l => l.slug in FASE_LANCE && !EVENTO_NOTAVEL.has(l.slug));
   if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
   const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
 
-  // Destaque ao centro: um evento marcante acabado de acontecer (~100s de
-  // relógio). É o que a sala mostra em vez da bola, com a equipa do lance.
+  // Destaque ao centro: um evento marcante acabado de acontecer, com a equipa
+  // do lance. Golos, penáltis e vermelhos ficam bem mais tempo do que um
+  // canto ou um remate.
+  const DESTAQUE_LONGO = new Set([
+    'goal', 'own-goal', 'penalty---scored', 'penalty---saved', 'penalty---missed', 'red-card',
+  ]);
   const notavel = [...lances].reverse().find(l => EVENTO_NOTAVEL.has(l.slug));
-  const destaque = notavel && relogioAgora - notavel.t <= 100 && FASE_LANCE[notavel.slug]
+  const janelaDestaque = notavel && DESTAQUE_LONGO.has(notavel.slug) ? 240 : 110;
+  const destaque = notavel && relogioAgora - notavel.t <= janelaDestaque && FASE_LANCE[notavel.slug]
     ? { texto: FASE_LANCE[notavel.slug], equipa: notavel.equipa }
     : null;
 
@@ -516,8 +541,15 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     ? `${ROTULO_LANCE[ultimo.slug]}${ultimo.equipa ? ` · ${nome(ultimo.equipa)}` : ''}`
     : '';
 
+  // Onde foi a última jogada, em % do campo. A casa ataca para a direita, por
+  // isso o X da ESPN (0 = baliza da casa, 100 = baliza adversária) serve tal
+  // e qual. Sem feed fresco não se finge posição.
+  const comCoord = feedParado ? undefined : [...lances].reverse().find(l => l.x != null);
+  const bolaX = comCoord?.x ?? null;
+  const bolaY = comCoord?.y ?? null;
+
   return {
-    casa, fora, posse, fase, destaque, lance,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
   };
 }

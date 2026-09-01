@@ -359,8 +359,9 @@
   min-width: 0;
 }
 
-/* Marcador + mini-campo centram-se na vertical em vez de colar ao topo. */
-.sala-jogo__lado--jogo { justify-content: center; }
+/* Marcador + mini-campo caem para o fundo: o topo pode ficar mais curto que
+   as estatísticas, mas as 3 colunas terminam todas ao mesmo nível. */
+.sala-jogo__lado--jogo { justify-content: flex-end; }
 
 /* O chat estica-se até ao fundo da coluna. */
 .sala-jogo__lado--social { justify-content: stretch; }
@@ -384,7 +385,7 @@
     align-items: start;
   }
   /* O mini-campo/marcador passa a ocupar a largura toda; stats e chat lado a lado. */
-  .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; justify-content: flex-start; }
+  .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; justify-content: flex-start; align-self: start; }
   .sala-jogo__lado--social .sala-jogo__mensagens { max-height: 52vh; }
 }
 
@@ -934,6 +935,20 @@
   background: linear-gradient(270deg, transparent, rgba(161, 124, 91, 0.3));
 }
 
+/* Marcador da última jogada: desliza pelo campo à medida que o feed avança.
+   Não é bola em tempo real — a ESPN só dá coordenada por evento. */
+.campo-live__bola {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transition: left 0.6s ease, top 0.6s ease;
+}
+
 /* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
    o evento — "Golo", "Remate à baliza", "Cartão amarelo", "Tempo de compensação"… */
 .campo-live__evento-wrap {
@@ -1041,6 +1056,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .campo-live__pres,
+  .campo-live__bola,
   .campo-live__posse-lado { transition: none; }
 }
 

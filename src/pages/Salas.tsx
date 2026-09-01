@@ -505,13 +505,14 @@ function GrupoJogos({
  */
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
+  bolaX: null, bolaY: null,
 };
 
 function CampoAoVivo(
   { jogo, momento, terminado = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase } = momento ?? MOMENTO_VAZIO;
+  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY } = momento ?? MOMENTO_VAZIO;
 
   const equipaDe = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa'
@@ -557,6 +558,16 @@ function CampoAoVivo(
         {time && (
           <span
             className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Marca a posição da última jogada (a ESPN só dá coordenada por
+            evento — salta pelo campo, não é bola em tempo real). */}
+        {!terminado && bolaX != null && bolaY != null && (
+          <span
+            className="campo-live__bola"
+            style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
             aria-hidden="true"
           />
         )}
