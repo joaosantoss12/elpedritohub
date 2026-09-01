@@ -6,7 +6,7 @@ import {
   type Escolha, type EscolhaGuardada, type Mercado, type MeuBoletim,
 } from '../lib/batalha';
 import type { JogoAoVivo } from '../lib/placar';
-import { ORDEM_CONTINENTES, continenteDaLiga } from '../lib/ligas';
+import { ORDEM_CONTINENTES, continenteDaLiga, bandeiraDaLiga } from '../lib/ligas';
 // Reutiliza a barra de filtros da Sala de Jogos — mesmos filtros, mesmo aspecto.
 import '../styles/Salas.css';
 
@@ -280,7 +280,12 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
                     <strong>{j.fora}</strong>
                   </div>
                   <div className='bt-jogo-meta'>
-                    <span>{j.liga}</span>
+                    <span>
+                      {bandeiraDaLiga(j.ligaSlug) && (
+                        <img className='liga-bandeira' src={bandeiraDaLiga(j.ligaSlug)!} alt='' loading='lazy' />
+                      )}
+                      {j.liga}
+                    </span>
                     <span>{horaDe(j.inicio)}</span>
                   </div>
                   <Plus size={16} className='bt-mais' />

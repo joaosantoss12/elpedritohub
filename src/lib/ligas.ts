@@ -217,3 +217,40 @@ export function continenteDaLiga(slug: string): string {
 export function nomeDaLiga(slug: string): string {
   return POR_SLUG.get(slug)?.nome ?? slug;
 }
+
+// ─── BANDEIRAS ────────────────────────────────────────────────
+//
+// Uma pista visual à frente do nome da liga: quem passa os olhos pela lista
+// reconhece a bandeira antes de ler "Serie B" ou "Segunda División". O slug
+// da ESPN começa quase sempre pelo código do país (`por.1`, `eng.2`), por
+// isso basta o prefixo — não é preciso mais uma coluna no catálogo.
+//
+// As competições continentais e de seleções não têm país; algumas caem na
+// bandeira da confederação (a UE serve a UEFA), as outras ficam sem bandeira
+// e a interface mostra só o troféu.
+
+const ISO_POR_PREFIXO: Record<string, string> = {
+  por: 'pt', eng: 'gb-eng', sco: 'gb-sct', wal: 'gb-wls', nir: 'gb-nir',
+  esp: 'es', ita: 'it', ger: 'de', fra: 'fr', ned: 'nl', bel: 'be',
+  tur: 'tr', sui: 'ch', aut: 'at', gre: 'gr', den: 'dk', nor: 'no',
+  swe: 'se', fin: 'fi', irl: 'ie', rus: 'ru', cze: 'cz', rou: 'ro',
+  cyp: 'cy', isr: 'il', mlt: 'mt', ukr: 'ua', pol: 'pl', hun: 'hu',
+  srb: 'rs', cro: 'hr', bul: 'bg', slo: 'si', svk: 'sk', bih: 'ba',
+  bra: 'br', arg: 'ar', chi: 'cl', col: 'co', per: 'pe', uru: 'uy',
+  par: 'py', ven: 've', ecu: 'ec', bol: 'bo',
+  usa: 'us', usl: 'us', mex: 'mx', crc: 'cr', hon: 'hn', gua: 'gt',
+  slv: 'sv', jam: 'jm', pan: 'pa',
+  ksa: 'sa', jpn: 'jp', kor: 'kr', chn: 'cn', aus: 'au', ind: 'in',
+  idn: 'id', mys: 'my', tha: 'th', sgp: 'sg', uae: 'ae', qat: 'qa',
+  rsa: 'za', nga: 'ng', gha: 'gh', ken: 'ke', egy: 'eg', mar: 'ma',
+  tun: 'tn', alg: 'dz',
+  uefa: 'eu',
+};
+
+/** URL da bandeira para pôr à frente do nome da liga, ou `null` se não houver
+ *  país associado (competições da CONMEBOL, CONCACAF, AFC, CAF, FIFA…). */
+export function bandeiraDaLiga(slug: string): string | null {
+  const prefixo = slug.split('.')[0];
+  const iso = ISO_POR_PREFIXO[prefixo];
+  return iso ? `https://flagcdn.com/${iso}.svg` : null;
+}

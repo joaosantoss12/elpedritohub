@@ -684,3 +684,17 @@
 
 /* O ponto pulsante nao pode encolher dentro do botao flex. */
 .salas-switch .salas-dot { flex-shrink: 0; }
+
+/* ── Bandeira da liga ─────────────────────────────────────────── */
+/* Pista visual à frente do nome da competição. Pequena de propósito: é para
+   se reconhecer de relance, não para competir com os escudos das equipas. */
+.liga-bandeira {
+  display: inline-block;
+  width: 15px;
+  height: 11px;
+  margin-right: 5px;
+  border-radius: 2px;
+  object-fit: cover;
+  vertical-align: -1px;
+  box-shadow: 0 0 0 1px var(--overlay, rgba(0, 0, 0, 0.15));
+}

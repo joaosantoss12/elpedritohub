@@ -8,7 +8,7 @@ import {
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
+  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal, bandeiraDaLiga,
   ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
@@ -393,6 +393,9 @@ function GrupoJogos({
         {jogos.map(j => (
           <button key={j.id} className="jogo-card" onClick={() => onAbrir(j)}>
             <div className="jogo-card__liga">
+              {bandeiraDaLiga(j.ligaSlug) && (
+                <img className="liga-bandeira" src={bandeiraDaLiga(j.ligaSlug)!} alt="" loading="lazy" />
+              )}
               <span>{j.liga}</span>
               <span className={estaAoVivo(j) ? 'jogo-card__relogio vivo' : 'jogo-card__relogio'}>
                 {j.relogio}
@@ -528,6 +531,9 @@ function SalaJogo({
       {/* ── Placar ── */}
       <div className={estaAoVivo(jogo) ? 'placar placar--vivo' : 'placar'}>
         <div className="placar__liga">
+          {bandeiraDaLiga(jogo.ligaSlug) && (
+            <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
+          )}
           <span>{jogo.liga}</span>
           <span className={estaAoVivo(jogo) ? 'placar__relogio vivo' : 'placar__relogio'}>
             {estaAoVivo(jogo) && <span className="salas-dot" />}
