@@ -42,12 +42,19 @@ function interpretarLink(bruto: string): Config | null {
   return null;
 }
 
-function lerConfig(): Config | null {
+// Música que toca à primeira visita — um vídeo inteiro, começa em pausa.
+const CONFIG_PADRAO: Config = {
+  tipo: 'video',
+  id: 'fTKqtvXjkvo',
+  origem: 'https://www.youtube.com/watch?v=fTKqtvXjkvo',
+};
+
+function lerConfig(): Config {
   try {
     const cru = localStorage.getItem(CHAVE_CFG);
-    return cru ? (JSON.parse(cru) as Config) : null;
+    return cru ? (JSON.parse(cru) as Config) : CONFIG_PADRAO;
   } catch {
-    return null;
+    return CONFIG_PADRAO;
   }
 }
 
@@ -80,7 +87,7 @@ function carregarYT(): Promise<void> {
 export function LeitorMusica() {
   const { user } = useAuth();
 
-  const [config, setConfig] = useState<Config | null>(lerConfig);
+  const [config, setConfig] = useState<Config>(lerConfig);
   const [aberto, setAberto] = useState<boolean>(() => {
     try { return localStorage.getItem(CHAVE_ABERTO) !== 'nao'; } catch { return true; }
   });
@@ -102,10 +109,13 @@ export function LeitorMusica() {
 
   const playerRef = useRef<any>(null);
   const arrastarRef = useRef(false);
+  // Só toca sozinho depois de o utilizador escolher algo (é o gesto que
+  // desbloqueia o autoplay). À primeira carga fica em pausa.
+  const autoTocarRef = useRef(false);
 
   // Cria o player quando há configuração.
   useEffect(() => {
-    if (!config || !user) return;
+    if (!user) return;
     let cancelado = false;
 
     void carregarYT().then(() => {
@@ -133,11 +143,16 @@ export function LeitorMusica() {
         },
       };
 
-      if (playerRef.current?.loadVideoById) {
+      const auto = autoTocarRef.current;
+
+      if (playerRef.current?.cueVideoById) {
         if (config.tipo === 'playlist') {
-          playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
-        } else {
+          if (auto) playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
+          else playerRef.current.cuePlaylist({ list: config.id, listType: 'playlist' });
+        } else if (auto) {
           playerRef.current.loadVideoById(config.id);
+        } else {
+          playerRef.current.cueVideoById(config.id);
         }
         playerRef.current.setVolume(mudo ? 0 : volume);
         setPronto(true);
@@ -148,7 +163,7 @@ export function LeitorMusica() {
         height: '0',
         width: '0',
         playerVars: {
-          autoplay: 1,
+          autoplay: auto ? 1 : 0,
           playsinline: 1,
           ...(config.tipo === 'playlist'
             ? { listType: 'playlist', list: config.id }
@@ -201,6 +216,7 @@ export function LeitorMusica() {
     const c = interpretarLink(rascunho);
     if (!c) { setErroLink('Não reconheci esse link do YouTube.'); return; }
     try { localStorage.setItem(CHAVE_CFG, JSON.stringify(c)); } catch { /* privado */ }
+    autoTocarRef.current = true; // escolha do utilizador → pode tocar já
     setConfig(c);
     setPronto(false);
     setAConfigurar(false);
