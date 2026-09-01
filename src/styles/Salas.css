@@ -813,6 +813,47 @@
 .campo-live__area--esq { left: 0; border-left: none; border-radius: 0 6px 6px 0; }
 .campo-live__area--dir { right: 0; border-right: none; border-radius: 6px 0 0 6px; }
 
+/* Rótulo ao centro, estilo AiScore: a fase grande, a equipa com posse por baixo.
+ * Fica atrás da bola (z abaixo) e desencosta para o lado de quem ataca. */
+.campo-live__fase {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0 10px;
+  text-align: center;
+  pointer-events: none;
+  transition: left 0.6s ease;
+}
+.campo-live__fase--casa { left: 34%; }
+.campo-live__fase--fora { left: 66%; }
+.campo-live__fase strong {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(220, 227, 238, 0.92);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+.campo-live__posse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(220, 227, 238, 0.7);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+.campo-live__posse img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
 /* Âncora: só posição, com transição lenta entre lances (o "deslize"). */
 .campo-live__bola {
   position: absolute;

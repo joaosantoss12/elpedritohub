@@ -250,6 +250,14 @@ export interface MomentoJogo {
   /** Posição da bola no relvado, com a casa a atacar sempre para x=100. */
   bolaX: number;
   bolaY: number;
+  /** Os últimos lances com coordenadas, do mais antigo para o mais recente.
+   *  A sala anda a bola por eles um a um, para se ver o fluxo do jogo em vez
+   *  de um salto seco para o último ponto. */
+  trilho: Array<{ x: number; y: number }>;
+  /** Quem tem a bola agora — casa, fora, ou indefinido (bola parada/neutra). */
+  posse: 'casa' | 'fora' | null;
+  /** Palavra-estado ao centro do campo, estilo AiScore: "Ataque", "Canto"… */
+  fase: string;
   /** Texto curto do último lance, ex. "Canto · Coritiba". */
   lance: string;
   minuto: string;
@@ -282,6 +290,18 @@ const PESO_LANCE: Record<string, number> = {
   'shot-on-target': 5, 'shot-hit-woodwork': 4,
   'shot-blocked': 3, 'shot-off-target': 3,
   'corner-awarded': 2.5, 'offside': 1, 'free-kick-won': 1,
+};
+
+/** Palavra-estado ao centro do campo (estilo AiScore: "Ataque", "Canto"…). */
+const FASE_LANCE: Record<string, string> = {
+  'goal': 'Golo', 'own-goal': 'Golo',
+  'penalty---scored': 'Penálti', 'penalty---saved': 'Penálti',
+  'penalty---missed': 'Penálti', 'penalty-won': 'Penálti',
+  'shot-on-target': 'Remate à baliza', 'shot-hit-woodwork': 'Na trave',
+  'shot-off-target': 'Remate', 'shot-blocked': 'Remate',
+  'corner-awarded': 'Canto', 'free-kick-won': 'Livre',
+  'offside': 'Fora de jogo', 'foul': 'Falta',
+  'yellow-card': 'Amarelo', 'red-card': 'Vermelho', 'substitution': 'Substituição',
 };
 
 /** Rótulo em PT para o último lance mostrado por baixo do campo. */
@@ -445,21 +465,37 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const casa = total > 0 ? Math.round((presCasa / total) * 100) : 50;
   const fora = 100 - casa;
 
-  // A bola vai para o último lance com coordenadas. O `fieldPositionX` da ESPN
-  // é relativo a quem ataca (0 = baliza própria, 100 = baliza adversária), por
-  // isso o lado de fora entra espelhado para a casa atacar sempre à direita.
-  const comXY = [...lances].reverse().find(l => l.x !== null && l.equipa);
+  // Orienta um lance para a casa atacar sempre à direita. O `fieldPositionX`
+  // da ESPN é relativo a quem ataca (0 = baliza própria, 100 = adversária),
+  // por isso o lado de fora entra espelhado.
+  const orientar = (l: Lance) => ({
+    x: Math.min(96, Math.max(4, l.equipa === 'casa' ? l.x! : 100 - l.x!)),
+    y: l.y === null
+      ? 50
+      : Math.min(92, Math.max(8, l.equipa === 'casa' ? l.y : 100 - l.y)),
+  });
+
+  // Trilho: os últimos 6 lances com coordenadas, do mais antigo para o mais
+  // recente — a sala anda a bola por eles para se ver o fluxo.
+  const comXY = lances.filter(l => l.x !== null && l.equipa);
+  const trilho = comXY.slice(-6).map(orientar);
+
   let bolaX: number;
   let bolaY: number;
-  if (comXY && comXY.x !== null) {
-    const x = comXY.equipa === 'casa' ? comXY.x : 100 - comXY.x;
-    const y = comXY.y === null ? 50 : comXY.equipa === 'casa' ? comXY.y : 100 - comXY.y;
-    bolaX = Math.min(96, Math.max(4, x));
-    bolaY = Math.min(92, Math.max(8, y));
+  if (trilho.length > 0) {
+    ({ x: bolaX, y: bolaY } = trilho[trilho.length - 1]);
   } else {
     bolaX = Math.min(85, Math.max(15, 50 + (casa - fora) * 0.35));
     bolaY = 50;
   }
+
+  // Quem tem a bola e em que fase — a falta passa a posse a quem a sofreu.
+  const refPosse = comXY[comXY.length - 1]
+    ?? [...lances].reverse().find(l => l.equipa);
+  let posse: 'casa' | 'fora' | null = refPosse?.equipa ?? null;
+  const ultimoFase = [...lances].reverse().find(l => l.slug in FASE_LANCE);
+  if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
+  const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
 
   const ultimo = [...lances].reverse().find(l => l.slug in ROTULO_LANCE);
   const nome = (lado: 'casa' | 'fora' | null) =>
@@ -469,7 +505,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     : '';
 
   return {
-    casa, fora, bolaX, bolaY, lance,
+    casa, fora, bolaX, bolaY, trilho, posse, fase, lance,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
   };
 }
