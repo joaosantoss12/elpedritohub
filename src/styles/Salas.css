@@ -294,9 +294,10 @@
 .sala-jogo {
   display: flex;
   flex-direction: column;
-  max-width: 1180px;
+  /* Mesma caixa que a página inicial da sala de jogo (.salas-wrapper). */
+  width: 80%;
   margin: 0 auto;
-  padding: 1.5rem 5% 0 5%;
+  padding: 1.5rem 0 0;
 }
 
 /* Duas colunas: o jogo (marcador + mini-campo + previsões) à esquerda, o
