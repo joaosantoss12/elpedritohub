@@ -519,13 +519,12 @@ function CampoAoVivo(
         <span className="campo-live__area campo-live__area--esq" aria-hidden="true" />
         <span className="campo-live__area campo-live__area--dir" aria-hidden="true" />
 
-        {/* Meio-campo com posse: a casa ataca para a direita, o fora para a
-            esquerda — sombreia-se o lado para onde a equipa carrega. */}
+        {/* Sombreia o lado para onde a equipa com posse carrega (casa → direita). */}
         {time && (
-          <div className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}>
-            {time.logo && <img src={time.logo} alt="" />}
-            <span>{time.nome}</span>
-          </div>
+          <span
+            className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}
+            aria-hidden="true"
+          />
         )}
 
         <div className="campo-live__evento-wrap">

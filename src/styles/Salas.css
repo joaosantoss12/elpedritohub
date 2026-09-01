@@ -826,20 +826,14 @@
 .campo-live__area--esq { left: 0; border-left: none; border-radius: 0 6px 6px 0; }
 .campo-live__area--dir { right: 0; border-right: none; border-radius: 6px 0 0 6px; }
 
-/* Meio-campo sombreado da equipa com posse, com escudo + nome (estilo AiScore).
- * casa ataca para a direita, fora para a esquerda. */
+/* Meio-campo sombreado da equipa com posse (estilo AiScore): casa ataca para
+ * a direita, fora para a esquerda. Sem escudo/nome nas laterais — só o
+ * degradé; a equipa aparece na cápsula central. */
 .campo-live__posse-lado {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 0 10px;
-  text-align: center;
   pointer-events: none;
   transition: left 0.45s ease;
 }
@@ -850,18 +844,6 @@
 .campo-live__posse-lado--fora {
   left: 0;
   background: linear-gradient(270deg, transparent, rgba(161, 124, 91, 0.3));
-}
-.campo-live__posse-lado img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
-}
-.campo-live__posse-lado span {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: rgba(220, 227, 238, 0.95);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 }
 
 /* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
