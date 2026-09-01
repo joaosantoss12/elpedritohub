@@ -255,13 +255,25 @@ export interface MomentoJogo {
   minuto: string;
 }
 
+/** Placar/relógio lidos do mesmo summary, para a sala não mostrar dois
+ *  minutos diferentes entre o marcador e o mini-campo. */
+export interface PatchVivo {
+  golosCasa: number | null;
+  golosFora: number | null;
+  estado: EstadoJogo;
+  relogio: string;
+}
+
 export interface DetalhesJogo {
   estatisticas: EstatisticaJogo[];
   eventos: EventoJogo[];
   momento: MomentoJogo | null;
+  vivo: PatchVivo | null;
 }
 
-const DETALHES_VAZIO: DetalhesJogo = { estatisticas: [], eventos: [], momento: null };
+const DETALHES_VAZIO: DetalhesJogo = {
+  estatisticas: [], eventos: [], momento: null, vivo: null,
+};
 
 /** Quanto vale cada tipo de lance para o cálculo da pressão. */
 const PESO_LANCE: Record<string, number> = {
@@ -462,6 +474,34 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   };
 }
 
+/** Placar + relógio + estado, lidos do header do summary. É a mesma fonte do
+ *  `commentary`, por isso o minuto casa com o do mini-campo. */
+function patchVivoDoSummary(json: Bruto): PatchVivo | null {
+  const comp = obj(lista(obj(json.header).competitions)[0]);
+  const cs = lista(comp.competitors).map(obj);
+  if (cs.length < 2) return null;
+  const casa = obj(cs.find(c => c.homeAway === 'home') ?? cs[0]);
+  const fora = obj(cs.find(c => c.homeAway === 'away') ?? cs[1]);
+
+  const st = obj(comp.status ?? obj(json.header).status);
+  const tipo = obj(st.type);
+  const detail = txt(tipo.detail) ?? txt(tipo.shortDetail) ?? '';
+  const estado = mapearEstado(txt(tipo.state) ?? 'pre', Boolean(tipo.completed), detail);
+
+  const golo = (c: Bruto) => {
+    const n = Number(txt(c.score));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  let relogio: string;
+  if (estado === 'intervalo') relogio = 'Intervalo';
+  else if (estado === 'terminado') relogio = 'Final';
+  else if (estado === 'ao_vivo') relogio = txt(st.displayClock) ?? txt(st.clock) ?? detail;
+  else relogio = detail;
+
+  return { golosCasa: golo(casa), golosFora: golo(fora), estado, relogio };
+}
+
 /** Estatísticas + eventos + momentum de um jogo. Falha em silêncio (devolve
  *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
@@ -474,6 +514,7 @@ export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): 
       estatisticas: mapearEstatisticas(json),
       eventos: mapearEventos(json),
       momento: mapearMomento(json, casa, fora),
+      vivo: patchVivoDoSummary(json),
     };
   } catch {
     return DETALHES_VAZIO;

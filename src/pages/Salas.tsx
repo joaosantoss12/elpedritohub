@@ -8,8 +8,8 @@ import {
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal, bandeiraDaLiga,
-  ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
+  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
+  bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
 import {
@@ -26,6 +26,10 @@ import '../styles/Salas.css';
 
 /** De quanto em quanto tempo se volta a pedir o placar à ESPN. */
 const INTERVALO_PLACAR = 45_000;
+
+/** Dentro de uma sala aberta o ritmo é mais apertado: marcador, estatísticas
+ *  e mini-campo têm de parecer ao vivo, e é só um jogo a ser lido. */
+const INTERVALO_LIVE = 15_000;
 
 /**
  * O interruptor de estado. 'todos' não é um terceiro estado do jogo — é a
@@ -436,11 +440,16 @@ function GrupoJogos({
  */
 function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo }) {
   const { casa, fora, bolaX, bolaY, lance, minuto } = momento;
+  // O minuto grande é o do relógio do jogo (o mesmo do marcador). O minuto do
+  // lance vai só na legenda, porque é o instante daquela jogada, não o agora.
+  const legenda = [minuto && `${minuto}`, lance || 'Bola em jogo'].filter(Boolean).join('  ·  ');
   return (
     <div className="campo-live">
       <div className="campo-live__topo">
         <span className="campo-live__eq">{jogo.casa}</span>
-        <span className="campo-live__min">{minuto || jogo.relogio}</span>
+        <span className="campo-live__min">
+          <span className="salas-dot" /> {jogo.relogio}
+        </span>
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>
 
@@ -452,7 +461,9 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         <span
           className="campo-live__bola"
           style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
-        />
+        >
+          <span className="campo-live__bola-i" />
+        </span>
       </div>
 
       <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
@@ -460,7 +471,7 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
       </div>
 
-      <p className="campo-live__lance">{lance || 'Bola em jogo'}</p>
+      <p className="campo-live__lance">{legenda}</p>
     </div>
   );
 }
@@ -482,8 +493,27 @@ function SalaJogo({
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [detalhes, setDetalhes] = useState<DetalhesJogo>({ estatisticas: [], eventos: [], momento: null });
+  const [detalhes, setDetalhes] = useState<DetalhesJogo>({
+    estatisticas: [], eventos: [], momento: null, vivo: null,
+  });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
+
+  // O jogo tal como se mostra: o que veio da lista, com o placar, o relógio e
+  // o estado do próprio summary por cima — a mesma fonte do mini-campo, para
+  // não haver dois minutos a discordar.
+  const jogoExibido = useMemo<JogoAoVivo>(() => {
+    const v = detalhes.vivo;
+    return v
+      ? {
+          ...jogo,
+          golosCasa: v.golosCasa ?? jogo.golosCasa,
+          golosFora: v.golosFora ?? jogo.golosFora,
+          estado: v.estado,
+          relogio: v.relogio || jogo.relogio,
+          momento: detalhes.momento ?? jogo.momento,
+        }
+      : { ...jogo, momento: detalhes.momento ?? jogo.momento };
+  }, [jogo, detalhes.vivo, detalhes.momento]);
   const fundoRef = useRef<HTMLDivElement | null>(null);
 
   // Perguntas de previsão presas a este jogo. São as mesmas da Arena, com o
@@ -499,14 +529,13 @@ function SalaJogo({
 
   useEffect(() => {
     let vivo = true;
-    const puxarDetalhes = () => {
+    // Um único pedido (o summary da ESPN) alimenta tudo o que tem de parecer
+    // ao vivo: marcador, relógio, estatísticas, eventos e o mini-campo.
+    const puxar = () => {
       carregarDetalhesJogo(jogo.ligaSlug, jogo.id).then(d => { if (vivo) setDetalhes(d); });
     };
-    puxarDetalhes();
-    // Estatísticas e eventos vêm de um endpoint à parte do placar; a ESPN
-    // nem sempre os publica antes do jogo começar, por isso o painel só
-    // aparece quando há algo para mostrar (ver render mais abaixo).
-    const t = window.setInterval(puxarDetalhes, INTERVALO_PLACAR);
+    puxar();
+    const t = window.setInterval(puxar, INTERVALO_LIVE);
     return () => { vivo = false; window.clearInterval(t); };
   }, [jogo.id, jogo.ligaSlug]);
 
@@ -561,149 +590,157 @@ function SalaJogo({
     }
   };
 
+  const jx = jogoExibido;
+  const temDetalhes = detalhes.eventos.length > 0 || detalhes.estatisticas.length > 0;
+
   return (
     <div className="sala-jogo">
       <button className="sala-jogo__voltar" onClick={onVoltar}>
         <ArrowLeft size={15} /> Todos os jogos
       </button>
 
-      {/* ── Placar ── */}
-      <div className={estaAoVivo(jogo) ? 'placar placar--vivo' : 'placar'}>
-        <div className="placar__liga">
-          {bandeiraDaLiga(jogo.ligaSlug) && (
-            <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
+      <div className="sala-jogo__grid">
+        {/* ── Coluna do jogo: marcador + atividade ── */}
+        <div className="sala-jogo__lado">
+          <div className={estaAoVivo(jx) ? 'placar placar--vivo' : 'placar'}>
+            <div className="placar__liga">
+              {bandeiraDaLiga(jogo.ligaSlug) && (
+                <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
+              )}
+              <span>{jx.liga}</span>
+              <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
+                {estaAoVivo(jx) && <span className="salas-dot" />}
+                {jx.relogio}
+              </span>
+            </div>
+
+            <div className="placar__corpo">
+              <div className="placar__equipa">
+                {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
+                <strong>{jx.casa}</strong>
+              </div>
+              <div className="placar__resultado">
+                <span>{jx.golosCasa ?? '–'}</span>
+                <em>:</em>
+                <span>{jx.golosFora ?? '–'}</span>
+              </div>
+              <div className="placar__equipa">
+                {jx.logoFora && <img src={jx.logoFora} alt="" />}
+                <strong>{jx.fora}</strong>
+              </div>
+            </div>
+          </div>
+
+          {estaAoVivo(jx) && jx.momento && (
+            <CampoAoVivo jogo={jx} momento={jx.momento} />
           )}
-          <span>{jogo.liga}</span>
-          <span className={estaAoVivo(jogo) ? 'placar__relogio vivo' : 'placar__relogio'}>
-            {estaAoVivo(jogo) && <span className="salas-dot" />}
-            {jogo.relogio}
-          </span>
+
+          {perguntas.length > 0 && (
+            <div className="gm-card" style={{ margin: 0 }}>
+              <h2>Prevê o jogo</h2>
+              <p className="gm-sub">
+                Grátis. Acertas, ganhas EPCoins — não há dinheiro envolvido.
+              </p>
+              <PainelPrevisoes perguntas={perguntas} />
+            </div>
+          )}
+
+          {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
+          <DropWidget eventoId={jogo.id} />
         </div>
 
-        <div className="placar__corpo">
-          <div className="placar__equipa">
-            {jogo.logoCasa && <img src={jogo.logoCasa} alt="" />}
-            <strong>{jogo.casa}</strong>
-          </div>
-          <div className="placar__resultado">
-            <span>{jogo.golosCasa ?? '–'}</span>
-            <em>:</em>
-            <span>{jogo.golosFora ?? '–'}</span>
-          </div>
-          <div className="placar__equipa">
-            {jogo.logoFora && <img src={jogo.logoFora} alt="" />}
-            <strong>{jogo.fora}</strong>
+        {/* ── Coluna social: estatísticas + chat ── */}
+        <div className="sala-jogo__lado sala-jogo__lado--social">
+          {temDetalhes && (
+            <div className="jogo-detalhes">
+              {detalhes.estatisticas.length > 0 && (
+                <div className="jogo-detalhes__bloco">
+                  <h3>Estatísticas</h3>
+                  {detalhes.estatisticas.map(s => (
+                    <div key={s.nome} className="jogo-stat">
+                      <span className="jogo-stat__valor">{s.casa}</span>
+                      <span className="jogo-stat__nome">{s.nome}</span>
+                      <span className="jogo-stat__valor">{s.fora}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {detalhes.eventos.length > 0 && (
+                <div className="jogo-detalhes__bloco">
+                  <h3>Eventos</h3>
+                  <ul className="jogo-eventos">
+                    {detalhes.eventos.map((e, i) => (
+                      <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
+                        <span className="jogo-evento__minuto">{e.minuto}</span>
+                        <span className="jogo-evento__icone">
+                          {e.tipo === 'golo' && <Target size={13} />}
+                          {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
+                          {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
+                          {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
+                        </span>
+                        <span className="jogo-evento__desc">{e.descricao}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="sala-jogo__chat">
+            <div className="sala-jogo__mensagens">
+              {!carregado ? (
+                <div className="salas-loading">
+                  <Loader2 size={22} className="salas-spin" color="var(--gold-primary)" />
+                </div>
+              ) : mensagens.length === 0 ? (
+                <p className="sala-jogo__vazio">
+                  Ainda não há comentários neste jogo. Começa tu.
+                </p>
+              ) : (
+                mensagens.map(m => (
+                  <div
+                    key={m.id}
+                    className={m.user_id === userId ? 'msg msg--eu' : 'msg'}
+                  >
+                    <div className="msg__topo">
+                      <strong>{m.username}</strong>
+                      <span>
+                        {new Date(m.created_at).toLocaleTimeString('pt-PT', {
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </span>
+                      {(m.user_id === userId || isAdmin) && (
+                        <button className="msg__apagar" onClick={() => apagar(m.id)} aria-label="Apagar">
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <p>{m.texto}</p>
+                  </div>
+                ))
+              )}
+              <div ref={fundoRef} />
+            </div>
+
+            {erro && <p className="sala-jogo__erro">{erro}</p>}
+
+            <div className="sala-jogo__barra">
+              <input
+                value={texto}
+                maxLength={500}
+                placeholder="Comentar este jogo…"
+                onChange={e => setTexto(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') enviar(); }}
+              />
+              <button onClick={enviar} disabled={enviando || !texto.trim()}>
+                {enviando ? <Loader2 size={15} className="salas-spin" /> : <Send size={15} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* ── Campo ao vivo (momentum) ── */}
-      {estaAoVivo(jogo) && (detalhes.momento ?? jogo.momento) && (
-        <CampoAoVivo jogo={jogo} momento={(detalhes.momento ?? jogo.momento)!} />
-      )}
-
-      {/* ── Estatísticas + eventos ── */}
-      {(detalhes.eventos.length > 0 || detalhes.estatisticas.length > 0) && (
-        <div className="jogo-detalhes">
-          {detalhes.eventos.length > 0 && (
-            <div className="jogo-detalhes__bloco">
-              <h3>Eventos</h3>
-              <ul className="jogo-eventos">
-                {detalhes.eventos.map((e, i) => (
-                  <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
-                    <span className="jogo-evento__minuto">{e.minuto}</span>
-                    <span className="jogo-evento__icone">
-                      {e.tipo === 'golo' && <Target size={13} />}
-                      {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
-                      {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
-                      {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
-                    </span>
-                    <span className="jogo-evento__desc">{e.descricao}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {detalhes.estatisticas.length > 0 && (
-            <div className="jogo-detalhes__bloco">
-              <h3>Estatísticas</h3>
-              {detalhes.estatisticas.map(s => (
-                <div key={s.nome} className="jogo-stat">
-                  <span className="jogo-stat__valor">{s.casa}</span>
-                  <span className="jogo-stat__nome">{s.nome}</span>
-                  <span className="jogo-stat__valor">{s.fora}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Previsões do jogo ── */}
-      {perguntas.length > 0 && (
-        <div className="gm-card" style={{ marginBottom: 18 }}>
-          <h2>Prevê o jogo</h2>
-          <p className="gm-sub">
-            Grátis. Acertas, ganhas EPCoins — não há dinheiro envolvido.
-          </p>
-          <PainelPrevisoes perguntas={perguntas} />
-        </div>
-      )}
-
-      {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
-      <DropWidget eventoId={jogo.id} />
-
-      {/* ── Chat ── */}
-      <div className="sala-jogo__mensagens">
-            {!carregado ? (
-              <div className="salas-loading">
-                <Loader2 size={22} className="salas-spin" color="var(--gold-primary)" />
-              </div>
-            ) : mensagens.length === 0 ? (
-              <p className="sala-jogo__vazio">
-                Ainda não há comentários neste jogo. Começa tu.
-              </p>
-            ) : (
-              mensagens.map(m => (
-                <div
-                  key={m.id}
-                  className={m.user_id === userId ? 'msg msg--eu' : 'msg'}
-                >
-                  <div className="msg__topo">
-                    <strong>{m.username}</strong>
-                    <span>
-                      {new Date(m.created_at).toLocaleTimeString('pt-PT', {
-                        hour: '2-digit', minute: '2-digit',
-                      })}
-                    </span>
-                    {(m.user_id === userId || isAdmin) && (
-                      <button className="msg__apagar" onClick={() => apagar(m.id)} aria-label="Apagar">
-                        <Trash2 size={12} />
-                      </button>
-                    )}
-                  </div>
-                  <p>{m.texto}</p>
-                </div>
-              ))
-            )}
-            <div ref={fundoRef} />
-          </div>
-
-          {erro && <p className="sala-jogo__erro">{erro}</p>}
-
-          <div className="sala-jogo__barra">
-            <input
-              value={texto}
-              maxLength={500}
-              placeholder="Comentar este jogo…"
-              onChange={e => setTexto(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') enviar(); }}
-            />
-            <button onClick={enviar} disabled={enviando || !texto.trim()}>
-              {enviando ? <Loader2 size={15} className="salas-spin" /> : <Send size={15} />}
-            </button>
-          </div>
     </div>
   );
 }

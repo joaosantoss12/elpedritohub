@@ -62,6 +62,11 @@ async function anexarLive(jogos: JogoAoVivo[]): Promise<void> {
         const d = await carregarDetalhesJogo(j.ligaSlug, j.id);
         if (d.estatisticas.length) j.stats = d.estatisticas;
         if (d.momento) j.momento = d.momento;
+        if (d.vivo) {
+          j.golosCasa = d.vivo.golosCasa ?? j.golosCasa;
+          j.golosFora = d.vivo.golosFora ?? j.golosFora;
+          if (d.vivo.relogio) j.relogio = d.vivo.relogio;
+        }
       } catch {
         // Um jogo sem detalhe não trava a escrita dos outros.
       }
