@@ -469,8 +469,15 @@ function GrupoJogos({
  * posse (com escudo + nome) e mostra ao centro o último evento marcante —
  * golo, cartão, canto, fora de jogo, tempo de compensação…
  */
-function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo }) {
-  const { casa, fora, lance, minuto, posse, fase } = momento;
+const MOMENTO_VAZIO: MomentoJogo = {
+  casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
+};
+
+function CampoAoVivo(
+  { jogo, momento, terminado = false }:
+  { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean },
+) {
+  const { casa, fora, lance, minuto, posse, fase } = momento ?? MOMENTO_VAZIO;
 
   const equipaDe = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa'
@@ -482,15 +489,17 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
   // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
   // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
   // senão a fase corrente.
-  const time = equipaDe(posse);
+  const time = terminado ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
-  const destaque = typeof momento.destaque === 'object' ? momento.destaque : null;
+  const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
   const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
-  const evento = compensacao
-    ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
-    : destaque
-      ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
-      : { texto: fase || 'Bola em jogo', nota: '', time: null };
+  const evento = terminado
+    ? { texto: 'Fim do jogo', nota: '', time: null }
+    : compensacao
+      ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
+      : destaque
+        ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
+        : { texto: fase || 'Bola em jogo', nota: '', time: null };
 
   const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
 
@@ -499,7 +508,7 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
       <div className="campo-live__topo">
         <span className="campo-live__eq">{jogo.casa}</span>
         <span className="campo-live__min">
-          <span className="salas-dot" /> {jogo.relogio}
+          {!terminado && <span className="salas-dot" />} {jogo.relogio}
         </span>
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>
@@ -533,12 +542,30 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
         </div>
       </div>
 
-      <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
-        <span className="campo-live__pres campo-live__pres--casa" style={{ width: `${casa}%` }} />
-        <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
-      </div>
+      {terminado ? (
+        <div className="campo-live__final">
+          <span className="campo-live__final-eq">
+            {jogo.logoCasa && <img src={jogo.logoCasa} alt="" />}
+            {jogo.casa}
+          </span>
+          <span className="campo-live__final-placar">
+            {jogo.golosCasa ?? 0} <em>:</em> {jogo.golosFora ?? 0}
+          </span>
+          <span className="campo-live__final-eq campo-live__final-eq--dir">
+            {jogo.fora}
+            {jogo.logoFora && <img src={jogo.logoFora} alt="" />}
+          </span>
+        </div>
+      ) : (
+        <>
+          <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
+            <span className="campo-live__pres campo-live__pres--casa" style={{ width: `${casa}%` }} />
+            <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
+          </div>
 
-      <p className="campo-live__lance">{legenda || 'Bola em jogo'}</p>
+          <p className="campo-live__lance">{legenda || 'Bola em jogo'}</p>
+        </>
+      )}
     </div>
   );
 }
@@ -700,6 +727,9 @@ function SalaJogo({
 
           {estaAoVivo(jx) && jx.momento && (
             <CampoAoVivo jogo={jx} momento={jx.momento} />
+          )}
+          {jx.estado === 'terminado' && (
+            <CampoAoVivo jogo={jx} momento={jx.momento} terminado />
           )}
 
           {perguntas.length > 0 && (

@@ -942,6 +942,33 @@
   text-align: center;
 }
 
+/* Jogo terminado: o painel fica, com o placar final por baixo do "Fim do jogo". */
+.campo-live__final {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+.campo-live__final-eq {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-white);
+}
+.campo-live__final-eq img { width: 22px; height: 22px; object-fit: contain; }
+.campo-live__final-placar {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  letter-spacing: 0.06em;
+}
+.campo-live__final-placar em { font-style: normal; opacity: 0.6; }
+
 @media (prefers-reduced-motion: reduce) {
   .campo-live__pres,
   .campo-live__posse-lado { transition: none; }
