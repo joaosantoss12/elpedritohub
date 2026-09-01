@@ -42,11 +42,11 @@ function interpretarLink(bruto: string): Config | null {
   return null;
 }
 
-// Música que toca à primeira visita — um vídeo inteiro, começa em pausa.
+// Playlist que carrega à primeira visita — começa em pausa.
 const CONFIG_PADRAO: Config = {
-  tipo: 'video',
-  id: 'fTKqtvXjkvo',
-  origem: 'https://www.youtube.com/watch?v=fTKqtvXjkvo',
+  tipo: 'playlist',
+  id: 'PLZjyOXTKuD2TKf4nWnkl5vo-qoRl8bW9y',
+  origem: 'https://www.youtube.com/watch?v=yvOh7vVqlaE&list=PLZjyOXTKuD2TKf4nWnkl5vo-qoRl8bW9y',
 };
 
 function lerConfig(): Config {
