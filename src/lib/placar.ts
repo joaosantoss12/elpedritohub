@@ -445,6 +445,14 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const agora = Math.max(...lances.map(l => l.t));
   const JANELA = 6 * 60;
 
+  // O relógio a sério vem do header (continua a andar mesmo quando o feed de
+  // comentário congela). Sem ele, um jogo com comentário parado ficava preso
+  // no último evento — "GOLO 59'" enquanto o cronómetro já ia nos 70'.
+  const stClock = Number(
+    txt(obj(obj(lista(obj(json.header).competitions)[0]).status).clock),
+  );
+  const relogioAgora = Number.isFinite(stClock) && stClock > agora ? stClock : agora;
+
   let presCasa = 0;
   let presFora = 0;
   for (const l of lances) {
@@ -467,17 +475,24 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const casa = total > 0 ? Math.round((presCasa / total) * 100) : 50;
   const fora = 100 - casa;
 
+  // Comentário congelado: o cronómetro já foi bem para a frente e o último
+  // lance é história. Não fingimos posse nem repetimos o evento antigo.
+  const feedParado = relogioAgora - agora > 150;
+
   // Quem tem a bola e em que fase — a falta passa a posse a quem a sofreu.
-  let posse: 'casa' | 'fora' | null =
-    [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
-  const ultimoFase = [...lances].reverse().find(l => l.slug in FASE_LANCE);
+  let posse: 'casa' | 'fora' | null = feedParado
+    ? null
+    : [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
+  const ultimoFase = feedParado
+    ? undefined
+    : [...lances].reverse().find(l => l.slug in FASE_LANCE);
   if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
   const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
 
   // Destaque ao centro: um evento marcante acabado de acontecer (~100s de
   // relógio). É o que a sala mostra em vez da bola, com a equipa do lance.
   const notavel = [...lances].reverse().find(l => EVENTO_NOTAVEL.has(l.slug));
-  const destaque = notavel && agora - notavel.t <= 100 && FASE_LANCE[notavel.slug]
+  const destaque = notavel && relogioAgora - notavel.t <= 100 && FASE_LANCE[notavel.slug]
     ? { texto: FASE_LANCE[notavel.slug], equipa: notavel.equipa }
     : null;
 
