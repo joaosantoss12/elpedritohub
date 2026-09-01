@@ -447,11 +447,17 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
 
   // O relógio a sério vem do header (continua a andar mesmo quando o feed de
   // comentário congela). Sem ele, um jogo com comentário parado ficava preso
-  // no último evento — "GOLO 59'" enquanto o cronómetro já ia nos 70'.
-  const stClock = Number(
-    txt(obj(obj(lista(obj(json.header).competitions)[0]).status).clock),
+  // no último evento — "Substituição 45'" enquanto o cronómetro já ia nos 56'.
+  // O `clock` numérico costuma vir a zero em jogos de divisões menores, por
+  // isso também se lê o `displayClock` ("56'") e converte-se a segundos.
+  const stStatus = obj(obj(lista(obj(json.header).competitions)[0]).status);
+  const stClock = Number(txt(stStatus.clock));
+  const stDisplay = Number((txt(stStatus.displayClock) ?? '').match(/\d+/)?.[0]) * 60;
+  const relogioAgora = Math.max(
+    agora,
+    Number.isFinite(stClock) ? stClock : 0,
+    Number.isFinite(stDisplay) ? stDisplay : 0,
   );
-  const relogioAgora = Number.isFinite(stClock) && stClock > agora ? stClock : agora;
 
   let presCasa = 0;
   let presFora = 0;
