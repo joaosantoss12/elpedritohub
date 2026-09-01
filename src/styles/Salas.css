@@ -348,7 +348,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.1rem;
-  align-items: start;
+  /* As 3 colunas ficam com a mesma altura (a das estatísticas manda). */
+  align-items: stretch;
 }
 
 .sala-jogo__lado {
@@ -358,16 +359,33 @@
   min-width: 0;
 }
 
+/* Marcador + mini-campo centram-se na vertical em vez de colar ao topo. */
+.sala-jogo__lado--jogo { justify-content: center; }
+
+/* O chat estica-se até ao fundo da coluna. */
+.sala-jogo__lado--social { justify-content: stretch; }
+
 .sala-jogo__chat {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.sala-jogo__lado--social .sala-jogo__mensagens {
+  flex: 1;
+  max-height: none;
 }
 
 @media (max-width: 1180px) {
-  .sala-jogo__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .sala-jogo__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
   /* O mini-campo/marcador passa a ocupar a largura toda; stats e chat lado a lado. */
-  .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; }
+  .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; justify-content: flex-start; }
+  .sala-jogo__lado--social .sala-jogo__mensagens { max-height: 52vh; }
 }
 
 @media (max-width: 720px) {
