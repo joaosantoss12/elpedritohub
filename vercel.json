@@ -9,15 +9,5 @@
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/batalha/resolver",
-      "schedule": "20 * * * *"
-    },
-    {
-      "path": "/api/placar/refresh",
-      "schedule": "*/2 * * * *"
-    }
   ]
 }
