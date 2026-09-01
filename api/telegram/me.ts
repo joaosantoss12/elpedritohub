@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifySession, SESSION_COOKIE } from '../_lib/session';
+import { verifySession, SESSION_COOKIE } from '../_lib/session.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   const session = verifySession(req.cookies?.[SESSION_COOKIE]);

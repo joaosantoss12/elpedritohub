@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { supabaseSelect, supabaseInsert, supabaseUpdate } from '../_lib/supabaseAdmin';
-import { createChannelInviteLink } from '../_lib/inviteLink';
+import { supabaseSelect, supabaseInsert, supabaseUpdate } from '../_lib/supabaseAdmin.js';
+import { createChannelInviteLink } from '../_lib/inviteLink.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 

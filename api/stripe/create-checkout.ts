@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { verifySession, SESSION_COOKIE } from '../_lib/session';
+import { verifySession, SESSION_COOKIE } from '../_lib/session.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 

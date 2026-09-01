@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifySession, SESSION_COOKIE } from '../_lib/session';
-import { supabaseSelect, supabaseUpdate } from '../_lib/supabaseAdmin';
-import { createChannelInviteLink, LINK_TTL_DAYS } from '../_lib/inviteLink';
+import { verifySession, SESSION_COOKIE } from '../_lib/session.js';
+import { supabaseSelect, supabaseUpdate } from '../_lib/supabaseAdmin.js';
+import { createChannelInviteLink, LINK_TTL_DAYS } from '../_lib/inviteLink.js';
 
 type Subscription = { id: string; plan: string; expires_at: string; invite_link_id: string | null };
 type InviteLink = { id: string; link: string; created_at: string; used_at: string | null };

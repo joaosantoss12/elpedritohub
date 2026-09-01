@@ -1,4 +1,4 @@
-import { supabaseInsert } from './supabaseAdmin';
+import { supabaseInsert } from './supabaseAdmin.js';
 
 // Ported from FOOTMILLION LP (src/lib/inviteLink.ts). Needs BOT_TOKEN and
 // NEW_GROUP_ID (the VIP channel id). Writes an invite_links row.

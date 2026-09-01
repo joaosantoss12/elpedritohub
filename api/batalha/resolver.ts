@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseRpc } from '../_lib/supabaseAdmin';
-import { LIGAS_TODAS } from '../../src/lib/ligas';
+import { supabaseRpc } from '../_lib/supabaseAdmin.js';
+import { LIGAS_TODAS } from '../../src/lib/ligas.js';
+
+// Varre o catalogo todo a procura de cada jogo do boletim.
+export const config = { maxDuration: 60 };
 
 /**
  * Resolvedor da Batalha de Prognósticos.

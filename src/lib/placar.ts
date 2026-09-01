@@ -10,7 +10,7 @@
 
 // ─── TIPOS ────────────────────────────────────────────────────
 
-import { LIGAS_NUCLEO } from './ligas';
+import { LIGAS_NUCLEO } from './ligas.js';
 
 export type EstadoJogo = 'agendado' | 'ao_vivo' | 'intervalo' | 'terminado' | 'adiado';
 
@@ -36,7 +36,7 @@ const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
 // O catálogo vive em `ligas.ts` porque também é preciso do lado do servidor,
 // onde nada disto — fetch a 140 competições — pode acontecer no browser.
-export { ORDEM_CONTINENTES, continenteDaLiga, nomeDaLiga, bandeiraDaLiga, LIGAS_TODAS, LIGAS_NUCLEO } from './ligas';
+export { ORDEM_CONTINENTES, continenteDaLiga, nomeDaLiga, bandeiraDaLiga, LIGAS_TODAS, LIGAS_NUCLEO } from './ligas.js';
 
 /** Sempre com dois jogos: o rótulo que fica congelado na sala. */
 export function labelJogo(j: JogoAoVivo): string {

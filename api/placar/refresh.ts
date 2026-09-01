@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { LIGAS_TODAS } from '../../src/lib/ligas';
-import { carregarJogos, ordenarJogos, type JogoAoVivo } from '../../src/lib/placar';
-import { supabaseSelect, supabaseUpdate } from '../_lib/supabaseAdmin';
+import { LIGAS_TODAS } from '../../src/lib/ligas.js';
+import { carregarJogos, ordenarJogos, type JogoAoVivo } from '../../src/lib/placar.js';
+import { supabaseSelect, supabaseUpdate } from '../_lib/supabaseAdmin.js';
+
+// A varredura das ~140 competicoes nao cabe nos 10s por omissao.
+export const config = { maxDuration: 60 };
 
 /**
  * Mantém `placar_cache` fresco. É o único sítio do projecto que fala com a

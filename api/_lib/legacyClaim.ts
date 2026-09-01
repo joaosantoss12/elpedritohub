@@ -1,6 +1,6 @@
-import { supabaseSelect, supabaseInsert, supabaseUpdate } from './supabaseAdmin';
-import { createChannelInviteLink } from './inviteLink';
-import type { TelegramSession } from './session';
+import { supabaseSelect, supabaseInsert, supabaseUpdate } from './supabaseAdmin.js';
+import { createChannelInviteLink } from './inviteLink.js';
+import type { TelegramSession } from './session.js';
 
 // Ported from FOOTMILLION LP (src/lib/legacyClaim.ts).
 // An admin can grant VIP by @username via the bot's /givevip before the member

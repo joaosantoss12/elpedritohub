@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifySession, SESSION_COOKIE } from '../_lib/session';
-import { supabaseSelect } from '../_lib/supabaseAdmin';
-import { LINK_TTL_DAYS } from '../_lib/inviteLink';
-import { claimGrantedVip } from '../_lib/legacyClaim';
+import { verifySession, SESSION_COOKIE } from '../_lib/session.js';
+import { supabaseSelect } from '../_lib/supabaseAdmin.js';
+import { LINK_TTL_DAYS } from '../_lib/inviteLink.js';
+import { claimGrantedVip } from '../_lib/legacyClaim.js';
 
 type Subscription = {
   id: string;
