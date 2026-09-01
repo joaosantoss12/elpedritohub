@@ -371,8 +371,20 @@ function mapearEstatisticas(json: Bruto): EstatisticaJogo[] {
   const mapaFora = paraMapa(fora);
   const nomes = new Set([...mapaCasa.keys(), ...mapaFora.keys()]);
 
+  // Ordem fixa pela relevância para acompanhar o jogo; o que não estiver
+  // listado vem a seguir, pela ordem em que a ESPN devolve.
+  const ORDEM = [
+    'possessionPct', 'totalShots', 'shotsOnTarget', 'saves',
+    'cornerKicks', 'wonCorners', 'yellowCards', 'redCards',
+  ];
+  const pos = (nome: string) => {
+    const i = ORDEM.indexOf(nome);
+    return i === -1 ? ORDEM.length : i;
+  };
+
   return [...nomes]
     .filter(nome => nome in LABELS_ESTATISTICA)
+    .sort((a, b) => pos(a) - pos(b))
     .map(nome => ({
       nome: LABELS_ESTATISTICA[nome],
       casa: mapaCasa.get(nome) ?? '—',
