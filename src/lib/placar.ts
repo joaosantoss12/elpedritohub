@@ -482,13 +482,20 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const fora = 100 - casa;
 
   // Comentário congelado: o cronómetro já foi bem para a frente e o último
-  // lance é história. Não fingimos posse nem repetimos o evento antigo.
+  // lance é história. Não repetimos o evento antigo, mas continuamos a marcar
+  // o lado dominante pela pressão recente — é o que dá a sensação de a bola
+  // andar de um lado para o outro entre atualizações.
   const feedParado = relogioAgora - agora > 150;
 
-  // Quem tem a bola e em que fase — a falta passa a posse a quem a sofreu.
-  let posse: 'casa' | 'fora' | null = feedParado
-    ? null
-    : [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
+  // Quem tem a bola: com feed vivo é a equipa do último lance; com feed
+  // parado, o lado com mais pressão na janela. A falta passa a posse a quem
+  // a sofreu.
+  let posse: 'casa' | 'fora' | null;
+  if (feedParado) {
+    posse = presCasa > presFora ? 'casa' : presFora > presCasa ? 'fora' : null;
+  } else {
+    posse = [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
+  }
   const ultimoFase = feedParado
     ? undefined
     : [...lances].reverse().find(l => l.slug in FASE_LANCE);
