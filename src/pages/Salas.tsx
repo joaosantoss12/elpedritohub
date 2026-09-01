@@ -693,8 +693,66 @@ function SalaJogo({
       </button>
 
       <div className="sala-jogo__grid">
-        {/* ── Coluna do jogo: marcador + atividade ── */}
-        <div className="sala-jogo__lado">
+        {/* ── Coluna esquerda: estatísticas + eventos ── */}
+        <div className="sala-jogo__lado sala-jogo__lado--stats">
+          {temDetalhes ? (
+            <div className="jogo-detalhes">
+              {detalhes.estatisticas.length > 0 && (
+                <div className="jogo-detalhes__bloco">
+                  <h3>Estatísticas</h3>
+                  {detalhes.estatisticas.map(s => {
+                    const nc = parseFloat(String(s.casa).replace(',', '.'));
+                    const nf = parseFloat(String(s.fora).replace(',', '.'));
+                    const tot = (nc || 0) + (nf || 0);
+                    const pc = tot > 0 ? Math.round((nc / tot) * 100) : 50;
+                    return (
+                      <div key={s.nome} className="jogo-stat">
+                        <span className="jogo-stat__valor">{s.casa}</span>
+                        <span className="jogo-stat__nome">{s.nome}</span>
+                        <span className="jogo-stat__valor">{s.fora}</span>
+                        <span
+                          className="jogo-stat__barra"
+                          role="img"
+                          aria-label={`${s.nome}: ${s.casa} contra ${s.fora}`}
+                        >
+                          <span className="jogo-stat__barra-casa" style={{ width: `${pc}%` }} />
+                          <span className="jogo-stat__barra-fora" style={{ width: `${100 - pc}%` }} />
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {detalhes.eventos.length > 0 && (
+                <div className="jogo-detalhes__bloco">
+                  <h3>Eventos</h3>
+                  <ul className="jogo-eventos">
+                    {detalhes.eventos.map((e, i) => (
+                      <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
+                        <span className="jogo-evento__minuto">{e.minuto}</span>
+                        <span className="jogo-evento__icone">
+                          {e.tipo === 'golo' && <Target size={13} />}
+                          {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
+                          {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
+                          {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
+                        </span>
+                        <span className="jogo-evento__desc">{e.descricao}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="sala-jogo__vazio">
+              As estatísticas aparecem quando o jogo arranca.
+            </p>
+          )}
+        </div>
+
+        {/* ── Coluna do meio: marcador + mini-campo + previsões ── */}
+        <div className="sala-jogo__lado sala-jogo__lado--jogo">
           <div className={estaAoVivo(jx) ? 'placar placar--vivo' : 'placar'}>
             <div className="placar__liga">
               {bandeiraDaLiga(jogo.ligaSlug) && (
@@ -745,45 +803,8 @@ function SalaJogo({
           <DropWidget eventoId={jogo.id} />
         </div>
 
-        {/* ── Coluna social: estatísticas + chat ── */}
+        {/* ── Coluna direita: chat ── */}
         <div className="sala-jogo__lado sala-jogo__lado--social">
-          {temDetalhes && (
-            <div className="jogo-detalhes">
-              {detalhes.estatisticas.length > 0 && (
-                <div className="jogo-detalhes__bloco">
-                  <h3>Estatísticas</h3>
-                  {detalhes.estatisticas.map(s => (
-                    <div key={s.nome} className="jogo-stat">
-                      <span className="jogo-stat__valor">{s.casa}</span>
-                      <span className="jogo-stat__nome">{s.nome}</span>
-                      <span className="jogo-stat__valor">{s.fora}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {detalhes.eventos.length > 0 && (
-                <div className="jogo-detalhes__bloco">
-                  <h3>Eventos</h3>
-                  <ul className="jogo-eventos">
-                    {detalhes.eventos.map((e, i) => (
-                      <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
-                        <span className="jogo-evento__minuto">{e.minuto}</span>
-                        <span className="jogo-evento__icone">
-                          {e.tipo === 'golo' && <Target size={13} />}
-                          {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
-                          {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
-                          {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
-                        </span>
-                        <span className="jogo-evento__desc">{e.descricao}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="sala-jogo__chat">
             <div className="sala-jogo__mensagens">
               {!carregado ? (

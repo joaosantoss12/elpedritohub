@@ -303,7 +303,7 @@
    social (estatísticas + chat) à direita. Abaixo de 960px empilha. */
 .sala-jogo__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.1rem;
   align-items: start;
 }
@@ -321,8 +321,15 @@
   gap: 0.6rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1180px) {
+  .sala-jogo__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* O mini-campo/marcador passa a ocupar a largura toda; stats e chat lado a lado. */
+  .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; }
+}
+
+@media (max-width: 720px) {
   .sala-jogo__grid { grid-template-columns: 1fr; }
+  .sala-jogo__lado--jogo { grid-column: auto; }
 }
 
 .sala-jogo__voltar {
@@ -499,6 +506,26 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Barra por baixo da linha: relance visual de quem domina a estatística. */
+.jogo-stat__barra {
+  grid-column: 1 / -1;
+  display: flex;
+  height: 5px;
+  margin-top: 0.3rem;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.jogo-stat__barra-casa { background: var(--gold-primary); }
+.jogo-stat__barra-fora { background: var(--border-strong); }
+.jogo-stat__barra-casa,
+.jogo-stat__barra-fora { transition: width 0.5s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jogo-stat__barra-casa,
+  .jogo-stat__barra-fora { transition: none; }
 }
 
 /* ── Mensagens ───────────────────────────────────────────────── */
