@@ -155,18 +155,24 @@
   50% { opacity: 0.25; }
 }
 
-/* Mosaico de competições: até 5 colunas, cada bloco de competição quebra
-   onde acaba para a seguinte encostar por baixo (sem alinhar em linhas). */
+/* Grelha de competições: 5 por linha, cada bloco no topo da sua célula. */
 .salas-ligas {
-  columns: 5 210px;
-  column-gap: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: start;
+  gap: 1.4rem 0.9rem;
 }
 
 .salas-liga {
-  break-inside: avoid;
-  display: inline-block;
-  width: 100%;
-  margin-bottom: 1.4rem;
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .salas-ligas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .salas-ligas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .salas-liga__cab {
