@@ -295,7 +295,7 @@ const FASE_LANCE: Record<string, string> = {
   'penalty---scored': 'Penálti', 'penalty---saved': 'Penálti',
   'penalty---missed': 'Penálti', 'penalty-won': 'Penálti',
   'shot-on-target': 'Remate à baliza', 'shot-hit-woodwork': 'Na trave',
-  'shot-off-target': 'Remate', 'shot-blocked': 'Remate',
+  'shot-off-target': 'Remate para fora', 'shot-blocked': 'Remate bloqueado',
   'corner-awarded': 'Canto', 'free-kick-won': 'Livre',
   'offside': 'Fora de jogo', 'foul': 'Falta',
   'yellow-card': 'Cartão amarelo', 'red-card': 'Cartão vermelho',
