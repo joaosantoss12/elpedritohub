@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft, Send,
   Trash2, RefreshCw, Target, Square, ArrowLeftRight,
-  Globe, Trophy, Clock,
+  Globe, Trophy, Clock, Calendar,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga,
+  carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
   ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
@@ -32,7 +32,22 @@ const INTERVALO_PLACAR = 45_000;
  * ausência de filtro, e é o que faz sentido por omissão: quem chega quer ver
  * o dia todo antes de decidir o que procurar.
  */
-type EstadoFiltro = 'todos' | 'ao_vivo' | 'pre_live';
+type EstadoFiltro = 'todos' | 'ao_vivo' | 'pre_live' | 'terminado';
+
+/**
+ * Hoje ou amanhã. O placar em cache traz uma janela de três dias (ontem, hoje,
+ * amanhã) escrita pelo cron; aqui só se decide que fatia mostrar.
+ */
+type DiaFiltro = 'hoje' | 'amanha';
+
+/** A data local (Europe/Lisbon) de hoje e de amanhã, como 'AAAA-MM-DD'. */
+function chavesDosDias(): { hoje: string; amanha: string } {
+  const agora = Date.now();
+  return {
+    hoje: diaLocal(new Date(agora).toISOString()),
+    amanha: diaLocal(new Date(agora + 24 * 60 * 60 * 1000).toISOString()),
+  };
+}
 
 /**
  * Salas por jogo — roadmap 11.
@@ -55,6 +70,7 @@ export default function Salas() {
   const [continente, setContinente] = useState<string>('todos');
   const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('todos');
+  const [dia, setDia] = useState<DiaFiltro>('hoje');
 
   const isAdmin = membro?.badges?.includes('Administrador') ?? false;
 
@@ -92,17 +108,29 @@ export default function Salas() {
 
   // Trocar de continente pode deixar a liga escolhida sem jogos — volta a "todas".
   const escolherContinente = (c: string) => { setContinente(c); setLigaFiltro('todas'); };
+  // Mudar para "Amanhã" não deve arrastar um filtro de estado que ali nem aparece.
+  const escolherDia = (d: DiaFiltro) => {
+    setDia(d);
+    if (d === 'amanha') setEstadoFiltro('todos');
+  };
   const limparFiltros = () => {
     setContinente('todos'); setLigaFiltro('todas'); setEstadoFiltro('todos');
   };
 
-  // A página mostra o que ainda tem sala viva: o que está a decorrer e o que
-  // ainda não começou. Um jogo terminado não entra — a conversa acabou com
-  // ele — e um adiado nem hora tem para mostrar.
-  const jogosDoDia = useMemo(
-    () => jogos.filter(j => estaAoVivo(j) || j.estado === 'agendado'),
-    [jogos],
-  );
+  // Que fatia da janela em cache mostrar. "Hoje" traz o que está a decorrer,
+  // o que ainda não começou e — desde o pedido do utilizador — o que já
+  // acabou hoje. "Amanhã" traz só os jogos agendados para o dia seguinte.
+  // Um adiado nem hora tem para mostrar, por isso fica sempre de fora.
+  const jogosDoDia = useMemo(() => {
+    const { hoje, amanha } = chavesDosDias();
+    if (dia === 'amanha') {
+      return jogos.filter(j => !estaAoVivo(j) && diaLocal(j.inicio) === amanha);
+    }
+    return jogos.filter(j =>
+      estaAoVivo(j)
+      || ((j.estado === 'agendado' || j.estado === 'terminado') && diaLocal(j.inicio) === hoje),
+    );
+  }, [jogos, dia]);
 
   const continentesDisponiveis = useMemo(
     () => ORDEM_CONTINENTES.filter(c => jogosDoDia.some(j => continenteDaLiga(j.ligaSlug) === c)),
@@ -132,14 +160,27 @@ export default function Salas() {
 
   const porComecar = useMemo(
     () => jogosDaLiga
-      .filter(j => !estaAoVivo(j))
+      .filter(j => !estaAoVivo(j) && j.estado === 'agendado')
       .sort((a, b) => a.inicio.localeCompare(b.inicio)),
     [jogosDaLiga],
   );
 
-  const mostraVivos = estadoFiltro !== 'pre_live';
-  const mostraPreLive = estadoFiltro !== 'ao_vivo';
-  const visiveis = (mostraVivos ? aoVivo.length : 0) + (mostraPreLive ? porComecar.length : 0);
+  const terminados = useMemo(
+    () => jogosDaLiga
+      .filter(j => j.estado === 'terminado')
+      .sort((a, b) => b.inicio.localeCompare(a.inicio)),
+    [jogosDaLiga],
+  );
+
+  // O separador "Terminados" só faz sentido em "Hoje" — amanhã ainda não
+  // acabou nada. Em "Amanhã" o interruptor de estado desaparece de todo.
+  const mostraSwitch = dia === 'hoje';
+  const mostraVivos = mostraSwitch && (estadoFiltro === 'todos' || estadoFiltro === 'ao_vivo');
+  const mostraPreLive = !mostraSwitch || estadoFiltro === 'todos' || estadoFiltro === 'pre_live';
+  const mostraTerminados = mostraSwitch && (estadoFiltro === 'todos' || estadoFiltro === 'terminado');
+  const visiveis = (mostraVivos ? aoVivo.length : 0)
+    + (mostraPreLive ? porComecar.length : 0)
+    + (mostraTerminados ? terminados.length : 0);
 
   const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas' || estadoFiltro !== 'todos';
 
@@ -167,8 +208,9 @@ export default function Salas() {
           <div className="salas-header__eyebrow"><Radio size={14} /> SALAS POR JOGO</div>
           <h1>Jogo a <span>jogo</span></h1>
           <p>
-            Os jogos de hoje, a decorrer e por começar. Cada um tem a sua sala,
-            com o placar ao vivo e um chat de comunidade só sobre aquele jogo.
+            A decorrer, por começar ou já terminados — e ainda os de amanhã.
+            Cada jogo tem a sua sala, com o placar ao vivo e um chat de
+            comunidade só sobre aquele jogo.
           </p>
         </header>
 
@@ -178,34 +220,50 @@ export default function Salas() {
             <span>A carregar os jogos de hoje…</span>
           </div>
         ) : jogosDoDia.length === 0 ? (
-          <div className="salas-vazio">
-            <Radio size={30} color="var(--text-gray)" />
-            <strong>Sem jogos para hoje</strong>
-            <span>Volta quando houver bola em campo — as salas abrem sozinhas.</span>
-            <button onClick={puxarJogos}><RefreshCw size={14} /> Atualizar</button>
-          </div>
+          <>
+            <SeletorDia dia={dia} onEscolher={escolherDia} />
+            <div className="salas-vazio">
+              <Radio size={30} color="var(--text-gray)" />
+              <strong>{dia === 'amanha' ? 'Sem jogos marcados para amanhã' : 'Sem jogos para hoje'}</strong>
+              <span>
+                {dia === 'amanha'
+                  ? 'O calendário ainda pode encher — volta mais tarde.'
+                  : 'Volta quando houver bola em campo — as salas abrem sozinhas.'}
+              </span>
+              <button onClick={puxarJogos}><RefreshCw size={14} /> Atualizar</button>
+            </div>
+          </>
         ) : (
           <>
-            <div className="salas-switch" role="group" aria-label="Estado dos jogos">
-              <button
-                className={estadoFiltro === 'todos' ? 'ativo' : ''}
-                onClick={() => setEstadoFiltro('todos')}
-              >
-                Todos <span>{aoVivo.length + porComecar.length}</span>
-              </button>
-              <button
-                className={estadoFiltro === 'ao_vivo' ? 'ativo' : ''}
-                onClick={() => setEstadoFiltro('ao_vivo')}
-              >
-                <span className="salas-dot" /> Ao vivo <span>{aoVivo.length}</span>
-              </button>
-              <button
-                className={estadoFiltro === 'pre_live' ? 'ativo' : ''}
-                onClick={() => setEstadoFiltro('pre_live')}
-              >
-                <Clock size={13} /> Por começar <span>{porComecar.length}</span>
-              </button>
-            </div>
+            <SeletorDia dia={dia} onEscolher={escolherDia} />
+            {mostraSwitch && (
+              <div className="salas-switch" role="group" aria-label="Estado dos jogos">
+                <button
+                  className={estadoFiltro === 'todos' ? 'ativo' : ''}
+                  onClick={() => setEstadoFiltro('todos')}
+                >
+                  Todos <span>{aoVivo.length + porComecar.length + terminados.length}</span>
+                </button>
+                <button
+                  className={estadoFiltro === 'ao_vivo' ? 'ativo' : ''}
+                  onClick={() => setEstadoFiltro('ao_vivo')}
+                >
+                  <span className="salas-dot" /> Ao vivo <span>{aoVivo.length}</span>
+                </button>
+                <button
+                  className={estadoFiltro === 'pre_live' ? 'ativo' : ''}
+                  onClick={() => setEstadoFiltro('pre_live')}
+                >
+                  <Clock size={13} /> Por começar <span>{porComecar.length}</span>
+                </button>
+                <button
+                  className={estadoFiltro === 'terminado' ? 'ativo' : ''}
+                  onClick={() => setEstadoFiltro('terminado')}
+                >
+                  <Square size={11} /> Terminados <span>{terminados.length}</span>
+                </button>
+              </div>
+            )}
 
             {(continentesDisponiveis.length > 1 || ligasDisponiveis.length > 1 || temFiltro) && (
               <div className="salas-filtros">
@@ -262,8 +320,16 @@ export default function Salas() {
                 )}
                 {mostraPreLive && porComecar.length > 0 && (
                   <GrupoJogos
-                    titulo="Por começar"
+                    titulo={dia === 'amanha' ? 'Amanhã' : 'Por começar'}
                     jogos={porComecar}
+                    contagens={contagens}
+                    onAbrir={setAberto}
+                  />
+                )}
+                {mostraTerminados && terminados.length > 0 && (
+                  <GrupoJogos
+                    titulo="Terminados"
+                    jogos={terminados}
                     contagens={contagens}
                     onAbrir={setAberto}
                   />
@@ -278,6 +344,30 @@ export default function Salas() {
           Serve para acompanhar a conversa, não para resolver apostas.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ─── DIA ──────────────────────────────────────────────────────
+
+function SeletorDia({ dia, onEscolher }: {
+  dia: DiaFiltro;
+  onEscolher: (d: DiaFiltro) => void;
+}) {
+  return (
+    <div className="salas-dias" role="group" aria-label="Dia">
+      <button
+        className={dia === 'hoje' ? 'ativo' : ''}
+        onClick={() => onEscolher('hoje')}
+      >
+        <Radio size={13} /> Hoje
+      </button>
+      <button
+        className={dia === 'amanha' ? 'ativo' : ''}
+        onClick={() => onEscolher('amanha')}
+      >
+        <Calendar size={13} /> Amanhã
+      </button>
     </div>
   );
 }

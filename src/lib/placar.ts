@@ -142,9 +142,33 @@ function mapearEvento(bruto: unknown, ligaSlug: string, ligaNome: string): JogoA
 
 // ─── LEITURA ──────────────────────────────────────────────────
 
-async function carregarLiga(slug: string): Promise<JogoAoVivo[]> {
+/** Uma janela de dias para pedir à ESPN, em vez de só "hoje". */
+export interface IntervaloDias {
+  de: Date;
+  ate: Date;
+}
+
+/** AAAAMMDD em UTC — o formato que o parâmetro `dates` da ESPN aceita. */
+function aaaammdd(d: Date): string {
+  return d.toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+/** A data local (Europe/Lisbon) de um jogo, como 'AAAA-MM-DD'. Serve para
+ *  separar "hoje" de "amanhã" sem que o fuso do browser dê um dia de erro. */
+export function diaLocal(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(d);
+}
+
+async function carregarLiga(slug: string, intervalo?: IntervaloDias): Promise<JogoAoVivo[]> {
   try {
-    const res = await fetch(`${BASE}/${slug}/scoreboard`);
+    const janela = intervalo
+      ? `?dates=${aaaammdd(intervalo.de)}-${aaaammdd(intervalo.ate)}`
+      : '';
+    const res = await fetch(`${BASE}/${slug}/scoreboard${janela}`);
     if (!res.ok) return [];
     const json = obj(await res.json());
     const liga = obj(lista(json.leagues)[0]);
@@ -169,13 +193,16 @@ const ORDEM_ESTADO: Record<EstadoJogo, number> = {
 export async function carregarJogos(
   ligas: readonly string[] = LIGAS_NUCLEO,
   lote = 12,
+  intervalo?: IntervaloDias,
 ): Promise<JogoAoVivo[]> {
   // Em lotes, e não tudo de uma vez: com o catálogo completo são ~140 pedidos,
   // e disparados em simultâneo esgotam os sockets da função e fazem a ESPN
   // começar a recusar. Doze de cada vez varre tudo em poucos segundos.
   const todos: JogoAoVivo[] = [];
   for (let i = 0; i < ligas.length; i += lote) {
-    const parte = await Promise.all(ligas.slice(i, i + lote).map(carregarLiga));
+    const parte = await Promise.all(
+      ligas.slice(i, i + lote).map(slug => carregarLiga(slug, intervalo)),
+    );
     todos.push(...parte.flat());
   }
   return ordenarJogos(todos);

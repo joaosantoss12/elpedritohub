@@ -583,6 +583,48 @@
   .placar__equipa img { width: 34px; height: 34px; }
 }
 
+/* ── Selector de dia: hoje / amanha ──────────────────────────── */
+/* O corte mais alto de todos — antes ate do estado. "Amanha" e outra lista
+   de jogos, nao um filtro da de hoje. */
+
+.salas-dias {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-sunken);
+}
+
+.salas-dias button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-gray);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.salas-dias button:hover { color: var(--text-white); }
+
+.salas-dias button.ativo {
+  background: var(--bg-card-hover);
+  color: var(--gold-primary);
+}
+
+@media (max-width: 640px) {
+  .salas-dias { width: 100%; }
+  .salas-dias button { flex: 1; justify-content: center; }
+}
+
 /* ── Interruptor de estado: ao vivo / por começar ─────────────── */
 /* Fica antes dos dropdowns porque e o corte mais grosso: escolher entre
    jogos a decorrer e jogos por comecar muda a pagina toda, enquanto o
