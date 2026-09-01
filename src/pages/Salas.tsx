@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft, Send,
   Trash2, RefreshCw, Target, Square, ArrowLeftRight,
-  Globe, Trophy,
+  Globe, Trophy, Clock,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,13 @@ import '../styles/Salas.css';
 const INTERVALO_PLACAR = 45_000;
 
 /**
+ * O interruptor de estado. 'todos' não é um terceiro estado do jogo — é a
+ * ausência de filtro, e é o que faz sentido por omissão: quem chega quer ver
+ * o dia todo antes de decidir o que procurar.
+ */
+type EstadoFiltro = 'todos' | 'ao_vivo' | 'pre_live';
+
+/**
  * Salas por jogo — roadmap 11.
  *
  * Uma sala por jogo, com o placar ao vivo em cima e o chat de comentários por
@@ -46,6 +53,7 @@ export default function Salas() {
   const [aberto, setAberto] = useState<JogoAoVivo | null>(null);
   const [continente, setContinente] = useState<string>('todos');
   const [ligaFiltro, setLigaFiltro] = useState<string>('todas');
+  const [estadoFiltro, setEstadoFiltro] = useState<EstadoFiltro>('todos');
 
   const isAdmin = membro?.badges?.includes('Administrador') ?? false;
 
@@ -79,19 +87,26 @@ export default function Salas() {
 
   // Trocar de continente pode deixar a liga escolhida sem jogos — volta a "todas".
   const escolherContinente = (c: string) => { setContinente(c); setLigaFiltro('todas'); };
-  const limparFiltros = () => { setContinente('todos'); setLigaFiltro('todas'); };
+  const limparFiltros = () => {
+    setContinente('todos'); setLigaFiltro('todas'); setEstadoFiltro('todos');
+  };
 
-  // A página mostra só o que está a decorrer agora; os filtros derivam daí.
-  const jogosVivos = useMemo(() => jogos.filter(estaAoVivo), [jogos]);
+  // A página mostra o que ainda tem sala viva: o que está a decorrer e o que
+  // ainda não começou. Um jogo terminado não entra — a conversa acabou com
+  // ele — e um adiado nem hora tem para mostrar.
+  const jogosDoDia = useMemo(
+    () => jogos.filter(j => estaAoVivo(j) || j.estado === 'agendado'),
+    [jogos],
+  );
 
   const continentesDisponiveis = useMemo(
-    () => ORDEM_CONTINENTES.filter(c => jogosVivos.some(j => continenteDaLiga(j.ligaSlug) === c)),
-    [jogosVivos],
+    () => ORDEM_CONTINENTES.filter(c => jogosDoDia.some(j => continenteDaLiga(j.ligaSlug) === c)),
+    [jogosDoDia],
   );
 
   const jogosDoContinente = useMemo(
-    () => (continente === 'todos' ? jogosVivos : jogosVivos.filter(j => continenteDaLiga(j.ligaSlug) === continente)),
-    [jogosVivos, continente],
+    () => (continente === 'todos' ? jogosDoDia : jogosDoDia.filter(j => continenteDaLiga(j.ligaSlug) === continente)),
+    [jogosDoDia, continente],
   );
 
   const ligasDisponiveis = useMemo(() => {
@@ -100,12 +115,28 @@ export default function Salas() {
     return [...mapa.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [jogosDoContinente]);
 
-  const aoVivo = useMemo(
+  const jogosDaLiga = useMemo(
     () => (ligaFiltro === 'todas' ? jogosDoContinente : jogosDoContinente.filter(j => j.ligaSlug === ligaFiltro)),
     [jogosDoContinente, ligaFiltro],
   );
 
-  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas';
+  // Os dois grupos derivam da liga escolhida e não do interruptor: assim as
+  // contagens nos botões continuam a dizer a verdade sobre o grupo que está
+  // escondido, que é a única razão para as mostrar ali.
+  const aoVivo = useMemo(() => jogosDaLiga.filter(estaAoVivo), [jogosDaLiga]);
+
+  const porComecar = useMemo(
+    () => jogosDaLiga
+      .filter(j => !estaAoVivo(j))
+      .sort((a, b) => a.inicio.localeCompare(b.inicio)),
+    [jogosDaLiga],
+  );
+
+  const mostraVivos = estadoFiltro !== 'pre_live';
+  const mostraPreLive = estadoFiltro !== 'ao_vivo';
+  const visiveis = (mostraVivos ? aoVivo.length : 0) + (mostraPreLive ? porComecar.length : 0);
+
+  const temFiltro = continente !== 'todos' || ligaFiltro !== 'todas' || estadoFiltro !== 'todos';
 
   if (jogoAberto) {
     return (
@@ -131,8 +162,8 @@ export default function Salas() {
           <div className="salas-header__eyebrow"><Radio size={14} /> SALAS POR JOGO</div>
           <h1>Jogo a <span>jogo</span></h1>
           <p>
-            Só os jogos a decorrer agora. Cada um tem a sua sala, com o placar
-            ao vivo e um chat de comunidade só sobre aquele jogo.
+            Os jogos de hoje, a decorrer e por começar. Cada um tem a sua sala,
+            com o placar ao vivo e um chat de comunidade só sobre aquele jogo.
           </p>
         </header>
 
@@ -141,15 +172,36 @@ export default function Salas() {
             <Loader2 size={26} className="salas-spin" color="var(--gold-primary)" />
             <span>A carregar os jogos de hoje…</span>
           </div>
-        ) : jogosVivos.length === 0 ? (
+        ) : jogosDoDia.length === 0 ? (
           <div className="salas-vazio">
             <Radio size={30} color="var(--text-gray)" />
-            <strong>Sem jogos a decorrer neste momento</strong>
+            <strong>Sem jogos para hoje</strong>
             <span>Volta quando houver bola em campo — as salas abrem sozinhas.</span>
             <button onClick={puxarJogos}><RefreshCw size={14} /> Atualizar</button>
           </div>
         ) : (
           <>
+            <div className="salas-switch" role="group" aria-label="Estado dos jogos">
+              <button
+                className={estadoFiltro === 'todos' ? 'ativo' : ''}
+                onClick={() => setEstadoFiltro('todos')}
+              >
+                Todos <span>{aoVivo.length + porComecar.length}</span>
+              </button>
+              <button
+                className={estadoFiltro === 'ao_vivo' ? 'ativo' : ''}
+                onClick={() => setEstadoFiltro('ao_vivo')}
+              >
+                <span className="salas-dot" /> Ao vivo <span>{aoVivo.length}</span>
+              </button>
+              <button
+                className={estadoFiltro === 'pre_live' ? 'ativo' : ''}
+                onClick={() => setEstadoFiltro('pre_live')}
+              >
+                <Clock size={13} /> Por começar <span>{porComecar.length}</span>
+              </button>
+            </div>
+
             {(continentesDisponiveis.length > 1 || ligasDisponiveis.length > 1 || temFiltro) && (
               <div className="salas-filtros">
                 {continentesDisponiveis.length > 1 && (
@@ -186,20 +238,32 @@ export default function Salas() {
               </div>
             )}
 
-            {aoVivo.length === 0 ? (
+            {visiveis === 0 ? (
               <div className="salas-vazio">
                 <Radio size={30} color="var(--text-gray)" />
                 <strong>Sem jogos para este filtro</strong>
-                <span>Experimenta outro continente ou liga.</span>
+                <span>Experimenta outro estado, continente ou liga.</span>
               </div>
             ) : (
-              <GrupoJogos
-                titulo="A decorrer"
-                aoVivo
-                jogos={aoVivo}
-                contagens={contagens}
-                onAbrir={setAberto}
-              />
+              <>
+                {mostraVivos && aoVivo.length > 0 && (
+                  <GrupoJogos
+                    titulo="A decorrer"
+                    aoVivo
+                    jogos={aoVivo}
+                    contagens={contagens}
+                    onAbrir={setAberto}
+                  />
+                )}
+                {mostraPreLive && porComecar.length > 0 && (
+                  <GrupoJogos
+                    titulo="Por começar"
+                    jogos={porComecar}
+                    contagens={contagens}
+                    onAbrir={setAberto}
+                  />
+                )}
+              </>
             )}
           </>
         )}

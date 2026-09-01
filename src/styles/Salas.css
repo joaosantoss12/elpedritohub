@@ -582,3 +582,63 @@
   .placar__resultado { font-size: 1.6rem; }
   .placar__equipa img { width: 34px; height: 34px; }
 }
+
+/* ── Interruptor de estado: ao vivo / por começar ─────────────── */
+/* Fica antes dos dropdowns porque e o corte mais grosso: escolher entre
+   jogos a decorrer e jogos por comecar muda a pagina toda, enquanto o
+   continente e a liga so a estreitam. */
+
+.salas-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-sunken);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.salas-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-gray);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.salas-switch button:hover { color: var(--text-white); }
+
+.salas-switch button.ativo {
+  background: var(--bg-card-hover);
+  color: var(--gold-primary);
+}
+
+/* A contagem e informacao secundaria: diz quanto ha do outro lado sem
+   competir com o nome do estado. */
+.salas-switch button > span:last-child {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-gray);
+  opacity: 0.8;
+}
+
+.salas-switch button.ativo > span:last-child { color: var(--gold-primary); }
+
+@media (max-width: 640px) {
+  .salas-switch { width: 100%; }
+  .salas-switch button { flex: 1; justify-content: center; padding: 0.55rem 0.5rem; }
+}
+
+/* O ponto pulsante nao pode encolher dentro do botao flex. */
+.salas-switch .salas-dot { flex-shrink: 0; }
