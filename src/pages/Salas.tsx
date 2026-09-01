@@ -12,6 +12,7 @@ import {
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
+import { idJogoSofa, urlWidgetSofa } from '../lib/sofascore';
 import {
   carregarSalasConfig, carregarMensagens, contarPorEvento, enviarMensagem,
   apagarMensagem, subscreverSala,
@@ -528,6 +529,43 @@ function CampoAoVivo({ jogo, momento }: { jogo: JogoAoVivo; momento: MomentoJogo
   );
 }
 
+/**
+ * Painel do widget oficial do SofaScore — mapa do jogo, momentum e estatísticas
+ * deles, ao lado do nosso. O id do evento é descoberto no browser do visitante
+ * (ver `sofascore.ts`); se a Cloudflare barrar ou não houver correspondência,
+ * o painel não aparece de todo.
+ */
+function PainelSofascore({ jogo }: { jogo: JogoAoVivo }) {
+  const [id, setId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    setId(null);
+    idJogoSofa(jogo.casa, jogo.fora, jogo.inicio).then(r => {
+      if (vivo) setId(r);
+    });
+    return () => { vivo = false; };
+  }, [jogo.casa, jogo.fora, jogo.inicio]);
+
+  if (id === null) return null;
+
+  return (
+    <div className="painel-sofa">
+      <div className="painel-sofa__topo">
+        <span>Mapa do jogo</span>
+        <span className="painel-sofa__fonte">SofaScore</span>
+      </div>
+      <iframe
+        className="painel-sofa__frame"
+        src={urlWidgetSofa(id)}
+        title="Mapa do jogo (SofaScore)"
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
+  );
+}
+
 // ─── SALA ─────────────────────────────────────────────────────
 
 function SalaJogo({
@@ -696,6 +734,9 @@ function SalaJogo({
               <PainelPrevisoes perguntas={perguntas} />
             </div>
           )}
+
+          {/* Widget do SofaScore — só aparece se o jogo for encontrado lá. */}
+          <PainelSofascore jogo={jogo} />
 
           {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
           <DropWidget eventoId={jogo.id} />
