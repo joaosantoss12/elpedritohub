@@ -576,6 +576,19 @@
 
 .jogo-evento__desc { line-height: 1.4; }
 
+/* Marcador de expulsão junto ao nome da equipa (marcador e cartão de jogo). */
+.placar__vermelho,
+.jogo-card__vermelho {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #ef4444;
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.jogo-card__vermelho { flex-shrink: 0; }
+
 /* Relato minuto-a-minuto — lista longa, scroll próprio. */
 .jogo-relato {
   display: flex;
@@ -587,9 +600,9 @@
 }
 
 .jogo-relato__linha {
-  display: grid;
-  grid-template-columns: 38px 1fr;
-  gap: 0.6rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
   padding: 0.45rem 0;
   font-size: 0.82rem;
   line-height: 1.45;
@@ -599,6 +612,8 @@
 .jogo-relato__linha:last-child { border-bottom: 0; }
 
 .jogo-relato__minuto {
+  flex-shrink: 0;
+  width: 34px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: 0.74rem;
@@ -606,7 +621,16 @@
   padding-top: 0.1rem;
 }
 
-.jogo-relato__texto { color: var(--text-white); }
+.jogo-relato__icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+  color: var(--gold-primary);
+}
+.jogo-relato__icone .cartao-amarelo { color: #8a6144; }
+.jogo-relato__icone .cartao-vermelho { color: #ef4444; }
+
+.jogo-relato__texto { color: var(--text-white); flex: 1; }
 
 .jogo-relato__linha--chave {
   background: var(--gold-tint);

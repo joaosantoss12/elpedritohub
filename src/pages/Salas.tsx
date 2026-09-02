@@ -440,11 +440,23 @@ function JogoCard({ jogo: j, contagens, onAbrir }: {
       <div className="jogo-card__equipa">
         {j.logoCasa && <img src={j.logoCasa} alt="" loading="lazy" />}
         <span>{j.casa}</span>
+        {(j.vermelhosCasa ?? 0) > 0 && (
+          <span className="jogo-card__vermelho" title="Expulsão">
+            <Square size={9} className="cartao-vermelho" fill="currentColor" />
+            {(j.vermelhosCasa ?? 0) > 1 && j.vermelhosCasa}
+          </span>
+        )}
         <strong>{j.golosCasa ?? '–'}</strong>
       </div>
       <div className="jogo-card__equipa">
         {j.logoFora && <img src={j.logoFora} alt="" loading="lazy" />}
         <span>{j.fora}</span>
+        {(j.vermelhosFora ?? 0) > 0 && (
+          <span className="jogo-card__vermelho" title="Expulsão">
+            <Square size={9} className="cartao-vermelho" fill="currentColor" />
+            {(j.vermelhosFora ?? 0) > 1 && j.vermelhosFora}
+          </span>
+        )}
         <strong>{j.golosFora ?? '–'}</strong>
       </div>
 
@@ -759,6 +771,13 @@ function SalaJogo({
   const estatisticas = detalhes.estatisticas.length > 0 ? detalhes.estatisticas : ESTATISTICAS_ZERO;
   const semDadosReais = detalhes.estatisticas.length === 0;
 
+  // Expulsões para o marcador: o summary é o mais fiável; se ainda não carregou,
+  // fica pelo que a cache do scoreboard trouxe.
+  const vermelhosEvento = (lado: 'casa' | 'fora') =>
+    detalhes.eventos.filter(e => e.tipo === 'cartao_vermelho' && e.equipa === lado).length;
+  const vermelhosCasa = Math.max(vermelhosEvento('casa'), jx.vermelhosCasa ?? 0);
+  const vermelhosFora = Math.max(vermelhosEvento('fora'), jx.vermelhosFora ?? 0);
+
   return (
     <div className="sala-jogo">
       <button className="sala-jogo__voltar" onClick={onVoltar}>
@@ -837,6 +856,12 @@ function SalaJogo({
               <div className="placar__equipa">
                 {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
                 <strong>{jx.casa}</strong>
+                {vermelhosCasa > 0 && (
+                  <span className="placar__vermelho" title="Expulsão">
+                    <Square size={10} className="cartao-vermelho" fill="currentColor" />
+                    {vermelhosCasa > 1 && vermelhosCasa}
+                  </span>
+                )}
               </div>
               <div className="placar__resultado">
                 <span>{jx.golosCasa ?? '–'}</span>
@@ -846,6 +871,12 @@ function SalaJogo({
               <div className="placar__equipa">
                 {jx.logoFora && <img src={jx.logoFora} alt="" />}
                 <strong>{jx.fora}</strong>
+                {vermelhosFora > 0 && (
+                  <span className="placar__vermelho" title="Expulsão">
+                    <Square size={10} className="cartao-vermelho" fill="currentColor" />
+                    {vermelhosFora > 1 && vermelhosFora}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -895,6 +926,14 @@ function SalaJogo({
                       className={`jogo-relato__linha${c.chave ? ' jogo-relato__linha--chave' : ''} jogo-relato__linha--${c.equipa ?? 'neutro'}`}
                     >
                       <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
+                      {c.tipo !== 'outro' && (
+                        <span className="jogo-relato__icone">
+                          {c.tipo === 'golo' && <Target size={13} />}
+                          {c.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
+                          {c.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
+                          {c.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
+                        </span>
+                      )}
                       <span className="jogo-relato__texto">{c.texto}</span>
                     </li>
                   ))}

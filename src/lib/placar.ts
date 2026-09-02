@@ -30,6 +30,9 @@ export interface JogoAoVivo {
   /** '67'' ', 'Intervalo', '18:45' — o que faz sentido mostrar naquele estado. */
   relogio: string;
   inicio: string;
+  /** Expulsões por lado, lidas do `details` do scoreboard. 0/ausente = nenhuma. */
+  vermelhosCasa?: number;
+  vermelhosFora?: number;
   /** Só preenchido enquanto o jogo decorre: o cron anexa a partir do summary
    *  da ESPN e a sala volta a calcular por cima, mais depressa que o cron. */
   stats?: EstatisticaJogo[];
@@ -127,9 +130,27 @@ function mapearEvento(bruto: unknown, ligaSlug: string, ligaNome: string): JogoA
   const id = txt(ev.id);
   if (!id) return null;
 
+  // Expulsões: o scoreboard traz um `details` com os lances-chave; cada cartão
+  // vermelho tem `redCard: true` e a equipa. Serve para o marcador da lista.
+  const idCasa = txt(obj(casa.team).id);
+  let vermelhosCasa = 0;
+  let vermelhosFora = 0;
+  for (const d of lista(comp.details).map(obj)) {
+    const texto = (txt(obj(d.type).text) ?? '').toLowerCase();
+    const eVermelho = d.redCard === true
+      || (texto.includes('red') && !texto.includes('yellow'))
+      || texto.includes('second yellow');
+    if (!eVermelho) continue;
+    const idEquipa = txt(obj(d.team).id);
+    if (idEquipa && idCasa && idEquipa === idCasa) vermelhosCasa++;
+    else vermelhosFora++;
+  }
+
   return {
     id,
     fonte: 'espn',
+    vermelhosCasa: vermelhosCasa || undefined,
+    vermelhosFora: vermelhosFora || undefined,
     liga: ligaNome,
     ligaSlug,
     casa: nome(casa),
@@ -285,6 +306,8 @@ export interface ComentarioJogo {
   equipa: 'casa' | 'fora' | null;
   /** Lance marcante — golo, penálti, cartão vermelho. Destaca-se na lista. */
   chave: boolean;
+  /** Para pôr um ícone à frente da linha. `outro` = sem ícone. */
+  tipo: TipoEvento;
 }
 
 export interface DetalhesJogo {
@@ -360,6 +383,15 @@ function classificarTipoEvento(texto: string): TipoEvento {
   if (s.includes('yellow')) return 'cartao_amarelo';
   if (s.includes('red')) return 'cartao_vermelho';
   if (s.includes('substitution')) return 'substituicao';
+  return 'outro';
+}
+
+/** Do slug do `commentary` (ex. 'red-card', 'penalty---scored') para o tipo. */
+function tipoDoComentario(slug: string): TipoEvento {
+  if (slug === 'goal' || slug === 'own-goal' || slug === 'penalty---scored') return 'golo';
+  if (slug.includes('red') || slug.includes('second-yellow')) return 'cartao_vermelho';
+  if (slug.includes('yellow')) return 'cartao_amarelo';
+  if (slug === 'substitution') return 'substituicao';
   return 'outro';
 }
 
@@ -455,6 +487,7 @@ function mapearComentario(json: Bruto, casaNome: string, foraNome: string): Come
       texto,
       equipa: ladoDe(txt(obj(play.team).displayName)),
       chave: EVENTO_NOTAVEL.has(slug),
+      tipo: tipoDoComentario(slug),
     });
   }
   return linhas.reverse();

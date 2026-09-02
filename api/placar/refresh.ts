@@ -62,6 +62,12 @@ async function anexarLive(jogos: JogoAoVivo[]): Promise<void> {
         const d = await carregarDetalhesJogo(j.ligaSlug, j.id);
         if (d.estatisticas.length) j.stats = d.estatisticas;
         if (d.momento) j.momento = d.momento;
+        if (d.eventos.length) {
+          const vc = d.eventos.filter(e => e.tipo === 'cartao_vermelho' && e.equipa === 'casa').length;
+          const vf = d.eventos.filter(e => e.tipo === 'cartao_vermelho' && e.equipa === 'fora').length;
+          j.vermelhosCasa = vc || undefined;
+          j.vermelhosFora = vf || undefined;
+        }
         if (d.vivo) {
           j.golosCasa = d.vivo.golosCasa ?? j.golosCasa;
           j.golosFora = d.vivo.golosFora ?? j.golosFora;

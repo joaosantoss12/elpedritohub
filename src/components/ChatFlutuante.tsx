@@ -45,7 +45,7 @@ export function ChatFlutuante({
   const [novasDesde, setNovasDesde] = useState(0);
 
   const fundoRef = useRef<HTMLDivElement>(null);
-  const arrasto = useRef<{ dx: number; dy: number; moveu: boolean } | null>(null);
+  const arrasto = useRef<{ px: number; py: number; baseX: number; baseY: number; moveu: boolean } | null>(null);
 
   /* Contagem de mensagens novas enquanto está fechado. */
   useEffect(() => {
@@ -71,34 +71,41 @@ export function ChatFlutuante({
     return () => window.removeEventListener('resize', reencaixar);
   }, []);
 
+  // Captura-se sempre o `currentTarget` (o botão do ícone ou a barra do painel),
+  // nunca o `e.target` — que pode ser o SVG/texto lá dentro e fazia o primeiro
+  // arrasto falhar por o pointer capture saltar de elemento.
   const onPointerDown = (e: React.PointerEvent) => {
     if (modo === 'full') return;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    arrasto.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, moveu: false };
+    // Carregar num botão de acção da barra (expandir/fechar) não arranca arrasto.
+    const btn = (e.target as HTMLElement).closest('button');
+    if (btn && btn !== e.currentTarget) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    arrasto.current = { px: e.clientX, py: e.clientY, baseX: pos.x, baseY: pos.y, moveu: false };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     const a = arrasto.current;
     if (!a) return;
-    const nx = e.clientX - a.dx;
-    const ny = e.clientY - a.dy;
-    if (Math.abs(nx - pos.x) > 3 || Math.abs(ny - pos.y) > 3) a.moveu = true;
-    const larg = modo === 'aberto' ? LARGURA : 60;
-    const alt = modo === 'aberto' ? ALTURA : 60;
+    const dx = e.clientX - a.px;
+    const dy = e.clientY - a.py;
+    if (!a.moveu && Math.abs(dx) + Math.abs(dy) > 3) a.moveu = true;
+    if (!a.moveu) return;
+    const larg = modo === 'aberto' ? LARGURA : ICONE;
+    const alt = modo === 'aberto' ? ALTURA : ICONE;
     setPos({
-      x: Math.min(Math.max(MARGEM, nx), window.innerWidth - larg - MARGEM),
-      y: Math.min(Math.max(MARGEM, ny), window.innerHeight - alt - MARGEM),
+      x: Math.min(Math.max(MARGEM, a.baseX + dx), window.innerWidth - larg - MARGEM),
+      y: Math.min(Math.max(MARGEM, a.baseY + dy), window.innerHeight - alt - MARGEM),
     });
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
     const a = arrasto.current;
     arrasto.current = null;
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ok */ }
-    if (a && !a.moveu) {
-      // Clique sem arrasto: alterna abrir/fechar.
-      setModo(m => (m === 'icone' ? 'aberto' : 'icone'));
-    }
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* ok */ }
+    // Só o ícone abre com um clique. Na barra do painel aberto, um clique sem
+    // arrasto não faz nada — fechar/expandir é nos botões, senão o clique no
+    // "expandir" fechava logo o chat.
+    if (a && !a.moveu && modo === 'icone') setModo('aberto');
   };
 
   if (modo === 'icone') {
