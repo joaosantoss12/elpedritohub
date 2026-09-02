@@ -1074,6 +1074,9 @@
   width: 50%;
   pointer-events: none;
   transition: left 0.45s ease;
+  /* O campo "respira" para o lado de quem carrega — sobe e desce de intensidade
+     devagar, para dar sensação de pressão viva sem piscar. */
+  animation: campo-live-posse 3.4s ease-in-out infinite;
 }
 .campo-live__posse-lado--casa {
   left: 50%;
@@ -1082,6 +1085,10 @@
 .campo-live__posse-lado--fora {
   left: 0;
   background: linear-gradient(270deg, transparent, rgba(161, 124, 91, 0.3));
+}
+@keyframes campo-live-posse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
 }
 
 /* Marcador da última jogada: desliza pelo campo à medida que o feed avança.
@@ -1097,6 +1104,12 @@
   pointer-events: none;
   transition: left 0.6s cubic-bezier(0.33, 1, 0.68, 1), top 0.6s cubic-bezier(0.33, 1, 0.68, 1);
   animation: campo-live-bola 1.6s ease-in-out infinite;
+  z-index: 2;
+}
+/* Quando é o `requestAnimationFrame` a mover a bola (trilho suave), a transição
+   de CSS só atrasava — o movimento já vem interpolado quadro a quadro. */
+.campo-live__bola--anim {
+  transition: none;
 }
 
 @keyframes campo-live-bola {
@@ -1112,6 +1125,17 @@
   height: 100%;
   pointer-events: none;
   color: rgba(255, 255, 255, 0.4);
+  overflow: visible;
+}
+/* Traço contínuo por baixo dos pontos: tracejado a "correr" na direção da bola,
+   como o fio de momentum da ESPN. `pathLength` é 1, por isso as unidades do
+   dash são fração do percurso. */
+.campo-live__rasto-traco {
+  stroke-dasharray: 0.05 0.035;
+  animation: campo-live-fluxo 0.9s linear infinite;
+}
+@keyframes campo-live-fluxo {
+  to { stroke-dashoffset: -0.085; }
 }
 
 /* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
@@ -1222,8 +1246,9 @@
 @media (prefers-reduced-motion: reduce) {
   .campo-live__pres,
   .campo-live__bola,
-  .campo-live__posse-lado { transition: none; }
+  .campo-live__posse-lado { transition: none; animation: none; }
   .campo-live__bola { animation: none; }
+  .campo-live__rasto-traco { animation: none; }
 }
 
 /* ═══ FICHA DO JOGO (estilo ESPN) ══════════════════════════════ */

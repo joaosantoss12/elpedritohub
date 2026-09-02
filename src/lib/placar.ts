@@ -708,13 +708,20 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const bolaY = comCoord?.y ?? null;
 
   // Rasto das últimas jogadas com coordenada (antiga → recente). Com feed
-  // parado não se inventa movimento — fica só o ponto atual, se houver.
-  const bolaTrilho = feedParado
+  // parado não se inventa movimento — fica só o ponto atual, se houver. Com
+  // feed vivo puxa-se tudo o que traga coordenada (não só os lances notáveis),
+  // para a bola ter pontos que cheguem para andar; pontos praticamente colados
+  // são fundidos, senão a bola fica a tremer parada.
+  const trilhoCru = feedParado
     ? (bolaX != null && bolaY != null ? [{ x: bolaX, y: bolaY }] : [])
     : lances
         .filter(l => l.x != null && l.y != null)
-        .slice(-6)
         .map(l => ({ x: l.x as number, y: l.y as number }));
+  const bolaTrilho: { x: number; y: number }[] = [];
+  for (const p of trilhoCru.slice(-16)) {
+    const ult = bolaTrilho[bolaTrilho.length - 1];
+    if (!ult || Math.hypot(ult.x - p.x, ult.y - p.y) > 1.2) bolaTrilho.push(p);
+  }
 
   return {
     casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho,
