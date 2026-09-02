@@ -1619,13 +1619,47 @@ function logoEquipa(t: Bruto): string | null {
 function mapearForma(json: Bruto, id: string | null): ResultadoForma[] {
   const bloco = obj(lista(json.lastFiveGames).find(b => txt(obj(obj(b).team).id) === id) ?? {});
   return lista(bloco.events).map(obj).map((e): ResultadoForma => {
-    const r = (txt(e.gameResult) ?? '').toUpperCase();
-    const resultado = r === 'W' ? 'V' : r === 'L' ? 'D' : 'E';
+    const placar = txt(e.score) ?? '';
+    const emCasa = txt(e.atVs) === 'vs';
+
+    // 1.ª escolha: `gameResult` da ESPN ("W"/"L"/"D"/"T"). Muitas respostas
+    // vêm sem este campo → aí calcula-se pelo resultado.
+    let resultado: 'V' | 'E' | 'D' | null = null;
+    const r = (txt(e.gameResult) ?? txt(e.result) ?? '').toUpperCase();
+    if (r === 'W') resultado = 'V';
+    else if (r === 'L') resultado = 'D';
+    else if (r === 'D' || r === 'T') resultado = 'E';
+
+    if (resultado == null) {
+      // Golos: pelos campos numéricos do evento, senão parte-se o "1-0".
+      const idHome = txt(e.homeTeamId);
+      let meus: number | null = null;
+      let deles: number | null = null;
+      const hs = Number(txt(e.homeTeamScore));
+      const as = Number(txt(e.awayTeamScore));
+      if (idHome && id && Number.isFinite(hs) && Number.isFinite(as)) {
+        const souCasa = idHome === id;
+        meus = souCasa ? hs : as;
+        deles = souCasa ? as : hs;
+      } else {
+        const m = placar.match(/(\d+)\s*[-x:]\s*(\d+)/);
+        if (m) {
+          const a = Number(m[1]);
+          const b = Number(m[2]);
+          meus = emCasa ? a : b;
+          deles = emCasa ? b : a;
+        }
+      }
+      if (meus != null && deles != null) {
+        resultado = meus > deles ? 'V' : meus < deles ? 'D' : 'E';
+      }
+    }
+
     const adv = obj(e.opponent);
     return {
-      resultado,
-      placar: txt(e.score) ?? '',
-      emCasa: txt(e.atVs) === 'vs',
+      resultado: resultado ?? 'E',
+      placar,
+      emCasa,
       adversario: txt(adv.displayName) ?? txt(adv.abbreviation) ?? '',
       logoAdversario: logoEquipa(adv),
       data: txt(e.gameDate) ?? '',
