@@ -171,18 +171,35 @@ export async function girarRoda(): Promise<ResultadoSpin> {
   };
 }
 
-/** Os segmentos da roda, só para desenhar. Os pesos não vêm para o cliente. */
-export async function carregarSegmentosRoda(): Promise<{ rotulo: string; cor: string | null }[]> {
+export interface SegmentoRoda {
+  rotulo: string;
+  cor: string | null;
+  /** Probabilidade de sair, em percentagem (0–100), já normalizada. */
+  chance: number;
+}
+
+/**
+ * Os segmentos da roda, para desenhar e para a tabela de probabilidades ao
+ * lado. O `peso` é público — a mecânica de sorteio continua toda no servidor
+ * (`spin_girar`), aqui só se mostra a hipótese de cada prémio.
+ */
+export async function carregarSegmentosRoda(): Promise<SegmentoRoda[]> {
   const { data, error } = await supabase
     .from('spin_premios')
-    .select('rotulo, cor, ordem')
+    .select('rotulo, cor, ordem, peso')
     .eq('ativo', true)
     .order('ordem');
   if (error) {
     console.warn('Segmentos da roda indisponíveis:', error.message);
     return [];
   }
-  return (data ?? []).map((s) => ({ rotulo: s.rotulo as string, cor: (s.cor as string) ?? null }));
+  const linhas = data ?? [];
+  const total = linhas.reduce((s, l) => s + (Number(l.peso) || 0), 0) || 1;
+  return linhas.map((s) => ({
+    rotulo: s.rotulo as string,
+    cor: (s.cor as string) ?? null,
+    chance: ((Number(s.peso) || 0) / total) * 100,
+  }));
 }
 
 // ─── LOJA ─────────────────────────────────────────────────────

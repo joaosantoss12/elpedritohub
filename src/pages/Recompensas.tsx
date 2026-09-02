@@ -10,6 +10,7 @@ import {
   carregarCatalogo, carregarExtrato, carregarMissoes, carregarSegmentosRoda,
   comprarItem, estadoSpin, girarRoda, resgatarMissao,
   type EstadoSpin, type ItemLoja, type Missao, type MovimentoEPC, type ResultadoSpin,
+  type SegmentoRoda,
 } from '../lib/epcoins';
 import {
   carregarResumoConvites, linkDeConvite, type ResumoConvites,
@@ -36,7 +37,7 @@ export default function Recompensas() {
   const [extrato, setExtrato] = useState<MovimentoEPC[]>([]);
   const [convites, setConvites] = useState<ResumoConvites | null>(null);
   const [spin, setSpin] = useState<EstadoSpin>({ disponivel: false, ultimo_rotulo: null });
-  const [segmentos, setSegmentos] = useState<{ rotulo: string; cor: string | null }[]>([]);
+  const [segmentos, setSegmentos] = useState<SegmentoRoda[]>([]);
   const [premio, setPremio] = useState<ResultadoSpin | null>(null);
   const [aGirar, setAGirar] = useState(false);
   const [voltas, setVoltas] = useState(0);
@@ -249,42 +250,66 @@ export default function Recompensas() {
               em dinheiro nem em saldo de aposta.
             </div>
 
-            <div className='gm-roda'>
-              <div
-                className='gm-roda-disco'
-                style={{ transform: `rotate(${voltas * 360}deg)` }}
-              >
-                <div className='gm-roda-centro'>
-                  {aGirar ? '…' : premio ? premio.rotulo : 'EPC'}
+            <div className='gm-roda-painel'>
+              <div className='gm-roda'>
+                <div
+                  className='gm-roda-disco'
+                  style={{ transform: `rotate(${voltas * 360}deg)` }}
+                >
+                  <div className='gm-roda-centro'>
+                    {aGirar ? '…' : premio ? premio.rotulo : 'EPC'}
+                  </div>
                 </div>
+
+                {premio && !aGirar && (
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+                    {premio.tipo === 'nada'
+                      ? 'Hoje não saiu nada. Amanhã há outra.'
+                      : `Ganhaste ${premio.rotulo}.`}
+                  </p>
+                )}
+
+                <button className='gm-btn' onClick={girar} disabled={!spin.disponivel || aGirar}>
+                  {aGirar
+                    ? 'A girar…'
+                    : spin.disponivel
+                      ? 'Girar'
+                      : 'Já giraste hoje'}
+                </button>
+
+                {!spin.disponivel && spin.ultimo_rotulo && !premio && (
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    Última volta: {spin.ultimo_rotulo}
+                  </span>
+                )}
               </div>
 
-              {premio && !aGirar && (
-                <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
-                  {premio.tipo === 'nada'
-                    ? 'Hoje não saiu nada. Amanhã há outra.'
-                    : `Ganhaste ${premio.rotulo}.`}
-                </p>
-              )}
-
-              <button className='gm-btn' onClick={girar} disabled={!spin.disponivel || aGirar}>
-                {aGirar
-                  ? 'A girar…'
-                  : spin.disponivel
-                    ? 'Girar'
-                    : 'Já giraste hoje'}
-              </button>
-
-              {!spin.disponivel && spin.ultimo_rotulo && !premio && (
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Última volta: {spin.ultimo_rotulo}
-                </span>
-              )}
-
               {segmentos.length > 0 && (
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  Prémios possíveis: {segmentos.map((s) => s.rotulo).join(' · ')}
-                </span>
+                <div className='gm-roda-tabela'>
+                  <h3>Ganhos possíveis</h3>
+                  <table>
+                    <thead>
+                      <tr><th>Prémio</th><th>Hipótese</th></tr>
+                    </thead>
+                    <tbody>
+                      {segmentos.map((s) => (
+                        <tr key={s.rotulo}>
+                          <td>
+                            <span
+                              className='gm-roda-tabela__cor'
+                              style={{ background: s.cor ?? 'var(--border-strong)' }}
+                            />
+                            {s.rotulo}
+                          </td>
+                          <td>{s.chance < 1 ? s.chance.toFixed(1) : Math.round(s.chance)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className='gm-roda-tabela__nota'>
+                    Hipóteses aproximadas. O sorteio é feito no servidor.
+                  </p>
+                </div>
               )}
             </div>
           </div>

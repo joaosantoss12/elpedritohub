@@ -470,12 +470,81 @@
 
 /* ─── Roda diária ─────────────────────────────────────────── */
 
+.gm-roda-painel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+}
+
 .gm-roda {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 18px;
   text-align: center;
+}
+
+.gm-roda-tabela {
+  flex: 1 1 260px;
+  max-width: 360px;
+  min-width: 240px;
+}
+
+.gm-roda-tabela h3 {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.gm-roda-tabela table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.gm-roda-tabela th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.gm-roda-tabela th:last-child,
+.gm-roda-tabela td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-roda-tabela td {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-white);
+}
+
+.gm-roda-tabela tbody tr:last-child td { border-bottom: none; }
+
+.gm-roda-tabela__cor {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.gm-roda-tabela__nota {
+  margin: 10px 0 0;
+  font-size: 0.74rem;
+  color: var(--text-muted);
 }
 
 .gm-roda-disco {
