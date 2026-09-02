@@ -21,6 +21,10 @@ const SLOTS = [
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+/* Quantos ganhos ficam em circulação. Muitos cartões => o carrossel nunca
+   parece repetir-se depressa. */
+const POOL_SIZE = 40;
+
 /* A maioria dos ganhos são centenas; milhares e dezenas de milhares são raros. */
 function generateAmount() {
   const r = Math.random();
@@ -42,7 +46,7 @@ type Win = {
 
 let nextId = 0;
 
-function makeWin(slotIndex: number): Win {
+function makeWin(slotIndex = Math.floor(Math.random() * SLOTS.length)): Win {
   return {
     id: nextId++,
     initial: LETTERS[Math.floor(Math.random() * LETTERS.length)],
@@ -52,16 +56,24 @@ function makeWin(slotIndex: number): Win {
   };
 }
 
+/* Baralha os slots para o arranque não sair sempre pela mesma ordem. */
+function makePool(): Win[] {
+  const ordem = SLOTS.map((_, i) => i).sort(() => Math.random() - 0.5);
+  return Array.from({ length: POOL_SIZE }, (_, i) => makeWin(ordem[i % SLOTS.length]));
+}
+
 const SCROLL_SPEED = 55; // px por segundo
 
 export default function SlotWinsSlider() {
-  const [wins, setWins] = useState<Win[]>(() => SLOTS.map((_, i) => makeWin(i)));
+  const [wins, setWins] = useState<Win[]>(makePool);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const pausedRef = useRef(false);
   const offsetRef = useRef(0);
 
-  /* Scroll infinito com requestAnimationFrame — mais fluido que uma
-     animação CSS porque não "salta" quando a lista é atualizada. */
+  /* Scroll infinito com requestAnimationFrame. A lista é renderizada em
+     duplicado; quando o deslocamento chega ao fim da 1ª cópia recuamos
+     exatamente a largura dessa cópia — como o conteúdo dos dois blocos é
+     idêntico, o salto é imperceptível e o loop parece contínuo. */
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -75,7 +87,7 @@ export default function SlotWinsSlider() {
       last = time;
 
       if (!pausedRef.current) {
-        const singleWidth = track.scrollWidth / 2; // a lista está duplicada
+        const singleWidth = track.scrollWidth / 2;
         offsetRef.current += SCROLL_SPEED * dt;
         if (singleWidth > 0 && offsetRef.current >= singleWidth) {
           offsetRef.current -= singleWidth;
@@ -90,14 +102,25 @@ export default function SlotWinsSlider() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  /* Vai entrando um ganho novo de vez em quando para parecer em tempo real. */
+  /* Renova ganhos para dar sensação de tempo real. Só mexe no cartão que já
+     passou a aresta esquerda há ~2 posições: na 1ª cópia está fora de vista e
+     a 2ª cópia desse índice está sempre uma largura-de-lista à frente, também
+     fora de vista — logo a troca nunca é vista e o loop não "salta". */
   useEffect(() => {
     const timer = window.setInterval(() => {
+      const track = trackRef.current;
+      if (!track || pausedRef.current) return;
+      const stride = track.scrollWidth / 2 / POOL_SIZE;
+      if (stride <= 0) return;
+      const alvo = Math.floor(offsetRef.current / stride) - 2;
+      if (alvo < 0 || alvo >= POOL_SIZE) return;
+
       setWins((prev) => {
-        const slotIndex = Math.floor(Math.random() * SLOTS.length);
-        return [makeWin(slotIndex), ...prev.slice(0, SLOTS.length - 1)];
+        const copia = prev.slice();
+        copia[alvo] = makeWin();
+        return copia;
       });
-    }, 9000);
+    }, 4500);
     return () => window.clearInterval(timer);
   }, []);
 

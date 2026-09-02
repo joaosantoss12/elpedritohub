@@ -270,7 +270,7 @@ const SLOTS: Slot[] = [
 
 export default function DemoSlots() {
   const [query, setQuery] = useState('');
-  const [ordem, setOrdem] = useState<Ordem>('az');
+  const [ordem, setOrdem] = useState<Ordem>('popular');
   const [page, setPage] = useState(1);
   const [ativo, setAtivo] = useState<Slot | null>(null);
   const [porPagina, setPorPagina] = useState(PAGE_SIZE_INICIAL);
@@ -358,8 +358,8 @@ export default function DemoSlots() {
               onChange={e => { setOrdem(e.target.value as Ordem); setPage(1); }}
               aria-label="Ordenar slots"
             >
-              <option value="az">Ordem alfabética</option>
               <option value="popular">Popularidade</option>
+              <option value="az">Ordem alfabética</option>
               <option value="categoria">Categoria</option>
             </select>
           </label>
