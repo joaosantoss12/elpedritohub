@@ -69,6 +69,15 @@ export interface MeuPedidoCla {
   cla_id: string;
   nome: string;
   tag: string;
+  /** true = é um convite do dono (o próprio responde); false = pedido meu. */
+  convite: boolean;
+}
+
+/** Um convite que o dono enviou e ainda não teve resposta. */
+export interface ConviteEnviado {
+  user_id: string;
+  username: string;
+  convidado_em: string;
 }
 
 export interface PerfilPublico {
@@ -227,7 +236,40 @@ export async function carregarMeuPedidoCla(): Promise<MeuPedidoCla | null> {
   if (error) return null;
   const l = Array.isArray(data) ? data[0] : data;
   if (!l?.cla_id) return null;
-  return { cla_id: l.cla_id as string, nome: l.nome as string, tag: l.tag as string };
+  return {
+    cla_id: l.cla_id as string,
+    nome: l.nome as string,
+    tag: l.tag as string,
+    convite: Boolean(l.convite),
+  };
+}
+
+/** O dono convida alguém pelo nome de utilizador. */
+export async function convidarParaCla(username: string): Promise<void> {
+  const { error } = await supabase.rpc('cla_convidar', { p_username: username.trim() });
+  if (error) throw new Error(traduzErro(error.message));
+}
+
+/** O convidado aceita ou recusa o convite que recebeu. */
+export async function responderConviteCla(aceitar: boolean): Promise<void> {
+  const { error } = await supabase.rpc('cla_convite_responder', { p_aceitar: aceitar });
+  if (error) throw new Error(traduzErro(error.message));
+}
+
+/** Convites enviados pelo dono e à espera de resposta. */
+export async function carregarConvitesEnviados(): Promise<ConviteEnviado[]> {
+  const { data, error } = await supabase.rpc('cla_convites_enviados');
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((l) => ({
+    user_id: l.user_id as string,
+    username: (l.username as string) ?? 'membro',
+    convidado_em: (l.convidado_em as string) ?? '',
+  }));
+}
+
+export async function cancelarConviteCla(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('cla_convite_cancelar', { p_user_id: userId });
+  if (error) throw new Error(traduzErro(error.message));
 }
 
 /** Pedidos à espera de resposta — só devolve linhas ao dono do clã. */

@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Check, Crown, Loader2, LogOut, MessagesSquare, Shield, Trophy, Users, X,
+  Check, Crown, Loader2, LogOut, MessagesSquare, Shield, Trophy, UserPlus, Users, X,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { CanaisComunidade } from '../components/CanaisComunidade';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  cancelarPedidoCla, carregarCla, carregarMeuPedidoCla, carregarPedidosCla,
-  carregarRankingClas, criarCla, editarCla, listarClas, pedirParaEntrar,
+  cancelarConviteCla, cancelarPedidoCla, carregarCla, carregarConvitesEnviados,
+  carregarMeuPedidoCla, carregarPedidosCla, carregarRankingClas, convidarParaCla,
+  criarCla, editarCla, listarClas, pedirParaEntrar, responderConviteCla,
   responderPedidoCla, sairDoCla,
-  type Cla, type ClaListado, type LinhaRankingClas, type MeuPedidoCla, type PedidoCla,
+  type Cla, type ClaListado, type ConviteEnviado, type LinhaRankingClas,
+  type MeuPedidoCla, type PedidoCla,
 } from '../lib/comunidade';
 import '../styles/Gamificacao.css';
 
@@ -32,6 +34,7 @@ export default function Clas() {
   const [lista, setLista] = useState<ClaListado[]>([]);
   const [meuPedido, setMeuPedido] = useState<MeuPedidoCla | null>(null);
   const [pedidos, setPedidos] = useState<PedidoCla[]>([]);
+  const [convites, setConvites] = useState<ConviteEnviado[]>([]);
   const [ranking, setRanking] = useState<LinhaRankingClas[]>([]);
   const [carregado, setCarregado] = useState(false);
   const [erro, setErro] = useState('');
@@ -54,7 +57,14 @@ export default function Clas() {
     setLista(l);
     setMeuPedido(p);
     setRanking(r);
-    setPedidos(c?.sou_dono ? await carregarPedidosCla() : []);
+    if (c?.sou_dono) {
+      const [ped, conv] = await Promise.all([carregarPedidosCla(), carregarConvitesEnviados()]);
+      setPedidos(ped);
+      setConvites(conv);
+    } else {
+      setPedidos([]);
+      setConvites([]);
+    }
     setCarregado(true);
   }, []);
 
@@ -140,6 +150,8 @@ export default function Clas() {
             ocupado={ocupado}
             onPedir={(id) => correr(() => pedirParaEntrar(id))}
             onCancelar={() => correr(() => cancelarPedidoCla())}
+            onAceitarConvite={() => correr(async () => { await responderConviteCla(true); setAba('meu'); })}
+            onRecusarConvite={() => correr(() => responderConviteCla(false))}
             onCriar={() => setAba('ranking')}
           />
         )}
@@ -148,8 +160,11 @@ export default function Clas() {
           <MeuCla
             cla={meuCla}
             pedidos={pedidos}
+            convites={convites}
             ocupado={ocupado}
             onResponder={(uid, ok) => correr(() => responderPedidoCla(uid, ok))}
+            onConvidar={(username) => correr(() => convidarParaCla(username))}
+            onCancelarConvite={(uid) => correr(() => cancelarConviteCla(uid))}
             onEditar={(campos) => correr(() => editarCla(campos))}
             onSair={() => correr(async () => { await sairDoCla(); setAba('clas'); })}
           />
@@ -194,7 +209,8 @@ export default function Clas() {
 // ─── LISTA DE TODOS OS CLÃS ──────────────────────────────────────
 
 function ListaClas({
-  lista, meuCla, meuPedido, ocupado, onPedir, onCancelar, onCriar,
+  lista, meuCla, meuPedido, ocupado, onPedir, onCancelar,
+  onAceitarConvite, onRecusarConvite, onCriar,
 }: {
   lista: ClaListado[];
   meuCla: Cla | null;
@@ -202,6 +218,8 @@ function ListaClas({
   ocupado: boolean;
   onPedir: (claId: string) => void;
   onCancelar: () => void;
+  onAceitarConvite: () => void;
+  onRecusarConvite: () => void;
   onCriar: () => void;
 }) {
   return (
@@ -210,9 +228,11 @@ function ListaClas({
       <p className='gm-sub'>
         {meuCla
           ? 'Já estás num clã. Sai do teu para poderes entrar noutro.'
-          : meuPedido
-            ? `Pedido enviado a [${meuPedido.tag}] ${meuPedido.nome} — à espera que o líder aceite.`
-            : 'Pede para entrar num. O líder decide quem entra.'}
+          : meuPedido?.convite
+            ? `Foste convidado para [${meuPedido.tag}] ${meuPedido.nome} — aceita no cartão do clã abaixo.`
+            : meuPedido
+              ? `Pedido enviado a [${meuPedido.tag}] ${meuPedido.nome} — à espera que o líder aceite.`
+              : 'Pede para entrar num. O líder decide quem entra.'}
       </p>
 
       {lista.length === 0 ? (
@@ -224,6 +244,7 @@ function ListaClas({
           {lista.map((c) => {
             const cheio = c.membros >= c.max_membros;
             const pedido = meuPedido?.cla_id === c.cla_id;
+            const convidado = pedido && meuPedido?.convite === true;
             return (
               <div key={c.cla_id} className='cla-item'>
                 <div className='cla-item__info'>
@@ -239,7 +260,16 @@ function ListaClas({
                   {c.descricao && <p className='cla-item__desc'>{c.descricao}</p>}
                 </div>
                 <div className='cla-item__acao'>
-                  {!meuCla && (pedido ? (
+                  {!meuCla && (convidado ? (
+                    <>
+                      <button className='gm-btn' disabled={ocupado} onClick={onAceitarConvite}>
+                        <Check size={15} /> Aceitar convite
+                      </button>
+                      <button className='gm-btn gm-btn-fantasma' disabled={ocupado} onClick={onRecusarConvite}>
+                        <X size={15} />
+                      </button>
+                    </>
+                  ) : pedido ? (
                     <button className='gm-btn gm-btn-fantasma' disabled={ocupado} onClick={onCancelar}>
                       Cancelar pedido
                     </button>
@@ -262,16 +292,29 @@ function ListaClas({
 // ─── O MEU CLÃ ───────────────────────────────────────────────────
 
 function MeuCla({
-  cla, pedidos, ocupado, onResponder, onEditar, onSair,
+  cla, pedidos, convites, ocupado, onResponder, onConvidar, onCancelarConvite, onEditar, onSair,
 }: {
   cla: Cla;
   pedidos: PedidoCla[];
+  convites: ConviteEnviado[];
   ocupado: boolean;
   onResponder: (userId: string, aceitar: boolean) => void;
+  onConvidar: (username: string) => void;
+  onCancelarConvite: (userId: string) => void;
   onEditar: (campos: { descricao?: string; aberto?: boolean; cor?: string | null }) => void;
   onSair: () => void;
 }) {
   const [cor, setCor] = useState(cla.cor ?? '#8b5cf6');
+  const [convidado, setConvidado] = useState('');
+  const cheio = cla.membros.length >= cla.max_membros;
+
+  function enviarConvite(e: React.FormEvent) {
+    e.preventDefault();
+    const nome = convidado.trim();
+    if (!nome) return;
+    onConvidar(nome);
+    setConvidado('');
+  }
 
   return (
     <>
@@ -327,6 +370,47 @@ function MeuCla({
           </div>
         )}
       </div>
+
+      {cla.sou_dono && (
+        <div className='gm-card'>
+          <h2>Convidar</h2>
+          <p className='gm-sub'>
+            Convida alguém pelo nome de utilizador. A pessoa recebe o convite no
+            separador Clãs e decide se aceita.
+          </p>
+          <form onSubmit={enviarConvite} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input
+              value={convidado}
+              onChange={(e) => setConvidado(e.target.value)}
+              placeholder='Nome de utilizador'
+              maxLength={32}
+              style={{ ...campo, flex: '1 1 200px' }}
+            />
+            <button className='gm-btn' type='submit' disabled={ocupado || cheio}>
+              <UserPlus size={15} /> {cheio ? 'Clã cheio' : 'Convidar'}
+            </button>
+          </form>
+
+          {convites.length > 0 && (
+            <div className='cla-lista' style={{ marginTop: 14 }}>
+              {convites.map((cv) => (
+                <div key={cv.user_id} className='cla-item'>
+                  <div className='cla-item__info'>
+                    <div className='cla-item__nome'><strong>{cv.username}</strong></div>
+                    <div className='cla-item__meta'><span>Convite por responder</span></div>
+                  </div>
+                  <div className='cla-item__acao'>
+                    <button className='gm-btn gm-btn-fantasma' disabled={ocupado}
+                      onClick={() => onCancelarConvite(cv.user_id)}>
+                      <X size={15} /> Retirar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {cla.sou_dono && (
         <div className='gm-card'>
