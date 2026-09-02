@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic, Heart,
+  Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic, Heart, Repeat,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { eLinkSpotify, resolverSpotify } from '../lib/musicaSpotify';
@@ -186,10 +186,15 @@ export function LeitorMusica() {
   const [aleatorio, setAleatorio] = useState<boolean>(() => {
     try { return localStorage.getItem('ep-musica-shuffle') === 'sim'; } catch { return false; }
   });
+  const [loop, setLoop] = useState<boolean>(() => {
+    try { return localStorage.getItem('ep-musica-loop') === 'sim'; } catch { return false; }
+  });
   const [favoritas, setFavoritas] = useState<Faixa[]>(lerFavoritas);
   const [abaLista, setAbaLista] = useState<'playlist' | 'favoritas'>('playlist');
 
   const playerRef = useRef<any>(null);
+  const loopRef = useRef(loop);
+  loopRef.current = loop;
   const arrastarRef = useRef(false);
   // Só toca sozinho depois de o utilizador escolher algo (é o gesto que
   // desbloqueia o autoplay). À primeira carga fica em pausa.
@@ -253,6 +258,11 @@ export function LeitorMusica() {
           },
           onStateChange: (e: any) => {
             // 1 = a tocar, 2 = em pausa, 0 = fim, 5 = em fila
+            // Repetir a faixa atual: ao terminar, volta ao início e toca.
+            if (e.data === 0 && loopRef.current) {
+              try { e.target.seekTo(0, true); e.target.playVideo(); } catch { /* ignora */ }
+              return;
+            }
             setTocar(e.data === 1);
             const d = e.target.getVideoData?.();
             if (d?.title) { setTitulo(d.title); setAutor(d.author ?? ''); }
@@ -462,6 +472,14 @@ export function LeitorMusica() {
     });
   };
 
+  const alternarLoop = () => {
+    setLoop(l => {
+      const prox = !l;
+      try { localStorage.setItem('ep-musica-loop', prox ? 'sim' : 'nao'); } catch { /* privado */ }
+      return prox;
+    });
+  };
+
   const alternarFavorita = (f: Faixa) => {
     if (!f.id) return;
     setFavoritas(prev => {
@@ -578,7 +596,7 @@ export function LeitorMusica() {
               <div className="leitor-musica__botoes">
                 {temPlaylist && (
                   <button
-                    className={aleatorio ? 'leitor-musica__on' : ''}
+                    className={`leitor-musica__ponto${aleatorio ? ' leitor-musica__on' : ''}`}
                     onClick={alternarAleatorio}
                     disabled={!pronto}
                     title={aleatorio ? 'Aleatório ligado' : 'Aleatório'}
@@ -607,6 +625,14 @@ export function LeitorMusica() {
                   title="Próxima"
                 >
                   <SkipForward size={18} />
+                </button>
+                <button
+                  className={`leitor-musica__ponto${loop ? ' leitor-musica__on' : ''}`}
+                  onClick={alternarLoop}
+                  disabled={!pronto}
+                  title={loop ? 'Repetir faixa ligado' : 'Repetir faixa'}
+                >
+                  <Repeat size={16} />
                 </button>
                 <button
                   className={verLista ? 'leitor-musica__on' : ''}
@@ -916,6 +942,12 @@ export function LeitorMusica() {
         .leitor-musica__cancel { background: transparent; color: var(--text-gray); }
 
         .leitor-musica__botoes button.leitor-musica__on { color: var(--gold-primary); }
+        .leitor-musica__botoes button.leitor-musica__ponto { position: relative; }
+        .leitor-musica__botoes button.leitor-musica__ponto.leitor-musica__on::after {
+          content: ''; position: absolute; left: 50%; bottom: 1px;
+          width: 3px; height: 3px; border-radius: 50%;
+          background: var(--gold-primary); transform: translateX(-50%);
+        }
 
         .leitor-musica__lista {
           position: absolute; left: 50%; transform: translateX(-50%);
