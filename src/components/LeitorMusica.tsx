@@ -4,20 +4,28 @@ import {
   Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic, Heart,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { eLinkSpotify, resolverSpotify } from '../lib/musicaSpotify';
 
 /* Barra de música estilo Spotify. Controla um player do YouTube escondido
    (IFrame API) — o utilizador cola um link de vídeo ou de playlist no botão
    "Configurar". A barra vive no App, fora do <Routes>, por isso a música não
    pára ao mudar de página. Nada disto toca em direitos de terceiros: é o
-   próprio player do YouTube a servir, com os anúncios e tudo. */
+   próprio player do YouTube a servir, com os anúncios e tudo.
+
+   Links do Spotify (playlist/álbum/faixa) também servem: o /api/musica/spotify
+   traduz a lista para IDs do YouTube — como fazem os bots de música do Discord —
+   e daí para a frente é uma playlist normal do player. */
 
 const CHAVE_CFG = 'ep-musica-cfg';
 const CHAVE_ABERTO = 'ep-musica-aberto';
 
 interface Config {
-  tipo: 'video' | 'playlist';
+  // 'lista' = conjunto solto de IDs do YouTube (ex.: vindo de um link Spotify),
+  // guardados em `id` separados por vírgula.
+  tipo: 'video' | 'playlist' | 'lista';
   id: string;
   origem: string;
+  nome?: string;
 }
 
 // Faixa marcada como favorita — guardada com título/autor para se poder
@@ -142,6 +150,7 @@ export function LeitorMusica() {
   const [aConfigurar, setAConfigurar] = useState(false);
   const [rascunho, setRascunho] = useState('');
   const [erroLink, setErroLink] = useState<string | null>(null);
+  const [aResolver, setAResolver] = useState<string | null>(null);
 
   const [pronto, setPronto] = useState(false);
   const [tocar, setTocar] = useState(false);
@@ -199,7 +208,7 @@ export function LeitorMusica() {
           onReady: (e: any) => {
             setPronto(true);
             e.target.setVolume(mudo ? 0 : volume);
-            if (config.tipo === 'playlist') e.target.setShuffle?.(aleatorio);
+            if (config.tipo !== 'video') e.target.setShuffle?.(aleatorio);
             const d = e.target.getVideoData?.();
             if (d) { setTitulo(d.title ?? ''); setAutor(d.author ?? ''); }
             sincronizarLista(e.target);
@@ -218,6 +227,8 @@ export function LeitorMusica() {
 
       const auto = autoTocarRef.current;
       const chaveConfig = `${config.tipo}:${config.id}`;
+      // 'lista': IDs soltos do YouTube (ex.: vindos de um link Spotify).
+      const idsLista = config.tipo === 'lista' ? config.id.split(',').filter(Boolean) : [];
 
       if (playerRef.current?.cueVideoById) {
         // Já é a mesma faixa/playlist — não mexer, senão reinicia.
@@ -226,13 +237,16 @@ export function LeitorMusica() {
         if (config.tipo === 'playlist') {
           if (auto) playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
           else playerRef.current.cuePlaylist({ list: config.id, listType: 'playlist' });
+        } else if (config.tipo === 'lista') {
+          if (auto) playerRef.current.loadPlaylist(idsLista, 0, 0);
+          else playerRef.current.cuePlaylist(idsLista, 0, 0);
         } else if (auto) {
           playerRef.current.loadVideoById(config.id);
         } else {
           playerRef.current.cueVideoById(config.id);
         }
         playerRef.current.setVolume(mudo ? 0 : volume);
-        if (config.tipo === 'playlist') playerRef.current.setShuffle?.(aleatorio);
+        if (config.tipo !== 'video') playerRef.current.setShuffle?.(aleatorio);
         setPronto(true);
         return;
       }
@@ -247,8 +261,12 @@ export function LeitorMusica() {
           ...(config.tipo === 'playlist'
             ? { listType: 'playlist', list: config.id }
             : {}),
+          ...(config.tipo === 'lista' && idsLista.length > 1
+            ? { playlist: idsLista.slice(1).join(',') }
+            : {}),
         },
         ...(config.tipo === 'video' ? { videoId: config.id } : {}),
+        ...(config.tipo === 'lista' ? { videoId: idsLista[0] } : {}),
         ...comum,
       });
     });
@@ -396,9 +414,7 @@ export function LeitorMusica() {
     playerRef.current?.loadVideoById?.(id);
   };
 
-  const guardarConfig = () => {
-    const c = interpretarLink(rascunho);
-    if (!c) { setErroLink('Não reconheci esse link do YouTube.'); return; }
+  const aplicarConfig = (c: Config) => {
     try { localStorage.setItem(CHAVE_CFG, JSON.stringify(c)); } catch { /* privado */ }
     autoTocarRef.current = true; // escolha do utilizador → pode tocar já
     setConfig(c);
@@ -410,9 +426,39 @@ export function LeitorMusica() {
     setTotal(0);
   };
 
+  const guardarConfig = async () => {
+    const bruto = rascunho.trim();
+    if (aResolver) return;
+
+    if (eLinkSpotify(bruto)) {
+      // O Spotify não serve o áudio: traduz-se a lista para vídeos do YouTube
+      // no servidor (mesmo princípio dos bots de música do Discord).
+      setErroLink(null);
+      setAResolver('A ler a lista do Spotify…');
+      try {
+        const lista = await resolverSpotify(bruto);
+        setAResolver(null);
+        aplicarConfig({
+          tipo: 'lista',
+          id: lista.faixas.map(f => f.videoId).join(','),
+          origem: bruto,
+          nome: lista.nome,
+        });
+      } catch (e) {
+        setAResolver(null);
+        setErroLink(e instanceof Error ? e.message : 'Não consegui ler o Spotify.');
+      }
+      return;
+    }
+
+    const c = interpretarLink(bruto);
+    if (!c) { setErroLink('Não reconheci esse link do YouTube ou Spotify.'); return; }
+    aplicarConfig(c);
+  };
+
   if (!user) return null;
 
-  const temPlaylist = config?.tipo === 'playlist';
+  const temPlaylist = config?.tipo === 'playlist' || config?.tipo === 'lista';
   const pct = total > 0 ? (atual / total) * 100 : 0;
   const favSet = new Set(favoritas.map(f => f.id));
   const abaAtiva: 'playlist' | 'favoritas' =
@@ -629,17 +675,27 @@ export function LeitorMusica() {
 
         {aConfigurar && aberto && (
           <div className="leitor-musica__painel">
-            <label>Link do YouTube (vídeo ou playlist)</label>
+            <label>Link do YouTube ou Spotify</label>
             <input
               autoFocus
               value={rascunho}
               onChange={e => { setRascunho(e.target.value); setErroLink(null); }}
-              onKeyDown={e => { if (e.key === 'Enter') guardarConfig(); }}
-              placeholder="https://www.youtube.com/watch?v=…  ou  …?list=…"
+              onKeyDown={e => { if (e.key === 'Enter') void guardarConfig(); }}
+              placeholder="youtube.com/watch?v=…  ·  open.spotify.com/playlist/…"
             />
+            {aResolver && <p className="leitor-musica__aviso-mini">{aResolver}</p>}
             {erroLink && <p className="leitor-musica__erro">{erroLink}</p>}
+            <p className="leitor-musica__aviso-mini">
+              Playlists do Spotify tocam via YouTube — pode demorar uns segundos a preparar.
+            </p>
             <div className="leitor-musica__painel-acoes">
-              <button className="leitor-musica__ok" onClick={guardarConfig}>Tocar</button>
+              <button
+                className="leitor-musica__ok"
+                onClick={() => void guardarConfig()}
+                disabled={Boolean(aResolver)}
+              >
+                {aResolver ? 'A preparar…' : 'Tocar'}
+              </button>
               <button className="leitor-musica__cancel" onClick={() => setAConfigurar(false)}>
                 Cancelar
               </button>
@@ -783,6 +839,7 @@ export function LeitorMusica() {
         }
         .leitor-musica__painel input:focus { outline: none; border-color: var(--gold-primary); }
         .leitor-musica__erro { font-size: 0.74rem; color: #e0736b; margin: 0; }
+        .leitor-musica__aviso-mini { font-size: 0.72rem; color: var(--text-muted); margin: 0; }
         .leitor-musica__painel-acoes { display: flex; gap: 0.5rem; margin-top: 0.2rem; }
         .leitor-musica__ok, .leitor-musica__cancel {
           flex: 1; padding: 0.55rem; border-radius: 8px; font-weight: 700;
