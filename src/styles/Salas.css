@@ -1466,17 +1466,29 @@
 .escala-jog__camisa { position: relative; width: 48px; height: 48px; }
 .escala-jog__marcas {
   position: absolute;
-  top: -3px;
-  right: -3px;
+  top: -4px;
+  right: -4px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 1px;
-  font-size: 0.72rem;
+  gap: 2px;
   line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .escala-jog__marcas:empty { display: none; }
+.escala-jog__marcas span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #1a1410;
+}
 .camisola { display: block; width: 100%; height: 100%; }
 .escala-jog__nome {
   max-width: 72px;
