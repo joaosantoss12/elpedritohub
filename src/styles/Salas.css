@@ -1438,8 +1438,8 @@
 .escala-jog__camisa { position: relative; width: 48px; height: 48px; }
 .escala-jog__marcas {
   position: absolute;
-  top: -5px;
-  right: -9px;
+  top: -3px;
+  right: -3px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

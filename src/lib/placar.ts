@@ -845,32 +845,69 @@ function coordsFormacao(formacao: string): { x: number; y: number }[] {
   return pts;
 }
 
-/** Evento em bruto para cruzar com a escalação (golos, cartões, trocas). */
+/** Evento em bruto para cruzar com a escalação (golos, cartões, trocas).
+ *  `principal` é o protagonista (o marcador, o substituído a entrar, o
+ *  jogador advertido); `nomes` inclui também os secundários (assistente,
+ *  jogador a sair). */
 interface EventoCru {
   slug: string;
   equipa: 'casa' | 'fora' | null;
   minuto: string;
+  principal: string;
   nomes: string[];
 }
 
+/**
+ * Os golos, cartões e substituições de um jogo. A ESPN publica isto de
+ * duas formas: `header.competitions[0].details` (só golos, no fim do jogo)
+ * e `commentary[].play` (relato ao minuto, com cartões e trocas). A
+ * commentary é a fonte completa; os details servem de recurso.
+ */
 function eventosCrus(json: Bruto): EventoCru[] {
   const comp = obj(lista(obj(json.header).competitions)[0]);
   const equipas = lista(comp.competitors).map(obj);
-  const idCasa = txt(obj(equipas.find(c => c.homeAway === 'home')?.team ?? {}).id);
-  return lista(comp.details).map(obj).map((d): EventoCru => {
-    const idEquipa = txt(obj(d.team).id);
-    const equipa: 'casa' | 'fora' | null = idEquipa
-      ? (idEquipa === idCasa ? 'casa' : 'fora')
-      : null;
+  const casaComp = obj(equipas.find(c => c.homeAway === 'home')?.team ?? {});
+  const idCasa = txt(casaComp.id);
+  const nomeCasa = (txt(casaComp.displayName) ?? txt(casaComp.name) ?? '').toLowerCase();
+
+  // O lado por id (details) ou, quando só há o nome (commentary), pelo nome.
+  const lado = (t: Bruto): 'casa' | 'fora' | null => {
+    const id = txt(t.id);
+    if (id && idCasa) return id === idCasa ? 'casa' : 'fora';
+    const nome = (txt(t.displayName) ?? txt(t.name) ?? '').toLowerCase();
+    if (nome && nomeCasa) return nome === nomeCasa ? 'casa' : 'fora';
+    return null;
+  };
+
+  const norm = (d: Bruto): EventoCru => {
+    const tipo = obj(d.type);
+    const atletas = [
+      ...lista(d.athletesInvolved).map(obj),
+      ...lista(d.participants).map(p => obj(obj(p).athlete)),
+    ].map(a => txt(a.displayName) ?? txt(a.shortName) ?? '').filter(Boolean);
     return {
-      slug: (txt(obj(d.type).id) ?? txt(obj(d.type).text) ?? '').toLowerCase(),
-      equipa,
+      slug: (txt(tipo.type) ?? txt(tipo.text) ?? txt(tipo.id) ?? '').toLowerCase(),
+      equipa: lado(obj(d.team)),
       minuto: txt(obj(d.clock).displayValue) ?? '',
-      nomes: lista(d.athletesInvolved).map(obj)
-        .map(a => txt(a.displayName) ?? txt(a.shortName) ?? '')
-        .filter(Boolean),
+      principal: atletas[0] ?? '',
+      nomes: atletas,
     };
-  });
+  };
+
+  const daCommentary = lista(json.commentary).map(obj)
+    .map(c => obj(c.play))
+    .filter(p => Object.keys(p).length > 0)
+    .map(norm);
+  if (daCommentary.length > 0) return daCommentary;
+  return lista(comp.details).map(obj).map(norm);
+}
+
+/** O evento é um golo a contar para o marcador (inclui grande penalidade
+ *  convertida, exclui autogolos)? */
+function eventoGolo(slug: string): boolean {
+  if (slug.includes('own')) return false;
+  if (slug.includes('goal')) return true;
+  return slug.includes('penalty') && slug.includes('scored');
 }
 
 /** Um nome de evento (displayName) refere-se a este atleta? Compara pelo
@@ -897,7 +934,9 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
       const at = obj(p.athlete);
       const lugar = Number(txt(p.formationPlace));
       const c = coords[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
-      const seus = meus.filter(e => e.nomes.some(n => mesmoJogador(n, at)));
+      // Golos e cartões contam só quando o jogador é o protagonista do lance
+      // (não quando aparece como assistente).
+      const meusLances = meus.filter(e => mesmoJogador(e.principal, at));
       const pos = txt(obj(p.position).abbreviation);
       return {
         numero: txt(p.jersey) ?? '',
@@ -906,9 +945,9 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         y: c.y,
         saiu: p.subbedOut === true,
         guardaRedes: lugar === 1 || pos === 'G' || pos === 'GK',
-        golos: seus.filter(e => e.slug.includes('goal') && !e.slug.includes('own')).length,
-        amarelo: seus.some(e => e.slug.includes('yellow')),
-        vermelho: seus.some(e => e.slug.includes('red')),
+        golos: meusLances.filter(e => eventoGolo(e.slug)).length,
+        amarelo: meusLances.some(e => e.slug.includes('yellow') && !e.slug.includes('red')),
+        vermelho: meusLances.some(e => e.slug.includes('red')),
       };
     });
 
@@ -930,7 +969,14 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         ? meus.find(e => e.slug.includes('substitution')
             && e.nomes.some(n => mesmoJogador(n, at)))
         : undefined;
-      const saiuPor = troca?.nomes.find(n => !mesmoJogador(n, at)) ?? null;
+      // Na commentary o protagonista da troca é quem entra; o outro nome é
+      // quem sai. Nos details antigos vinham os dois sem ordem garantida.
+      const saiuPor = troca
+        ? (mesmoJogador(troca.principal, at)
+            ? troca.nomes[1]
+            : troca.nomes.find(n => !mesmoJogador(n, at)))
+          ?? null
+        : null;
       return {
         numero: txt(p.jersey) ?? '',
         nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
