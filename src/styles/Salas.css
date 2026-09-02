@@ -1122,6 +1122,27 @@
   50%      { opacity: 1; }
 }
 
+/* Overlay de debug (?debug na URL ou localStorage.ep-debug='1') */
+.campo-live__debug {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 6;
+  max-width: calc(100% - 12px);
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(7, 11, 20, 0.86);
+  border: 1px solid var(--border-strong);
+  color: #dce3ee;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+.campo-live__debug b { color: var(--gold-light); }
+.campo-live__debug-desc { margin-top: 3px; color: #9aa7bd; white-space: normal; }
+.campo-live__bola--estim { background: #ffd34d; }
+
 /* Marcador da última jogada: desliza pelo campo à medida que o feed avança.
    Não é bola em tempo real — a ESPN só dá coordenada por evento. */
 .campo-live__bola {

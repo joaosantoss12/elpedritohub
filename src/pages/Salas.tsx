@@ -902,14 +902,32 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  bolaX: null, bolaY: null, ultimaJogada: null,
+  bolaX: null, bolaY: null, bolaReal: false, ultimaJogada: null,
 };
 
 function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY, ultimaJogada } = momento ?? MOMENTO_VAZIO;
+  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY, bolaReal, ultimaJogada } = momento ?? MOMENTO_VAZIO;
+
+  // Debug: ?debug na URL ou localStorage.ep-debug='1' mostra as coordenadas
+  // da bola + o evento por cima do campo, e imprime na consola a cada momento.
+  const debug = (() => {
+    try {
+      return new URLSearchParams(location.search).has('debug')
+        || localStorage.getItem('ep-debug') === '1';
+    } catch { return false; }
+  })();
+  useEffect(() => {
+    if (debug && momento) {
+      // eslint-disable-next-line no-console
+      console.log('[campo]', {
+        minuto, evento: ultimaJogada?.rotulo ?? fase, descricao: ultimaJogada?.descricao,
+        posse, fase, lance, bolaX, bolaY, bolaReal,
+      });
+    }
+  }, [debug, momento, minuto, fase, lance, posse, bolaX, bolaY, bolaReal, ultimaJogada]);
 
   // Nem todos os jogos têm feed ao vivo da ESPN (ligas fora da cobertura, ou
   // dados que ainda não abriram). Mostramos o campo na mesma, só que "vazio".
@@ -970,9 +988,21 @@ function CampoAoVivo(
         {/* Bola da última jogada: a ESPN só dá uma coordenada por lance do
             `commentary`, por isso a bola desliza (transição CSS) de lance em
             lance a acompanhar o jogo — sem rasto nem linhas. */}
+        {debug && (
+          <div className="campo-live__debug">
+            <div>{minuto || '—'} · <b>{ultimaJogada?.rotulo ?? fase ?? '—'}</b></div>
+            <div>posse: {posse ?? '—'} · fase: {fase || '—'}</div>
+            <div>
+              bola: {bolaX != null ? bolaX.toFixed(1) : '—'} , {bolaY != null ? bolaY.toFixed(1) : '—'}
+              {' '}({bolaReal ? 'real ESPN' : 'estimada'})
+            </div>
+            {ultimaJogada?.descricao && <div className="campo-live__debug-desc">{ultimaJogada.descricao}</div>}
+          </div>
+        )}
+
         {!terminado && !prejogo && bolaX != null && bolaY != null && (
           <span
-            className="campo-live__bola"
+            className={`campo-live__bola${debug && !bolaReal ? ' campo-live__bola--estim' : ''}`}
             style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
             aria-hidden="true"
           />

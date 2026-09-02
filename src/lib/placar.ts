@@ -286,6 +286,9 @@ export interface MomentoJogo {
    *  salta pelo campo a acompanhar o jogo. */
   bolaX: number | null;
   bolaY: number | null;
+  /** `true` = coordenada mesmo publicada pela ESPN; `false` = zona estimada
+   *  pelo tipo de lance. Só para debug. */
+  bolaReal: boolean;
   /** O painel "última jogada" da ESPN: reconhece qualquer tipo de lance do
    *  `commentary` (drible, interceção, lateral, alívio, desarme, cruzamento…),
    *  não só golos e cartões. `null` quando o feed ainda não deu nenhum lance. */
@@ -1041,9 +1044,10 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const ultimoReal = [...lances].reverse().find(l => l.x != null && l.y != null);
   const bolaX = comCoord?.x ?? ultimaZona?.x ?? ultimoReal?.x ?? null;
   const bolaY = comCoord?.y ?? ultimaZona?.y ?? ultimoReal?.y ?? null;
+  const bolaReal = comCoord?.x != null || (ultimaZona?.x == null && ultimoReal?.x != null);
 
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, ultimaJogada,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaReal, ultimaJogada,
     minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
 }
