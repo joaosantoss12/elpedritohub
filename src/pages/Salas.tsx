@@ -574,6 +574,20 @@ function Camisola({ cor, numero, escuro }: { cor: string; numero: string; escuro
  * formação), campo na vertical com o guarda-redes em baixo e as camisolas
  * com os ícones de golo / cartão / saída, e as substituições por baixo.
  */
+/** Emojis de golo / cartão de um jogador (nada se não houver). */
+function MarcasEvento(
+  { golos, amarelo, vermelho }: { golos: number; amarelo: boolean; vermelho: boolean },
+) {
+  if (!golos && !amarelo && !vermelho) return null;
+  return (
+    <span className="escalacoes__sub-marcas" aria-hidden="true">
+      {golos > 0 && <span>⚽{golos > 1 ? golos : ''}</span>}
+      {amarelo && <span>🟨</span>}
+      {vermelho && <span>🟥</span>}
+    </span>
+  );
+}
+
 /** Barras casa-vs-fora de uma lista de estatísticas de jogo. */
 function ListaEstatisticas({ estatisticas }: { estatisticas: EstatisticaJogo[] }) {
   return (
@@ -684,6 +698,7 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
                 <div className="escalacoes__sub-in">
                   <span className="escalacoes__sub-num">#{s.numero}</span>
                   <span className="escalacoes__sub-nome">{s.nome}</span>
+                  <MarcasEvento golos={s.golos} amarelo={s.amarelo} vermelho={s.vermelho} />
                   <span className="escalacoes__sub-dir">
                     {s.minuto && <span className="escalacoes__sub-min">{s.minuto}</span>}
                     <span className="escalacoes__sub-seta escalacoes__sub-seta--in">▲</span>
@@ -693,6 +708,7 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
                   <div className="escalacoes__sub-out">
                     <span className="escalacoes__sub-seta escalacoes__sub-seta--out">▼</span>
                     {s.saiuPor}
+                    <MarcasEvento golos={s.saiuGolos} amarelo={s.saiuAmarelo} vermelho={s.saiuVermelho} />
                   </div>
                 )}
               </li>

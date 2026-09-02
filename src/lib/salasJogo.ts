@@ -117,6 +117,15 @@ export async function apagarMensagem(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * URL público da foto de perfil de um utilizador. O ficheiro tem o id do
+ * utilizador como nome (bucket `profile_images`); quem nunca fez upload dá
+ * 404 — cabe a quem mostra tratar o erro da imagem.
+ */
+export function urlFotoPerfil(userId: string): string {
+  return supabase.storage.from('profile_images').getPublicUrl(userId).data.publicUrl;
+}
+
 // ─── REALTIME ─────────────────────────────────────────────────
 
 /**

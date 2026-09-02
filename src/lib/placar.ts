@@ -341,6 +341,14 @@ export interface Suplente {
    *  com os eventos do jogo. */
   minuto: string | null;
   saiuPor: string | null;
+  /** Golos / cartões de quem entrou, no tempo em que jogou. */
+  golos: number;
+  amarelo: boolean;
+  vermelho: boolean;
+  /** O mesmo para o jogador que saiu, quando dá para o identificar. */
+  saiuGolos: number;
+  saiuAmarelo: boolean;
+  saiuVermelho: boolean;
 }
 
 export interface LadoEscalacao {
@@ -1040,14 +1048,13 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
       };
     });
 
-  const nomeCurto = (nome: string): string => {
-    // "Jefferson Castillo" → tenta casar com um titular e usar o apelido curto.
-    const t = titulares.find(tt => {
+  // "Jefferson Castillo" → tenta casar com um titular e devolve-o (para usar o
+  // apelido curto e aproveitar os golos/cartões já calculados).
+  const titularPorNome = (nome: string): JogadorCampo | undefined =>
+    titulares.find(tt => {
       const ap = nome.toLowerCase().split(' ').pop() ?? '';
       return ap.length > 2 && tt.nome.toLowerCase().includes(ap);
     });
-    return t?.nome ?? nome;
-  };
 
   const suplentes: Suplente[] = jogadores
     .filter(p => p.starter !== true)
@@ -1060,18 +1067,26 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         : undefined;
       // Na commentary o protagonista da troca é quem entra; o outro nome é
       // quem sai. Nos details antigos vinham os dois sem ordem garantida.
-      const saiuPor = troca
+      const saiuPorCru = troca
         ? (mesmoJogador(troca.principal, at)
             ? troca.nomes[1]
             : troca.nomes.find(n => !mesmoJogador(n, at)))
           ?? null
         : null;
+      const saiuTit = saiuPorCru ? titularPorNome(saiuPorCru) : undefined;
+      const meusLances = meus.filter(e => mesmoJogador(e.principal, at));
       return {
         numero: txt(p.jersey) ?? '',
         nome: semInicial(txt(at.shortName) ?? txt(at.displayName) ?? ''),
         entrou,
         minuto: troca?.minuto ?? null,
-        saiuPor: saiuPor ? nomeCurto(saiuPor) : null,
+        saiuPor: saiuPorCru ? (saiuTit?.nome ?? saiuPorCru) : null,
+        golos: meusLances.filter(e => eventoGolo(e.slug)).length,
+        amarelo: meusLances.some(e => e.slug.includes('yellow') && !e.slug.includes('red')),
+        vermelho: meusLances.some(e => e.slug.includes('red')),
+        saiuGolos: saiuTit?.golos ?? 0,
+        saiuAmarelo: saiuTit?.amarelo ?? false,
+        saiuVermelho: saiuTit?.vermelho ?? false,
       };
     });
 

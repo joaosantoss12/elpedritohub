@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Loader2, Send, Trash2, MessageSquare, X, Maximize2, Minimize2 } from 'lucide-react';
-import type { MensagemSala } from '../lib/salasJogo';
+import { urlFotoPerfil, type MensagemSala } from '../lib/salasJogo';
 
 /* Chat da sala como janela flutuante:
    - ícone fechado, arrastável; clicar abre o painel
@@ -187,6 +187,7 @@ export function ChatFlutuante({
           mensagens.map(m => (
             <div key={m.id} className={m.user_id === userId ? 'msg msg--eu' : 'msg'}>
               <div className="msg__topo">
+                <AvatarMsg userId={m.user_id} username={m.username} />
                 <strong>{m.username}</strong>
                 <span>
                   {new Date(m.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
@@ -221,6 +222,25 @@ export function ChatFlutuante({
 
       <style>{ESTILO}</style>
     </div>
+  );
+}
+
+/* Foto de perfil do autor. Quem nunca fez upload não tem ficheiro — o 404
+   cai para as iniciais do nome. */
+function AvatarMsg({ userId, username }: { userId: string; username: string }) {
+  const [falhou, setFalhou] = useState(false);
+  const inicial = (username.trim()[0] ?? '?').toUpperCase();
+  if (falhou || !userId) {
+    return <span className="msg__avatar msg__avatar--txt" aria-hidden="true">{inicial}</span>;
+  }
+  return (
+    <img
+      className="msg__avatar"
+      src={urlFotoPerfil(userId)}
+      alt=""
+      loading="lazy"
+      onError={() => setFalhou(true)}
+    />
   );
 }
 
