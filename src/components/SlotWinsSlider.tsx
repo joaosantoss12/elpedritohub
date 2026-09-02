@@ -3,32 +3,38 @@ import '../styles/SlotWins.css';
 
 const AFFILIATE_URL = 'https://captainspartners.com/processing/click?btag=16361_18466';
 
-/* Slots populares + thumbnails em /public/slots */
-const SLOTS = [
-  { name: 'Le Bandit', image: '/slots/1.jpg' },
-  { name: 'Dork Unit', image: '/slots/5.jpg' },
-  { name: 'Wanted Dead or a Wild', image: '/slots/8.jpg' },
-  { name: 'Le Santa', image: '/slots/12.jpg' },
-  { name: 'Pray for Three', image: '/slots/15.jpg' },
-  { name: 'Le Pharaoh', image: '/slots/18.jpg' },
-  { name: 'Donny Dough', image: '/slots/20.jpg' },
-  { name: 'Benny the Beer', image: '/slots/22.jpg' },
-  { name: 'Sweet Bonanza Super Scatter', image: '/slots/25.png' },
-  { name: 'Cyber Heist City', image: '/slots/28.png' },
-  { name: 'Starlight Princess Super Scatter', image: '/slots/30.png' },
-  { name: 'Sweet Rush Bonanza', image: '/slots/31.png' },
+/* Thumbnails disponíveis em /public/slots — reaproveitadas pelos vários
+   títulos (o match exato imagem↔nome não é importante aqui). */
+const IMAGES = [
+  '/slots/1.jpg', '/slots/5.jpg', '/slots/8.jpg', '/slots/12.jpg',
+  '/slots/15.jpg', '/slots/18.jpg', '/slots/20.jpg', '/slots/22.jpg',
+  '/slots/25.png', '/slots/28.png', '/slots/30.png', '/slots/31.png',
 ];
+
+/* Slots mais populares nas casas (Pragmatic, Hacksaw, Nolimit, Push, etc.). */
+const SLOT_NAMES = [
+  'Gates of Olympus', 'Sweet Bonanza', 'Sugar Rush', 'The Dog House',
+  'Big Bass Bonanza', 'Wanted Dead or a Wild', 'Le Bandit', 'Book of Dead',
+  'Money Train 3', 'San Quentin', 'Wild West Gold', 'Starlight Princess',
+  'Fruit Party', "Gonzo's Quest", 'Bonanza', 'Dead or Alive 2',
+  'Reactoonz', "Jammin' Jars", 'Razor Shark', 'Mental', 'Chaos Crew',
+  'Fire in the Hole', 'Dork Unit', 'Pray for Three', 'Le Pharaoh',
+  'Cash Elevator', 'Wisdom of Athena', 'Zeus vs Hades', 'The Hand of Midas',
+  'Sweet Rush Bonanza', 'Sun of Egypt 3', 'Rise of Olympus', 'Book of Shadows',
+];
+
+const SLOTS = SLOT_NAMES.map((name, i) => ({ name, image: IMAGES[i % IMAGES.length] }));
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 /* Quantos ganhos ficam em circulação. Muitos cartões => o carrossel nunca
    parece repetir-se depressa. */
-const POOL_SIZE = 40;
+const POOL_SIZE = 100;
 
-/* A maioria dos ganhos são centenas; milhares e dezenas de milhares são raros. */
+/* Maioria são centenas; milhares são menos comuns; o topo nunca passa dos 35k. */
 function generateAmount() {
   const r = Math.random();
-  const [min, max] = r < 0.8 ? [150, 950] : r < 0.95 ? [1000, 9999] : [10000, 50000];
+  const [min, max] = r < 0.82 ? [120, 900] : r < 0.96 ? [900, 6000] : [6000, 35000];
   return Math.random() * (max - min) + min;
 }
 
