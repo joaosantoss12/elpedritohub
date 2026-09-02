@@ -689,7 +689,19 @@ function SalaJogo({
     // Um único pedido (o summary da ESPN) alimenta tudo o que tem de parecer
     // ao vivo: marcador, relógio, estatísticas, eventos e o mini-campo.
     const puxar = () => {
-      carregarDetalhesJogo(jogo.ligaSlug, jogo.id).then(d => { if (vivo) setDetalhes(d); });
+      carregarDetalhesJogo(jogo.ligaSlug, jogo.id).then(d => {
+        if (!vivo) return;
+        // A ESPN às vezes devolve o summary sem o boxscore/relato preenchidos
+        // (entre partes, logo após o apito, ou por lentidão do feed). Nesses
+        // casos ficava tudo a zero de repente — o Atlético-MG vs Cruzeiro fazia
+        // isto de forma consistente. Mantém-se o último valor não-vazio.
+        setDetalhes(prev => ({
+          ...d,
+          estatisticas: d.estatisticas.length ? d.estatisticas : prev.estatisticas,
+          eventos: d.eventos.length ? d.eventos : prev.eventos,
+          comentario: d.comentario.length ? d.comentario : prev.comentario,
+        }));
+      });
     };
     puxar();
     const t = window.setInterval(puxar, INTERVALO_LIVE);
