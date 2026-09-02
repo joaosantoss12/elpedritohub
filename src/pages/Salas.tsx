@@ -428,6 +428,23 @@ const EMOJI_EVENTO: Record<string, string> = {
   golo: '⚽', cartao_amarelo: '🟨', cartao_vermelho: '🟥', substituicao: '🔁',
 };
 
+/** Cabeçalho com escudo + nome das duas equipas, casa à esquerda, fora à
+ *  direita — serve de topo às estatísticas e ao histórico dividido por lados. */
+function CabecalhoEquipas({ jogo: j }: { jogo: JogoAoVivo }) {
+  return (
+    <div className="equipas-cab">
+      <span className="equipas-cab__eq">
+        {j.logoCasa && <img src={j.logoCasa} alt="" />}
+        <span>{j.casa}</span>
+      </span>
+      <span className="equipas-cab__eq equipas-cab__eq--dir">
+        <span>{j.fora}</span>
+        {j.logoFora && <img src={j.logoFora} alt="" />}
+      </span>
+    </div>
+  );
+}
+
 function JogoCard({ jogo: j, contagens, onAbrir }: {
   jogo: JogoAoVivo;
   contagens: Record<string, number>;
@@ -793,6 +810,7 @@ function SalaJogo({
             <div className="jogo-detalhes">
               <div className="jogo-detalhes__bloco">
                   <h3>Estatísticas</h3>
+                  <CabecalhoEquipas jogo={jx} />
                   {semDadosReais && (
                     <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
                   )}
@@ -916,23 +934,37 @@ function SalaJogo({
           <div className="jogo-detalhes">
             <div className="jogo-detalhes__bloco">
               <h3>Histórico do jogo</h3>
+              <CabecalhoEquipas jogo={jx} />
               {detalhes.comentario.length === 0 ? (
                 <p className="jogo-detalhes__nota">Aparece quando o jogo começar.</p>
               ) : (
-                <ul className="jogo-relato">
-                  {detalhes.comentario.map((c, i) => (
-                    <li
-                      key={i}
-                      className={`jogo-relato__linha${c.chave ? ' jogo-relato__linha--chave' : ''} jogo-relato__linha--${c.equipa ?? 'neutro'}`}
-                    >
-                      <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
-                      {c.tipo !== 'outro' && (
-                        <span className="jogo-relato__icone">{EMOJI_EVENTO[c.tipo]}</span>
-                      )}
-                      <span className="jogo-relato__texto">{c.texto}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="jogo-relato">
+                  {detalhes.comentario.map((c, i) => {
+                    const ic = c.tipo !== 'outro'
+                      ? <span className="relato-linha__ic">{EMOJI_EVENTO[c.tipo]}</span>
+                      : null;
+                    if (c.equipa === null) {
+                      return (
+                        <div key={i} className={`relato-linha relato-linha--neutro${c.chave ? ' relato-linha--chave' : ''}`}>
+                          <span className="relato-linha__min">{c.minuto || '·'}</span>
+                          {ic}
+                          <span className="relato-linha__txt">{c.texto}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={i} className={`relato-linha relato-linha--${c.equipa}${c.chave ? ' relato-linha--chave' : ''}`}>
+                        <span className="relato-linha__lado relato-linha__lado--casa">
+                          {c.equipa === 'casa' && <><span className="relato-linha__txt">{c.texto}</span>{ic}</>}
+                        </span>
+                        <span className="relato-linha__min">{c.minuto || '·'}</span>
+                        <span className="relato-linha__lado relato-linha__lado--fora">
+                          {c.equipa === 'fora' && <>{ic}<span className="relato-linha__txt">{c.texto}</span></>}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
