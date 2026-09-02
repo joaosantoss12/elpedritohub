@@ -12,6 +12,7 @@ import {
   carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
   type Escalacoes, type LadoEscalacao, type LiderJogo, type ResultadoForma, type HeadToHead,
+  type EventoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
 import {
@@ -481,6 +482,42 @@ function CronologiaJogo({ eventos }: { eventos: DetalhesJogo['eventos'] }) {
       </div>
       <div className="cronologia__reguas">
         <span>0'</span><span>45'</span><span>{fim}'</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tira de golos e expulsões logo por baixo do placar, como na ESPN: os da
+ * casa alinhados à esquerda, os de fora à direita, com um traço a separar.
+ */
+function ResumoGolos({ eventos }: { eventos: EventoJogo[] }) {
+  const relevantes = eventos.filter(
+    e => (e.tipo === 'golo' || e.tipo === 'cartao_vermelho') && e.equipa,
+  );
+  if (relevantes.length === 0) return null;
+
+  const linha = (e: EventoJogo, i: number) => {
+    // A descrição vem como "Golo · Fulano"; fica só o nome.
+    const nome = e.descricao.includes('·')
+      ? e.descricao.split('·').pop()!.trim()
+      : e.descricao;
+    return (
+      <span key={i} className="resumo-golos__item">
+        <span className="resumo-golos__ic">{e.tipo === 'golo' ? '⚽' : '🟥'}</span>
+        {nome} <em>{e.minuto}</em>
+      </span>
+    );
+  };
+
+  return (
+    <div className="resumo-golos">
+      <div className="resumo-golos__lado">
+        {relevantes.filter(e => e.equipa === 'casa').map(linha)}
+      </div>
+      <span className="resumo-golos__sep" aria-hidden="true" />
+      <div className="resumo-golos__lado resumo-golos__lado--fora">
+        {relevantes.filter(e => e.equipa === 'fora').map(linha)}
       </div>
     </div>
   );
@@ -1092,14 +1129,8 @@ function SalaJogo({
       </button>
 
       <div className="sala-jogo__ficha">
-        {/* ── Topo: escalações · placar · forma/confrontos, três colunas ── */}
-        <div className="ficha-topo">
-        <div className="ficha-topo__esq">
-        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
-        </div>
-
-        {/* ── Placar ── */}
-        <div className={estaAoVivo(jx) ? 'placar placar--vivo ficha-topo__meio' : 'placar ficha-topo__meio'}>
+        {/* ── Placar em faixa larga, ao estilo da ESPN ── */}
+        <div className={estaAoVivo(jx) ? 'placar placar--faixa placar--vivo' : 'placar placar--faixa'}>
           <div className="placar__liga">
             {bandeiraDaLiga(jogo.ligaSlug) && (
               <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
@@ -1112,8 +1143,8 @@ function SalaJogo({
           </div>
 
           <div className="placar__corpo">
-            <div className="placar__equipa">
-              {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
+            {jx.logoCasa && <img className="placar__escudo" src={jx.logoCasa} alt="" />}
+            <div className="placar__lado placar__lado--casa">
               <strong>
                 {jx.casa}
                 {vermelhosCasa > 0 && (
@@ -1128,11 +1159,12 @@ function SalaJogo({
             </div>
             <div className="placar__resultado">
               <span>{jx.golosCasa ?? '–'}</span>
-              <em>:</em>
+              <em>
+                {jx.estado === 'terminado' ? 'F' : estaAoVivo(jx) ? jx.relogio : ':'}
+              </em>
               <span>{jx.golosFora ?? '–'}</span>
             </div>
-            <div className="placar__equipa">
-              {jx.logoFora && <img src={jx.logoFora} alt="" />}
+            <div className="placar__lado placar__lado--fora">
               <strong>
                 {jx.fora}
                 {vermelhosFora > 0 && (
@@ -1145,6 +1177,7 @@ function SalaJogo({
                 <span className="placar__forma">{detalhes.escalacoes.fora.formacao}</span>
               )}
             </div>
+            {jx.logoFora && <img className="placar__escudo" src={jx.logoFora} alt="" />}
           </div>
 
           {detalhes.vivo?.htCasa != null && detalhes.vivo?.htFora != null && (
@@ -1154,24 +1187,19 @@ function SalaJogo({
           )}
         </div>
 
-        <div className="ficha-topo__dir">
-        {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
-          <div className="jogo-detalhes__bloco">
-            <h3>Forma recente</h3>
-            <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
-            <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
-          </div>
+        {/* ── Tira de golos e expulsões, logo por baixo do placar ── */}
+        {jx.estado !== 'agendado' && (
+          <ResumoGolos eventos={detalhes.eventos} />
         )}
-        {detalhes.h2h && (
-          <div className="jogo-detalhes__bloco">
-            <h3>Confrontos diretos</h3>
-            <ConfrontosH2H h2h={detalhes.h2h} />
-          </div>
-        )}
-        </div>
-        </div>{/* /.ficha-topo */}
 
-        {/* ── Cronologia dos lances-chave ── */}
+        {/* ── Corpo em três colunas, ao estilo da ficha da ESPN ── */}
+        <div className="ficha-corpo">
+        <div className="ficha-corpo__esq">
+        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
+        </div>
+
+        <div className="ficha-corpo__meio">
+        {/* ── Linha do tempo do jogo ── */}
         {detalhes.eventos.length > 0 && jx.estado !== 'agendado' && (
           <CronologiaJogo eventos={detalhes.eventos} />
         )}
@@ -1257,6 +1285,24 @@ function SalaJogo({
             </div>
           )}
         </div>
+        </div>{/* /.ficha-corpo__meio */}
+
+        <div className="ficha-corpo__dir">
+        {detalhes.h2h && (
+          <div className="jogo-detalhes__bloco">
+            <h3>Confronto-direto</h3>
+            <ConfrontosH2H h2h={detalhes.h2h} />
+          </div>
+        )}
+        {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
+          <div className="jogo-detalhes__bloco">
+            <h3>Forma recente</h3>
+            <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
+            <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
+          </div>
+        )}
+        </div>
+        </div>{/* /.ficha-corpo */}
 
         {/* ── Previsões + drops ── */}
         {perguntas.length > 0 && (

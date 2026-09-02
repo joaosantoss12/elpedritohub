@@ -1265,26 +1265,98 @@
   width: 100%;
 }
 
-/* Topo da ficha ao estilo ESPN: escalações à esquerda, placar (estreito) ao
-   centro, forma recente + confrontos à direita. Abaixo de 1000px empilha,
-   com o placar sempre primeiro. */
-.ficha-topo {
+/* ── Placar em faixa larga (estilo ESPN) ── */
+.placar--faixa .placar__corpo {
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 1.4rem;
+}
+.placar--faixa .placar__escudo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+.placar--faixa .placar__escudo:first-child { justify-self: start; }
+.placar--faixa .placar__escudo:last-child { justify-self: end; }
+.placar__lado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.placar__lado--casa { align-items: flex-end; text-align: right; }
+.placar__lado--fora { align-items: flex-start; text-align: left; }
+.placar__lado strong { font-size: 1rem; line-height: 1.25; }
+.placar--faixa .placar__resultado { font-size: 2.4rem; }
+.placar--faixa .placar__resultado em {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+@media (max-width: 620px) {
+  .placar--faixa .placar__corpo {
+    grid-template-columns: auto 1fr auto 1fr auto;
+    gap: 0.6rem;
+  }
+  .placar--faixa .placar__escudo { width: 40px; height: 40px; }
+  .placar--faixa .placar__resultado { font-size: 1.7rem; }
+  .placar__lado strong { font-size: 0.82rem; }
+}
+
+/* ── Tira de golos / expulsões ── */
+.resumo-golos {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px) minmax(0, 1fr);
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+  font-size: 0.8rem;
+}
+.resumo-golos__lado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+  text-align: right;
+}
+.resumo-golos__lado--fora { align-items: flex-start; text-align: left; }
+.resumo-golos__item { color: var(--text-white); }
+.resumo-golos__item em {
+  font-style: normal;
+  color: var(--text-gray);
+  font-variant-numeric: tabular-nums;
+}
+.resumo-golos__ic { margin: 0 0.3rem; }
+.resumo-golos__sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-color);
+}
+
+/* ── Corpo em três colunas (escalações · centro · confronto-direto) ── */
+.ficha-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr) minmax(0, 330px);
   gap: 1.1rem;
   align-items: start;
 }
-.ficha-topo__esq,
-.ficha-topo__dir {
+.ficha-corpo__esq,
+.ficha-corpo__meio,
+.ficha-corpo__dir {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   min-width: 0;
 }
-.ficha-topo__meio { align-self: stretch; }
-@media (max-width: 1000px) {
-  .ficha-topo { grid-template-columns: 1fr; }
-  .ficha-topo__meio { order: -1; }
+@media (max-width: 1100px) {
+  .ficha-corpo { grid-template-columns: 1fr 1fr; }
+  .ficha-corpo__meio { grid-column: 1 / -1; order: 3; }
+}
+@media (max-width: 720px) {
+  .ficha-corpo { grid-template-columns: 1fr; }
+  .resumo-golos { font-size: 0.74rem; }
 }
 
 /* Separadores de equipa (escudo + formação) */
