@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Radio, MessageSquare, Loader2, ArrowLeft, Send,
-  Trash2, RefreshCw, Target, Square, ArrowLeftRight,
+  Radio, MessageSquare, Loader2, ArrowLeft,
+  RefreshCw, Target, Square, ArrowLeftRight,
   Globe, Trophy, Clock, Calendar, Search, X,
 } from 'lucide-react';
+import { ChatFlutuante } from '../components/ChatFlutuante';
 import { Navbar } from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -671,7 +672,6 @@ function SalaJogo({
         }
       : { ...jogo, momento: detalhes.momento ?? jogo.momento };
   }, [jogo, detalhes.vivo, detalhes.momento]);
-  const fundoRef = useRef<HTMLDivElement | null>(null);
 
   // Perguntas de previsão presas a este jogo. São as mesmas da Arena, com o
   // mesmo painel — o que muda é de onde vêm.
@@ -712,10 +712,6 @@ function SalaJogo({
 
     return () => { vivo = false; limpar(); };
   }, [jogo.id]);
-
-  useEffect(() => {
-    fundoRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [mensagens.length]);
 
   const enviar = async () => {
     const conteudo = texto.trim();
@@ -808,23 +804,6 @@ function SalaJogo({
                   </ul>
                 </div>
               )}
-
-              {detalhes.comentario.length > 0 && (
-                <div className="jogo-detalhes__bloco">
-                  <h3>Histórico do jogo</h3>
-                  <ul className="jogo-relato">
-                    {detalhes.comentario.map((c, i) => (
-                      <li
-                        key={i}
-                        className={`jogo-relato__linha${c.chave ? ' jogo-relato__linha--chave' : ''} jogo-relato__linha--${c.equipa ?? 'neutro'}`}
-                      >
-                        <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
-                        <span className="jogo-relato__texto">{c.texto}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
         </div>
 
@@ -889,61 +868,43 @@ function SalaJogo({
           <DropWidget eventoId={jogo.id} />
         </div>
 
-        {/* ── Coluna direita: chat ── */}
+        {/* ── Coluna direita: histórico do jogo ── */}
         <div className="sala-jogo__lado sala-jogo__lado--social">
-          <div className="sala-jogo__chat">
-            <div className="sala-jogo__mensagens">
-              {!carregado ? (
-                <div className="salas-loading">
-                  <Loader2 size={22} className="salas-spin" color="var(--gold-primary)" />
-                </div>
-              ) : mensagens.length === 0 ? (
-                <p className="sala-jogo__vazio">
-                  Ainda não há comentários neste jogo. Começa tu.
-                </p>
+          <div className="jogo-detalhes">
+            <div className="jogo-detalhes__bloco">
+              <h3>Histórico do jogo</h3>
+              {detalhes.comentario.length === 0 ? (
+                <p className="jogo-detalhes__nota">Aparece quando o jogo começar.</p>
               ) : (
-                mensagens.map(m => (
-                  <div
-                    key={m.id}
-                    className={m.user_id === userId ? 'msg msg--eu' : 'msg'}
-                  >
-                    <div className="msg__topo">
-                      <strong>{m.username}</strong>
-                      <span>
-                        {new Date(m.created_at).toLocaleTimeString('pt-PT', {
-                          hour: '2-digit', minute: '2-digit',
-                        })}
-                      </span>
-                      {(m.user_id === userId || isAdmin) && (
-                        <button className="msg__apagar" onClick={() => apagar(m.id)} aria-label="Apagar">
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-                    <p>{m.texto}</p>
-                  </div>
-                ))
+                <ul className="jogo-relato">
+                  {detalhes.comentario.map((c, i) => (
+                    <li
+                      key={i}
+                      className={`jogo-relato__linha${c.chave ? ' jogo-relato__linha--chave' : ''} jogo-relato__linha--${c.equipa ?? 'neutro'}`}
+                    >
+                      <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
+                      <span className="jogo-relato__texto">{c.texto}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
-              <div ref={fundoRef} />
-            </div>
-
-            {erro && <p className="sala-jogo__erro">{erro}</p>}
-
-            <div className="sala-jogo__barra">
-              <input
-                value={texto}
-                maxLength={500}
-                placeholder="Comentar este jogo…"
-                onChange={e => setTexto(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') enviar(); }}
-              />
-              <button onClick={enviar} disabled={enviando || !texto.trim()}>
-                {enviando ? <Loader2 size={15} className="salas-spin" /> : <Send size={15} />}
-              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <ChatFlutuante
+        mensagens={mensagens}
+        carregado={carregado}
+        erro={erro}
+        texto={texto}
+        onTexto={setTexto}
+        onEnviar={enviar}
+        enviando={enviando}
+        onApagar={apagar}
+        userId={userId}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
