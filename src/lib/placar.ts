@@ -1619,42 +1619,38 @@ function logoEquipa(t: Bruto): string | null {
 function mapearForma(json: Bruto, id: string | null): ResultadoForma[] {
   const bloco = obj(lista(json.lastFiveGames).find(b => txt(obj(obj(b).team).id) === id) ?? {});
   return lista(bloco.events).map(obj).map((e): ResultadoForma => {
-    const placar = txt(e.score) ?? '';
-    const emCasa = txt(e.atVs) === 'vs';
+    const idHome = txt(e.homeTeamId);
+    const souCasa = !!idHome && !!id && idHome === id;
+    const emCasa = idHome ? souCasa : txt(e.atVs) === 'x' || txt(e.atVs) === 'vs';
 
-    // 1.ª escolha: `gameResult` da ESPN ("W"/"L"/"D"/"T"). Muitas respostas
-    // vêm sem este campo → aí calcula-se pelo resultado.
-    let resultado: 'V' | 'E' | 'D' | null = null;
-    const r = (txt(e.gameResult) ?? txt(e.result) ?? '').toUpperCase();
-    if (r === 'W') resultado = 'V';
-    else if (r === 'L') resultado = 'D';
-    else if (r === 'D' || r === 'T') resultado = 'E';
-
-    if (resultado == null) {
-      // Golos: pelos campos numéricos do evento, senão parte-se o "1-0".
-      const idHome = txt(e.homeTeamId);
-      let meus: number | null = null;
-      let deles: number | null = null;
-      const hs = Number(txt(e.homeTeamScore));
-      const as = Number(txt(e.awayTeamScore));
-      if (idHome && id && Number.isFinite(hs) && Number.isFinite(as)) {
-        const souCasa = idHome === id;
-        meus = souCasa ? hs : as;
-        deles = souCasa ? as : hs;
-      } else {
-        const m = placar.match(/(\d+)\s*[-x:]\s*(\d+)/);
-        if (m) {
-          const a = Number(m[1]);
-          const b = Number(m[2]);
-          meus = emCasa ? a : b;
-          deles = emCasa ? b : a;
-        }
-      }
-      if (meus != null && deles != null) {
-        resultado = meus > deles ? 'V' : meus < deles ? 'D' : 'E';
-      }
+    // `score` vem sempre "maior-menor" (não dá perspetiva). O fiável são os
+    // golos por mando: `homeTeamScore`/`awayTeamScore` + `homeTeamId` vs `id`.
+    const hs = Number(txt(e.homeTeamScore));
+    const as = Number(txt(e.awayTeamScore));
+    let meus: number | null = null;
+    let deles: number | null = null;
+    if ((idHome || txt(e.awayTeamId)) && id && Number.isFinite(hs) && Number.isFinite(as)) {
+      meus = souCasa ? hs : as;
+      deles = souCasa ? as : hs;
     }
 
+    let resultado: 'V' | 'E' | 'D' | null =
+      meus != null && deles != null
+        ? (meus > deles ? 'V' : meus < deles ? 'D' : 'E')
+        : null;
+
+    // Fallback: `gameResult`. Neste feed pt-BR é V/E/D (Vitória/Empate/Derrota),
+    // noutros é W/L/T. "D" é ambíguo (Derrota vs Draw) → só empate se não houver
+    // golos que digam o contrário.
+    if (resultado == null) {
+      const r = (txt(e.gameResult) ?? txt(e.result) ?? '').toUpperCase();
+      if (r === 'V' || r === 'W') resultado = 'V';
+      else if (r === 'L') resultado = 'D';
+      else if (r === 'E' || r === 'T') resultado = 'E';
+      else if (r === 'D') resultado = 'D';
+    }
+
+    const placar = txt(e.score) ?? (meus != null ? `${meus}-${deles}` : '');
     const adv = obj(e.opponent);
     return {
       resultado: resultado ?? 'E',
