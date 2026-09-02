@@ -285,6 +285,10 @@ export interface MomentoJogo {
    *  salta pelo campo a acompanhar o jogo. */
   bolaX: number | null;
   bolaY: number | null;
+  /** As últimas jogadas com coordenada (antiga → recente), em % do campo. Serve
+   *  para animar a bola a deslizar de lance em lance, no espírito do "LastPlays"
+   *  da ESPN, em vez de aparecer só o último ponto. */
+  bolaTrilho: { x: number; y: number }[];
 }
 
 /** Placar/relógio lidos do mesmo summary, para a sala não mostrar dois
@@ -703,8 +707,17 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const bolaX = comCoord?.x ?? null;
   const bolaY = comCoord?.y ?? null;
 
+  // Rasto das últimas jogadas com coordenada (antiga → recente). Com feed
+  // parado não se inventa movimento — fica só o ponto atual, se houver.
+  const bolaTrilho = feedParado
+    ? (bolaX != null && bolaY != null ? [{ x: bolaX, y: bolaY }] : [])
+    : lances
+        .filter(l => l.x != null && l.y != null)
+        .slice(-6)
+        .map(l => ({ x: l.x as number, y: l.y as number }));
+
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
   };
 }

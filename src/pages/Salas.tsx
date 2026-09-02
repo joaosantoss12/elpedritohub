@@ -684,8 +684,63 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  bolaX: null, bolaY: null,
+  bolaX: null, bolaY: null, bolaTrilho: [],
 };
+
+/**
+ * A bola das "últimas jogadas", no espírito do LastPlays da ESPN: em vez de
+ * saltar de repente para a última coordenada, desliza pelos pontos recentes do
+ * trilho e deixa um rasto que se apaga. A ESPN usa uma animação Rive alimentada
+ * por dados posicionais em tempo real que o feed público não dá — aqui aproxima-
+ * se com as coordenadas por lance do `commentary`.
+ */
+function BolaAoVivo({ trilho }: { trilho: { x: number; y: number }[] }) {
+  const chave = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
+  const [idx, setIdx] = useState(Math.max(0, trilho.length - 1));
+
+  useEffect(() => {
+    if (trilho.length <= 1) { setIdx(0); return; }
+    // Arranca uns passos atrás e caminha até ao lance atual.
+    const inicio = Math.max(0, trilho.length - 5);
+    setIdx(inicio);
+    let i = inicio;
+    const t = setInterval(() => {
+      i += 1;
+      setIdx(i);
+      if (i >= trilho.length - 1) clearInterval(t);
+    }, 650);
+    return () => clearInterval(t);
+    // `chave` resume o trilho: só re-anima quando as jogadas mudam mesmo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chave]);
+
+  if (trilho.length === 0) return null;
+  const seguro = Math.min(idx, trilho.length - 1);
+  const pos = trilho[seguro];
+  const rasto = trilho.slice(Math.max(0, seguro - 4), seguro + 1);
+
+  return (
+    <>
+      {rasto.length > 1 && (
+        <svg className="campo-live__rasto" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <polyline
+            points={rasto.map(p => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+      <span
+        className="campo-live__bola"
+        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+        aria-hidden="true"
+      />
+    </>
+  );
+}
 
 function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
@@ -749,15 +804,17 @@ function CampoAoVivo(
           />
         )}
 
-        {/* Marca a posição da última jogada (a ESPN só dá coordenada por
-            evento — salta pelo campo, não é bola em tempo real). */}
-        {!terminado && !prejogo && bolaX != null && bolaY != null && (
-          <span
-            className="campo-live__bola"
-            style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
-            aria-hidden="true"
-          />
-        )}
+        {/* Bola das últimas jogadas: desliza pelo trilho de coordenadas do
+            feed e deixa rasto, à maneira do LastPlays da ESPN. */}
+        {!terminado && !prejogo && (momento?.bolaTrilho?.length
+          ? <BolaAoVivo trilho={momento.bolaTrilho} />
+          : bolaX != null && bolaY != null && (
+              <span
+                className="campo-live__bola"
+                style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+                aria-hidden="true"
+              />
+            ))}
 
         <div className="campo-live__evento-wrap">
           {evento.time && (

@@ -1095,7 +1095,23 @@
   background: #fff;
   box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 2px 8px rgba(0, 0, 0, 0.6);
   pointer-events: none;
-  transition: left 0.6s ease, top 0.6s ease;
+  transition: left 0.6s cubic-bezier(0.33, 1, 0.68, 1), top 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: campo-live-bola 1.6s ease-in-out infinite;
+}
+
+@keyframes campo-live-bola {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 0 0 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6); }
+  50%      { box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 0 0 7px rgba(255, 255, 255, 0), 0 2px 8px rgba(0, 0, 0, 0.6); }
+}
+
+/* Rasto das últimas jogadas — linha que liga os pontos por onde a bola passou. */
+.campo-live__rasto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
@@ -1207,6 +1223,7 @@
   .campo-live__pres,
   .campo-live__bola,
   .campo-live__posse-lado { transition: none; }
+  .campo-live__bola { animation: none; }
 }
 
 /* ═══ FICHA DO JOGO (estilo ESPN) ══════════════════════════════ */
