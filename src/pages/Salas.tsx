@@ -651,7 +651,7 @@ function SalaJogo({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<DetalhesJogo>({
-    estatisticas: [], eventos: [], momento: null, vivo: null,
+    estatisticas: [], eventos: [], comentario: [], momento: null, vivo: null,
   });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
 
@@ -803,6 +803,23 @@ function SalaJogo({
                           {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
                         </span>
                         <span className="jogo-evento__desc">{e.descricao}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {detalhes.comentario.length > 0 && (
+                <div className="jogo-detalhes__bloco">
+                  <h3>Histórico do jogo</h3>
+                  <ul className="jogo-relato">
+                    {detalhes.comentario.map((c, i) => (
+                      <li
+                        key={i}
+                        className={`jogo-relato__linha${c.chave ? ' jogo-relato__linha--chave' : ''} jogo-relato__linha--${c.equipa ?? 'neutro'}`}
+                      >
+                        <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
+                        <span className="jogo-relato__texto">{c.texto}</span>
                       </li>
                     ))}
                   </ul>

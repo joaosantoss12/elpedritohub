@@ -576,6 +576,48 @@
 
 .jogo-evento__desc { line-height: 1.4; }
 
+/* Relato minuto-a-minuto — lista longa, scroll próprio. */
+.jogo-relato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.jogo-relato__linha {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.jogo-relato__linha:last-child { border-bottom: 0; }
+
+.jogo-relato__minuto {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.74rem;
+  color: var(--text-gray);
+  padding-top: 0.1rem;
+}
+
+.jogo-relato__texto { color: var(--text-white); }
+
+.jogo-relato__linha--chave {
+  background: var(--gold-tint);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 0;
+  margin: 0.15rem 0;
+}
+
+.jogo-relato__linha--chave .jogo-relato__minuto { color: var(--gold-primary); }
+
 .jogo-stat {
   display: grid;
   grid-template-columns: 1fr auto 1fr;

@@ -278,15 +278,25 @@ export interface PatchVivo {
   htFora: number | null;
 }
 
+/** Uma linha do relato minuto-a-minuto (feed `commentary` da ESPN). */
+export interface ComentarioJogo {
+  minuto: string;
+  texto: string;
+  equipa: 'casa' | 'fora' | null;
+  /** Lance marcante — golo, penálti, cartão vermelho. Destaca-se na lista. */
+  chave: boolean;
+}
+
 export interface DetalhesJogo {
   estatisticas: EstatisticaJogo[];
   eventos: EventoJogo[];
+  comentario: ComentarioJogo[];
   momento: MomentoJogo | null;
   vivo: PatchVivo | null;
 }
 
 const DETALHES_VAZIO: DetalhesJogo = {
-  estatisticas: [], eventos: [], momento: null, vivo: null,
+  estatisticas: [], eventos: [], comentario: [], momento: null, vivo: null,
 };
 
 /** Quanto vale cada tipo de lance para o cálculo da pressão. */
@@ -411,6 +421,43 @@ function mapearEventos(json: Bruto): EventoJogo[] {
       descricao: jogador ? `${textoTipo} · ${jogador}` : textoTipo,
     };
   }).filter(e => e.descricao !== '');
+}
+
+/**
+ * Relato minuto-a-minuto completo, do lance mais recente para o mais antigo.
+ * O `commentary` da ESPN vem por ordem cronológica (o último elemento é o
+ * evento mais recente), por isso invertemos para a lista abrir no "agora".
+ */
+function mapearComentario(json: Bruto, casaNome: string, foraNome: string): ComentarioJogo[] {
+  const coment = lista(json.commentary).map(obj);
+  if (coment.length === 0) return [];
+
+  const casaBaixo = casaNome.toLowerCase();
+  const foraBaixo = foraNome.toLowerCase();
+  const ladoDe = (nome: string | null): 'casa' | 'fora' | null => {
+    if (!nome) return null;
+    const n = nome.toLowerCase();
+    const eCasa = n.includes(casaBaixo) || casaBaixo.includes(n);
+    const eFora = n.includes(foraBaixo) || foraBaixo.includes(n);
+    if (eCasa && !eFora) return 'casa';
+    if (eFora && !eCasa) return 'fora';
+    return null;
+  };
+
+  const linhas: ComentarioJogo[] = [];
+  for (const c of coment) {
+    const texto = (txt(c.text) ?? '').trim();
+    if (!texto) continue;
+    const play = obj(c.play);
+    const slug = txt(obj(play.type).type) ?? '';
+    linhas.push({
+      minuto: txt(obj(c.time).displayValue) ?? '',
+      texto,
+      equipa: ladoDe(txt(obj(play.team).displayName)),
+      chave: EVENTO_NOTAVEL.has(slug),
+    });
+  }
+  return linhas.reverse();
 }
 
 /** Nomes canónicos das duas equipas, tal como aparecem no `commentary`. */
@@ -623,6 +670,7 @@ export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): 
     return {
       estatisticas: mapearEstatisticas(json),
       eventos: mapearEventos(json),
+      comentario: mapearComentario(json, casa, fora),
       momento: mapearMomento(json, casa, fora),
       vivo: patchVivoDoSummary(json),
     };
