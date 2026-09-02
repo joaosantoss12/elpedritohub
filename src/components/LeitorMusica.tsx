@@ -782,19 +782,6 @@ export function LeitorMusica() {
           border-top: 1px solid var(--border-strong);
           box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.4);
           backdrop-filter: blur(10px);
-          opacity: 0.62;
-          transition: opacity 0.18s ease;
-        }
-        /* Ao passar o rato (ou focar um controlo), a barra fica activa e nítida. */
-        .leitor-musica:hover,
-        .leitor-musica:focus-within,
-        .leitor-musica--min {
-          opacity: 1;
-        }
-        .leitor-musica:hover,
-        .leitor-musica:focus-within {
-          background: var(--bg-card);
-          backdrop-filter: none;
         }
         .leitor-musica__aba {
           position: absolute; top: -26px; right: 24px;
@@ -984,6 +971,10 @@ export function LeitorMusica() {
           color: var(--text-muted); display: flex; align-items: center;
           gap: 0.3rem; flex-wrap: wrap;
         }
+
+        /* Com uma slot demo aberta, a barra passa à frente do modal para se
+           poder pausar ou trocar de música sem fechar o jogo. */
+        body.slot-demo-aberta .leitor-musica { z-index: 1001; }
 
         body.tem-leitor-musica .gm-drop { bottom: 92px; }
         /* O botão "ir para o topo" da Home não pode ficar por baixo da barra. */

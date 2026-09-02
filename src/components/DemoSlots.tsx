@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, X, ExternalLink, Search, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Maximize2, Minimize2 } from 'lucide-react';
+import { Play, X, Search, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Maximize2, Minimize2 } from 'lucide-react';
 import '../styles/DemoSlots.css';
 
 /**
@@ -332,6 +332,14 @@ export default function DemoSlots() {
     };
   }, [ativo]);
 
+  // Com a slot aberta (mas não em ecrã cheio), a barra de música tem de
+  // continuar acessível — pausar ou trocar de faixa sem sair do jogo.
+  useEffect(() => {
+    const on = !!ativo && !emEcraCheio;
+    document.body.classList.toggle('slot-demo-aberta', on);
+    return () => document.body.classList.remove('slot-demo-aberta');
+  }, [ativo, emEcraCheio]);
+
   // Segue o estado real do ecrã cheio (o utilizador pode sair com Esc/F11).
   useEffect(() => {
     const sync = () => setEmEcraCheio(!!document.fullscreenElement);
@@ -466,14 +474,6 @@ export default function DemoSlots() {
                 >
                   {emEcraCheio ? <>Sair <Minimize2 size={14} /></> : <>Ecrã cheio <Maximize2 size={14} /></>}
                 </button>
-                <a
-                  href={demoUrl(ativo.symbol)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="demo-modal__ext"
-                >
-                  Nova aba <ExternalLink size={14} />
-                </a>
                 <button
                   type="button"
                   className="demo-modal__close"

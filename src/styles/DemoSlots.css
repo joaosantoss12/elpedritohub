@@ -245,6 +245,12 @@
   backdrop-filter: blur(4px);
 }
 
+/* Barra de música fica acessível por cima do modal (pausar/trocar faixa
+   sem sair da slot). Deixa-se folga em baixo para ela não tapar o modal. */
+body.slot-demo-aberta.tem-leitor-musica .demo-modal {
+  padding-bottom: 88px;
+}
+
 .demo-modal__box {
   width: min(1100px, 100%);
   max-height: 92vh;
