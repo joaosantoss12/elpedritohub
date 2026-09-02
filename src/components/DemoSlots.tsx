@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, X, ExternalLink, Search, ChevronLeft, ChevronRight, ArrowDownWideNarrow } from 'lucide-react';
+import { Play, X, ExternalLink, Search, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Maximize2, Minimize2 } from 'lucide-react';
 import '../styles/DemoSlots.css';
 
 /**
@@ -274,7 +274,9 @@ export default function DemoSlots() {
   const [page, setPage] = useState(1);
   const [ativo, setAtivo] = useState<Slot | null>(null);
   const [porPagina, setPorPagina] = useState(PAGE_SIZE_INICIAL);
+  const [emEcraCheio, setEmEcraCheio] = useState(false);
   const grelhaRef = useRef<HTMLUListElement>(null);
+  const modalBoxRef = useRef<HTMLDivElement>(null);
 
   const filtradas = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -321,7 +323,7 @@ export default function DemoSlots() {
 
   useEffect(() => {
     if (!ativo) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAtivo(null); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.fullscreenElement) setAtivo(null); };
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
     return () => {
@@ -329,6 +331,24 @@ export default function DemoSlots() {
       window.removeEventListener('keydown', onKey);
     };
   }, [ativo]);
+
+  // Segue o estado real do ecrã cheio (o utilizador pode sair com Esc/F11).
+  useEffect(() => {
+    const sync = () => setEmEcraCheio(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+
+  useEffect(() => {
+    if (!ativo && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+  }, [ativo]);
+
+  const alternarEcraCheio = () => {
+    const alvo = modalBoxRef.current;
+    if (!alvo) return;
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    else void alvo.requestFullscreen().catch(() => {});
+  };
 
   return (
     <section className="demo-slots" aria-label="Slots em modo demo">
@@ -435,10 +455,17 @@ export default function DemoSlots() {
           aria-label={`${ativo.name} — modo demo`}
           onClick={() => setAtivo(null)}
         >
-          <div className="demo-modal__box" onClick={e => e.stopPropagation()}>
+          <div className="demo-modal__box" ref={modalBoxRef} onClick={e => e.stopPropagation()}>
             <header className="demo-modal__bar">
               <strong>{ativo.name}</strong>
               <div className="demo-modal__actions">
+                <button
+                  type="button"
+                  className="demo-modal__ext"
+                  onClick={alternarEcraCheio}
+                >
+                  {emEcraCheio ? <>Sair <Minimize2 size={14} /></> : <>Ecrã cheio <Maximize2 size={14} /></>}
+                </button>
                 <a
                   href={demoUrl(ativo.symbol)}
                   target="_blank"

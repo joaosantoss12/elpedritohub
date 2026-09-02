@@ -28,3 +28,6 @@ dist-ssr
 
 # Estado local do CLI da Supabase (ref do projeto, versoes) — nao pertence ao repo.
 supabase/.temp/
+
+.vercel
+.env*

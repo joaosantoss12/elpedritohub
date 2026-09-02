@@ -64,6 +64,16 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
     [boletim],
   );
 
+  // Os emblemas só vêm no catálogo de jogos por começar. Para uma escolha cujo
+  // jogo já arrancou pode não haver — nesse caso mostra-se só o nome.
+  const emblemasPorEvento = useMemo(() => {
+    const m = new Map<string, { casa: string | null; fora: string | null }>();
+    jogos.forEach((j) => m.set(j.id, { casa: j.logoCasa, fora: j.logoFora }));
+    return m;
+  }, [jogos]);
+
+  const emblemasDoLabel = (eventoId: string) => emblemasPorEvento.get(eventoId) ?? null;
+
   const restam = MAX_JOGOS - trancadas.length - rascunho.length;
 
   const escolhidos = useMemo(
@@ -183,7 +193,10 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
               <div key={e.id}
                    className={`bt-pick trancada ${e.correta === true ? 'certa' : e.correta === false ? 'errada' : ''}`}>
                 <div className='bt-pick-jogo'>
-                  <strong>{e.jogo_label}</strong>
+                  <span className='bt-pick-titulo'>
+                    <EmblemasPick emblemas={emblemasDoLabel(e.evento_id)} />
+                    <strong>{e.jogo_label}</strong>
+                  </span>
                   <span>{e.liga}</span>
                 </div>
                 <div className='bt-pick-escolha'>{e.escolha_label}</div>
@@ -198,7 +211,10 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
             {rascunho.map((e) => (
               <div key={e.evento_id} className='bt-pick'>
                 <div className='bt-pick-jogo'>
-                  <strong>{e.jogo_label}</strong>
+                  <span className='bt-pick-titulo'>
+                    <EmblemasPick emblemas={emblemasDoLabel(e.evento_id)} />
+                    <strong>{e.jogo_label}</strong>
+                  </span>
                   <span>{e.liga} · {horaDe(e.inicio)}</span>
                 </div>
                 <div className='bt-pick-escolha'>{e.escolha_label}</div>
@@ -275,9 +291,11 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
                         onClick={() => setAberto(aberto === j.id ? null : j.id)}
                         disabled={restam <= 0}>
                   <div className='bt-jogo-nomes'>
+                    {j.logoCasa && <img className='bt-eq-logo' src={j.logoCasa} alt='' loading='lazy' />}
                     <strong>{j.casa}</strong>
                     <span className='bt-x'>x</span>
                     <strong>{j.fora}</strong>
+                    {j.logoFora && <img className='bt-eq-logo' src={j.logoFora} alt='' loading='lazy' />}
                   </div>
                   <div className='bt-jogo-meta'>
                     <span>
@@ -314,6 +332,16 @@ export function BatalhaBoletim({ onGuardado }: { onGuardado?: () => void }) {
         )}
       </div>
     </>
+  );
+}
+
+function EmblemasPick({ emblemas }: { emblemas: { casa: string | null; fora: string | null } | null }) {
+  if (!emblemas || (!emblemas.casa && !emblemas.fora)) return null;
+  return (
+    <span className='bt-pick-emblemas'>
+      {emblemas.casa && <img className='bt-eq-logo' src={emblemas.casa} alt='' loading='lazy' />}
+      {emblemas.fora && <img className='bt-eq-logo' src={emblemas.fora} alt='' loading='lazy' />}
+    </span>
   );
 }
 

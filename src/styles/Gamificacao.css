@@ -840,6 +840,16 @@
 
 .bt-pick-jogo span { font-size: 0.74rem; color: var(--text-gray); }
 
+.bt-pick-titulo { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bt-pick-emblemas { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+.bt-eq-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .bt-pick-escolha {
   font-size: 0.8rem;
   font-weight: 800;
