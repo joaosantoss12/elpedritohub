@@ -310,16 +310,76 @@ export interface ComentarioJogo {
   tipo: TipoEvento;
 }
 
+// ─── FICHA DO JOGO (estilo ESPN) ──────────────────────────────
+
+/** Um jogador colocado no campo, em % (a casa ataca da esquerda para a
+ *  direita; o lado de fora entra espelhado). */
+export interface JogadorCampo {
+  numero: string;
+  nome: string;
+  x: number;
+  y: number;
+  /** Foi substituído — mostra-se esbatido. */
+  saiu: boolean;
+}
+
+export interface LadoEscalacao {
+  formacao: string;
+  titulares: JogadorCampo[];
+  suplentes: { numero: string; nome: string; entrou: boolean }[];
+}
+
+export interface Escalacoes {
+  casa: LadoEscalacao;
+  fora: LadoEscalacao;
+}
+
+/** Uma linha do "Líderes do jogo": o melhor de cada lado numa métrica. */
+export interface LiderJogo {
+  rotulo: string;
+  casa: { nome: string; valor: string } | null;
+  fora: { nome: string; valor: string } | null;
+}
+
+/** Um dos últimos cinco jogos de uma equipa. */
+export interface ResultadoForma {
+  resultado: 'V' | 'E' | 'D';
+  /** "2-1 vs Millonarios" já montado para mostrar. */
+  texto: string;
+  data: string;
+}
+
+/** Um confronto direto anterior entre as duas equipas. */
+export interface ConfrontoH2H {
+  data: string;
+  casa: string;
+  fora: string;
+  golosCasa: number | null;
+  golosFora: number | null;
+}
+
+export interface HeadToHead {
+  /** "FOR lidera 3-2" traduzido. */
+  resumo: string;
+  jogos: ConfrontoH2H[];
+}
+
 export interface DetalhesJogo {
   estatisticas: EstatisticaJogo[];
   eventos: EventoJogo[];
   comentario: ComentarioJogo[];
   momento: MomentoJogo | null;
   vivo: PatchVivo | null;
+  escalacoes: Escalacoes | null;
+  lideres: LiderJogo[];
+  formaCasa: ResultadoForma[];
+  formaFora: ResultadoForma[];
+  h2h: HeadToHead | null;
 }
 
 const DETALHES_VAZIO: DetalhesJogo = {
   estatisticas: [], eventos: [], comentario: [], momento: null, vivo: null,
+  escalacoes: null, lideres: [], formaCasa: [], formaFora: [], h2h: null,
 };
 
 /** Quanto vale cada tipo de lance para o cálculo da pressão. */
@@ -692,6 +752,170 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
   };
 }
 
+/** IDs das duas equipas, lidos do header — a chave para casar `rosters`,
+ *  `leaders` e `lastFiveGames` (que vêm por `team.id`) com casa/fora. */
+function idsDoJogo(json: Bruto): { idCasa: string | null; idFora: string | null } {
+  const comp = obj(lista(obj(json.header).competitions)[0]);
+  const cs = lista(comp.competitors).map(obj);
+  const casa = obj((cs.find(c => c.homeAway === 'home') ?? cs[0] ?? {}).team);
+  const fora = obj((cs.find(c => c.homeAway === 'away') ?? cs[1] ?? {}).team);
+  return { idCasa: txt(casa.id), idFora: txt(fora.id) };
+}
+
+/** Coordenadas em % de cada lugar de uma formação ("4-2-3-1"), pela ordem do
+ *  `formationPlace` da ESPN (1 = guarda-redes). A casa ocupa a metade
+ *  esquerda; o campo do lado de fora é o espelho. */
+function coordsFormacao(formacao: string): { x: number; y: number }[] {
+  const linhas = [1, ...formacao.split('-').map(n => parseInt(n, 10)).filter(Boolean)];
+  const pts: { x: number; y: number }[] = [];
+  linhas.forEach((qtd, li) => {
+    const x = linhas.length > 1 ? 5 + (li / (linhas.length - 1)) * 42 : 25;
+    for (let k = 0; k < qtd; k++) {
+      pts.push({ x, y: ((k + 1) / (qtd + 1)) * 100 });
+    }
+  });
+  return pts;
+}
+
+function mapearLadoEscalacao(roster: Bruto, casa: boolean): LadoEscalacao {
+  const formacao = txt(roster.formation) ?? '';
+  const coords = coordsFormacao(formacao || '4-4-2');
+  const jogadores = lista(roster.roster).map(obj);
+
+  const titulares: JogadorCampo[] = jogadores
+    .filter(p => p.starter === true)
+    .map((p, i) => {
+      const at = obj(p.athlete);
+      const lugar = Number(txt(p.formationPlace));
+      const c = coords[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
+      return {
+        numero: txt(p.jersey) ?? '',
+        nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
+        x: casa ? c.x : 100 - c.x,
+        y: c.y,
+        saiu: p.subbedOut === true,
+      };
+    });
+
+  const suplentes = jogadores
+    .filter(p => p.starter !== true)
+    .map(p => {
+      const at = obj(p.athlete);
+      return {
+        numero: txt(p.jersey) ?? '',
+        nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
+        entrou: p.subbedIn === true,
+      };
+    });
+
+  return { formacao, titulares, suplentes };
+}
+
+function mapearEscalacoes(json: Bruto): Escalacoes | null {
+  const rosters = lista(json.rosters).map(obj);
+  if (rosters.length < 2) return null;
+  const casa = rosters.find(r => r.homeAway === 'home') ?? rosters[0];
+  const fora = rosters.find(r => r.homeAway === 'away') ?? rosters[1];
+  const e: Escalacoes = {
+    casa: mapearLadoEscalacao(casa, true),
+    fora: mapearLadoEscalacao(fora, false),
+  };
+  // Sem titulares dos dois lados não vale a pena desenhar o campo.
+  return e.casa.titulares.length && e.fora.titulares.length ? e : null;
+}
+
+/** Rótulo em PT para as métricas de "Líderes do jogo". */
+const ROTULO_LIDER: Record<string, string> = {
+  totalShots: 'Remates',
+  accuratePasses: 'Passes certos',
+  defensiveInterventions: 'Ações defensivas',
+  saves: 'Defesas',
+  goals: 'Golos',
+  assists: 'Assistências',
+};
+
+function mapearLideres(json: Bruto, idCasa: string | null, idFora: string | null): LiderJogo[] {
+  const blocos = lista(json.leaders).map(obj);
+  if (blocos.length < 2) return [];
+
+  const doLado = (id: string | null) =>
+    obj(blocos.find(b => txt(obj(b.team).id) === id) ?? {});
+  const casa = doLado(idCasa);
+  const fora = doLado(idFora);
+
+  const extrair = (bloco: Bruto, chave: string): { nome: string; valor: string } | null => {
+    const grupo = obj(lista(bloco.leaders).find(g => txt(obj(g).name) === chave) ?? {});
+    const primeiro = obj(lista(grupo.leaders)[0]);
+    const nome = txt(obj(primeiro.athlete).shortName) ?? txt(obj(primeiro.athlete).displayName);
+    const valor = txt(primeiro.displayValue);
+    return nome && valor !== null ? { nome, valor } : null;
+  };
+
+  const chaves = new Set<string>();
+  for (const b of [casa, fora]) {
+    for (const g of lista(b.leaders).map(obj)) {
+      const n = txt(g.name);
+      if (n) chaves.add(n);
+    }
+  }
+
+  return [...chaves]
+    .filter(c => c in ROTULO_LIDER)
+    .map(c => ({ rotulo: ROTULO_LIDER[c], casa: extrair(casa, c), fora: extrair(fora, c) }))
+    .filter(l => l.casa || l.fora);
+}
+
+function mapearForma(json: Bruto, id: string | null): ResultadoForma[] {
+  const bloco = obj(lista(json.lastFiveGames).find(b => txt(obj(obj(b).team).id) === id) ?? {});
+  return lista(bloco.events).map(obj).map((e): ResultadoForma => {
+    const r = (txt(e.gameResult) ?? '').toUpperCase();
+    const resultado = r === 'W' ? 'V' : r === 'L' ? 'D' : 'E';
+    const adversario = txt(obj(e.opponent).abbreviation) ?? txt(obj(e.opponent).displayName) ?? '';
+    const via = txt(e.atVs) === 'vs' ? 'vs' : '@';
+    return {
+      resultado,
+      texto: `${txt(e.score) ?? ''} ${via} ${adversario}`.trim(),
+      data: txt(e.gameDate) ?? '',
+    };
+  }).filter(f => f.texto);
+}
+
+function mapearH2H(json: Bruto): HeadToHead | null {
+  const serie = obj(lista(json.seasonseries).find(s => txt(obj(s).type) === 'head-to-head')
+    ?? lista(json.seasonseries)[0] ?? {});
+  const eventos = lista(serie.events).map(obj);
+  if (eventos.length === 0) return null;
+
+  const jogos: ConfrontoH2H[] = eventos
+    .filter(e => obj(obj(e.statusType)).completed === true || txt(e.status) === 'post')
+    .map((e): ConfrontoH2H => {
+      const cs = lista(e.competitors).map(obj);
+      const casa = obj(cs.find(c => c.homeAway === 'home') ?? cs[0] ?? {});
+      const fora = obj(cs.find(c => c.homeAway === 'away') ?? cs[1] ?? {});
+      const golo = (c: Bruto) => {
+        const n = Number(txt(c.score));
+        return Number.isFinite(n) ? n : null;
+      };
+      return {
+        data: txt(e.date) ?? '',
+        casa: txt(obj(casa.team).abbreviation) ?? txt(obj(casa.team).displayName) ?? '',
+        fora: txt(obj(fora.team).abbreviation) ?? txt(obj(fora.team).displayName) ?? '',
+        golosCasa: golo(casa),
+        golosFora: golo(fora),
+      };
+    });
+
+  // "FOR leads series 3-2" / "Series tied 2-2" → PT.
+  const bruto = txt(serie.summary) ?? '';
+  const placar = bruto.match(/(\d+)-(\d+)/);
+  const abrev = bruto.match(/^([A-Z]{2,4})\b/);
+  let resumo = bruto;
+  if (/tied/i.test(bruto) && placar) resumo = `Empatado ${placar[1]}-${placar[2]}`;
+  else if (abrev && placar) resumo = `${abrev[1]} lidera ${placar[1]}-${placar[2]}`;
+
+  return jogos.length ? { resumo, jogos } : null;
+}
+
 /** Estatísticas + eventos + momentum de um jogo. Falha em silêncio (devolve
  *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
@@ -700,12 +924,18 @@ export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): 
     if (!res.ok) return DETALHES_VAZIO;
     const json = obj(await res.json());
     const { casa, fora } = nomesDoSummary(json);
+    const { idCasa, idFora } = idsDoJogo(json);
     return {
       estatisticas: mapearEstatisticas(json),
       eventos: mapearEventos(json),
       comentario: mapearComentario(json, casa, fora),
       momento: mapearMomento(json, casa, fora),
       vivo: patchVivoDoSummary(json),
+      escalacoes: mapearEscalacoes(json),
+      lideres: mapearLideres(json, idCasa, idFora),
+      formaCasa: mapearForma(json, idCasa),
+      formaFora: mapearForma(json, idFora),
+      h2h: mapearH2H(json),
     };
   } catch {
     return DETALHES_VAZIO;

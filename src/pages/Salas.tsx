@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
+  type Escalacoes, type LadoEscalacao, type LiderJogo, type ResultadoForma, type HeadToHead,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
 import {
@@ -445,6 +446,144 @@ function CabecalhoEquipas({ jogo: j }: { jogo: JogoAoVivo }) {
   );
 }
 
+// ─── FICHA DO JOGO (estilo ESPN) ─────────────────────────────
+
+/** Minuto numérico de um rótulo tipo "45+2'" ou "67'". */
+function minutoNum(s: string): number {
+  const m = s.match(/(\d+)(?:\+(\d+))?/);
+  if (!m) return 0;
+  return Number(m[1]) + (m[2] ? Number(m[2]) : 0);
+}
+
+/** Barra da linha do tempo com um marcador por lance-chave, no minuto certo,
+ *  a casa por cima e o lado de fora por baixo. */
+function CronologiaJogo({ eventos }: { eventos: DetalhesJogo['eventos'] }) {
+  const marcas = eventos
+    .map(e => ({ ...e, min: minutoNum(e.minuto) }))
+    .filter(e => e.min > 0 && e.tipo !== 'outro');
+  if (marcas.length === 0) return null;
+  const fim = Math.max(90, ...marcas.map(m => m.min));
+
+  return (
+    <div className="cronologia">
+      <div className="cronologia__faixa">
+        <span className="cronologia__meio" style={{ left: `${(45 / fim) * 100}%` }} />
+        {marcas.map((m, i) => (
+          <span
+            key={i}
+            className={`cronologia__pin cronologia__pin--${m.equipa ?? 'neutro'} cronologia__pin--${m.tipo}`}
+            style={{ left: `${Math.min(99, (m.min / fim) * 100)}%` }}
+            title={`${m.minuto} · ${m.descricao}`}
+          >
+            {EMOJI_EVENTO[m.tipo] ?? '•'}
+          </span>
+        ))}
+      </div>
+      <div className="cronologia__reguas">
+        <span>0'</span><span>45'</span><span>{fim}'</span>
+      </div>
+    </div>
+  );
+}
+
+/** Campo com as duas formações em cima. */
+function CampoEscalacoes({ esc, jogo: j }: { esc: Escalacoes; jogo: JogoAoVivo }) {
+  const pino = (jog: Escalacoes['casa']['titulares'][number], lado: 'casa' | 'fora', i: number) => (
+    <span
+      key={`${lado}-${i}`}
+      className={`escala-pin escala-pin--${lado}${jog.saiu ? ' escala-pin--saiu' : ''}`}
+      style={{ left: `${jog.x}%`, top: `${jog.y}%` }}
+    >
+      <span className="escala-pin__n">{jog.numero}</span>
+      <span className="escala-pin__nome">{jog.nome}</span>
+    </span>
+  );
+  return (
+    <>
+      <div className="escala-formacoes">
+        <span>{j.casa} · {esc.casa.formacao || '—'}</span>
+        <span>{esc.fora.formacao || '—'} · {j.fora}</span>
+      </div>
+      <div className="escala-campo">
+        {esc.casa.titulares.map((jog, i) => pino(jog, 'casa', i))}
+        {esc.fora.titulares.map((jog, i) => pino(jog, 'fora', i))}
+      </div>
+    </>
+  );
+}
+
+function BancoEquipa({ titulo, lado }: { titulo: string; lado: LadoEscalacao }) {
+  if (lado.suplentes.length === 0) return null;
+  return (
+    <div className="escala-banco">
+      <strong>{titulo}</strong>
+      <ul>
+        {lado.suplentes.map((s, i) => (
+          <li key={i} className={s.entrou ? 'escala-banco__entrou' : undefined}>
+            <span>{s.numero}</span> {s.nome}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LideresJogo({ lideres }: { lideres: LiderJogo[] }) {
+  return (
+    <div className="lideres">
+      {lideres.map(l => (
+        <div key={l.rotulo} className="lideres__linha">
+          <span className="lideres__lado">
+            {l.casa ? <><strong>{l.casa.valor}</strong> {l.casa.nome}</> : '—'}
+          </span>
+          <span className="lideres__rotulo">{l.rotulo}</span>
+          <span className="lideres__lado lideres__lado--dir">
+            {l.fora ? <>{l.fora.nome} <strong>{l.fora.valor}</strong></> : '—'}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FormaRecente({ titulo, jogos }: { titulo: string; jogos: ResultadoForma[] }) {
+  if (jogos.length === 0) return null;
+  return (
+    <div className="forma">
+      <div className="forma__cab">
+        <strong>{titulo}</strong>
+        <span className="forma__selos">
+          {jogos.map((g, i) => (
+            <span key={i} className={`forma__selo forma__selo--${g.resultado}`} title={g.texto}>
+              {g.resultado}
+            </span>
+          ))}
+        </span>
+      </div>
+      <ul className="forma__lista">
+        {jogos.map((g, i) => <li key={i}>{g.texto}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+function ConfrontosH2H({ h2h }: { h2h: HeadToHead }) {
+  return (
+    <div className="h2h">
+      <p className="h2h__resumo">{h2h.resumo}</p>
+      <ul className="h2h__lista">
+        {h2h.jogos.map((g, i) => (
+          <li key={i}>
+            <span className="h2h__eq">{g.casa}</span>
+            <span className="h2h__placar">{g.golosCasa ?? '–'} : {g.golosFora ?? '–'}</span>
+            <span className="h2h__eq h2h__eq--dir">{g.fora}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function JogoCard({ jogo: j, contagens, onAbrir }: {
   jogo: JogoAoVivo;
   contagens: Record<string, number>;
@@ -685,6 +824,7 @@ function SalaJogo({
   const [erro, setErro] = useState<string | null>(null);
   const [detalhes, setDetalhes] = useState<DetalhesJogo>({
     estatisticas: [], eventos: [], comentario: [], momento: null, vivo: null,
+    escalacoes: null, lideres: [], formaCasa: [], formaFora: [], h2h: null,
   });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
 
@@ -732,6 +872,11 @@ function SalaJogo({
           estatisticas: d.estatisticas.length ? d.estatisticas : prev.estatisticas,
           eventos: d.eventos.length ? d.eventos : prev.eventos,
           comentario: d.comentario.length ? d.comentario : prev.comentario,
+          escalacoes: d.escalacoes ?? prev.escalacoes,
+          lideres: d.lideres.length ? d.lideres : prev.lideres,
+          formaCasa: d.formaCasa.length ? d.formaCasa : prev.formaCasa,
+          formaFora: d.formaFora.length ? d.formaFora : prev.formaFora,
+          h2h: d.h2h ?? prev.h2h,
         }));
       });
     };
@@ -804,171 +949,186 @@ function SalaJogo({
         <ArrowLeft size={15} /> Todos os jogos
       </button>
 
-      <div className="sala-jogo__grid">
-        {/* ── Coluna esquerda: estatísticas + eventos ── */}
-        <div className="sala-jogo__lado sala-jogo__lado--stats">
-            <div className="jogo-detalhes">
-              <div className="jogo-detalhes__bloco">
-                  <h3>Estatísticas</h3>
-                  <CabecalhoEquipas jogo={jx} />
-                  {semDadosReais && (
-                    <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
-                  )}
-                  {estatisticas.map(s => {
-                    const nc = parseFloat(String(s.casa).replace(',', '.'));
-                    const nf = parseFloat(String(s.fora).replace(',', '.'));
-                    const tot = (nc || 0) + (nf || 0);
-                    const pc = tot > 0 ? Math.round((nc / tot) * 100) : 50;
-                    return (
-                      <div key={s.nome} className="jogo-stat">
-                        <span className="jogo-stat__valor">{s.casa}</span>
-                        <span className="jogo-stat__nome">{s.nome}</span>
-                        <span className="jogo-stat__valor">{s.fora}</span>
-                        <span
-                          className="jogo-stat__barra"
-                          role="img"
-                          aria-label={`${s.nome}: ${s.casa} contra ${s.fora}`}
-                        >
-                          <span className="jogo-stat__barra-casa" style={{ width: `${pc}%` }} />
-                          <span className="jogo-stat__barra-fora" style={{ width: `${100 - pc}%` }} />
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
+      <div className="sala-jogo__ficha">
+        {/* ── Cabeçalho: placar ── */}
+        <div className={estaAoVivo(jx) ? 'placar placar--vivo' : 'placar'}>
+          <div className="placar__liga">
+            {bandeiraDaLiga(jogo.ligaSlug) && (
+              <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
+            )}
+            <span>{jx.liga}</span>
+            <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
+              {estaAoVivo(jx) && <span className="salas-dot" />}
+              {jx.relogio}
+            </span>
+          </div>
 
-              {detalhes.eventos.length > 0 && (
-                <div className="jogo-detalhes__bloco">
-                  <h3>Eventos</h3>
-                  <ul className="jogo-eventos">
-                    {detalhes.eventos.map((e, i) => (
-                      <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
-                        <span className="jogo-evento__minuto">{e.minuto}</span>
-                        <span className="jogo-evento__icone">{EMOJI_EVENTO[e.tipo] ?? '•'}</span>
-                        <span className="jogo-evento__desc">{e.descricao}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+          <div className="placar__corpo">
+            <div className="placar__equipa">
+              {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
+              <strong>
+                {jx.casa}
+                {vermelhosCasa > 0 && (
+                  <span className="placar__vermelho" title="Expulsão">
+                    {' '}🟥{vermelhosCasa > 1 ? `×${vermelhosCasa}` : ''}
+                  </span>
+                )}
+              </strong>
             </div>
+            <div className="placar__resultado">
+              <span>{jx.golosCasa ?? '–'}</span>
+              <em>:</em>
+              <span>{jx.golosFora ?? '–'}</span>
+            </div>
+            <div className="placar__equipa">
+              {jx.logoFora && <img src={jx.logoFora} alt="" />}
+              <strong>
+                {jx.fora}
+                {vermelhosFora > 0 && (
+                  <span className="placar__vermelho" title="Expulsão">
+                    {' '}🟥{vermelhosFora > 1 ? `×${vermelhosFora}` : ''}
+                  </span>
+                )}
+              </strong>
+            </div>
+          </div>
+
+          {detalhes.vivo?.htCasa != null && detalhes.vivo?.htFora != null && (
+            <p className="placar__ht">
+              Intervalo <span>{detalhes.vivo.htCasa} : {detalhes.vivo.htFora}</span>
+            </p>
+          )}
         </div>
 
-        {/* ── Coluna do meio: marcador + mini-campo + previsões ── */}
-        <div className="sala-jogo__lado sala-jogo__lado--jogo">
-          <div className={estaAoVivo(jx) ? 'placar placar--vivo' : 'placar'}>
-            <div className="placar__liga">
-              {bandeiraDaLiga(jogo.ligaSlug) && (
-                <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
-              )}
-              <span>{jx.liga}</span>
-              <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
-                {estaAoVivo(jx) && <span className="salas-dot" />}
-                {jx.relogio}
-              </span>
-            </div>
+        {/* ── Cronologia dos lances-chave ── */}
+        {detalhes.eventos.length > 0 && jx.estado !== 'agendado' && (
+          <CronologiaJogo eventos={detalhes.eventos} />
+        )}
 
-            <div className="placar__corpo">
-              <div className="placar__equipa">
-                {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
-                <strong>
-                  {jx.casa}
-                  {vermelhosCasa > 0 && (
-                    <span className="placar__vermelho" title="Expulsão">
-                      {' '}🟥{vermelhosCasa > 1 ? `×${vermelhosCasa}` : ''}
-                    </span>
-                  )}
-                </strong>
-              </div>
-              <div className="placar__resultado">
-                <span>{jx.golosCasa ?? '–'}</span>
-                <em>:</em>
-                <span>{jx.golosFora ?? '–'}</span>
-              </div>
-              <div className="placar__equipa">
-                {jx.logoFora && <img src={jx.logoFora} alt="" />}
-                <strong>
-                  {jx.fora}
-                  {vermelhosFora > 0 && (
-                    <span className="placar__vermelho" title="Expulsão">
-                      {' '}🟥{vermelhosFora > 1 ? `×${vermelhosFora}` : ''}
-                    </span>
-                  )}
-                </strong>
-              </div>
-            </div>
+        {/* ── Momentum / mini-campo ── */}
+        {estaAoVivo(jx) && <CampoAoVivo jogo={jx} momento={jx.momento} />}
+        {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
+        {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
 
-            {detalhes.vivo?.htCasa != null && detalhes.vivo?.htFora != null && (
-              <p className="placar__ht">
-                Intervalo <span>{detalhes.vivo.htCasa} : {detalhes.vivo.htFora}</span>
-              </p>
+        {/* ── Escalações no campo ── */}
+        {detalhes.escalacoes && (
+          <div className="jogo-detalhes__bloco">
+            <h3>Escalações</h3>
+            <CampoEscalacoes esc={detalhes.escalacoes} jogo={jx} />
+            <div className="escala-bancos">
+              <BancoEquipa titulo={jx.casa} lado={detalhes.escalacoes.casa} />
+              <BancoEquipa titulo={jx.fora} lado={detalhes.escalacoes.fora} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Estatísticas + Líderes ── */}
+        <div className="ficha-2col">
+          <div className="jogo-detalhes__bloco">
+            <h3>Estatísticas</h3>
+            <CabecalhoEquipas jogo={jx} />
+            {semDadosReais && (
+              <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
+            )}
+            {estatisticas.map(s => {
+              const nc = parseFloat(String(s.casa).replace(',', '.'));
+              const nf = parseFloat(String(s.fora).replace(',', '.'));
+              const tot = (nc || 0) + (nf || 0);
+              const pc = tot > 0 ? Math.round((nc / tot) * 100) : 50;
+              return (
+                <div key={s.nome} className="jogo-stat">
+                  <span className="jogo-stat__valor">{s.casa}</span>
+                  <span className="jogo-stat__nome">{s.nome}</span>
+                  <span className="jogo-stat__valor">{s.fora}</span>
+                  <span
+                    className="jogo-stat__barra"
+                    role="img"
+                    aria-label={`${s.nome}: ${s.casa} contra ${s.fora}`}
+                  >
+                    <span className="jogo-stat__barra-casa" style={{ width: `${pc}%` }} />
+                    <span className="jogo-stat__barra-fora" style={{ width: `${100 - pc}%` }} />
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {detalhes.lideres.length > 0 && (
+            <div className="jogo-detalhes__bloco">
+              <h3>Líderes do jogo</h3>
+              <CabecalhoEquipas jogo={jx} />
+              <LideresJogo lideres={detalhes.lideres} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Forma recente + confrontos diretos ── */}
+        {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0 || detalhes.h2h) && (
+          <div className="ficha-2col">
+            {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
+              <div className="jogo-detalhes__bloco">
+                <h3>Forma recente</h3>
+                <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
+                <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
+              </div>
+            )}
+            {detalhes.h2h && (
+              <div className="jogo-detalhes__bloco">
+                <h3>Confrontos diretos</h3>
+                <ConfrontosH2H h2h={detalhes.h2h} />
+              </div>
             )}
           </div>
+        )}
 
-          {estaAoVivo(jx) && (
-            <CampoAoVivo jogo={jx} momento={jx.momento} />
-          )}
-          {jx.estado === 'terminado' && (
-            <CampoAoVivo jogo={jx} momento={jx.momento} terminado />
-          )}
-          {jx.estado === 'agendado' && (
-            <CampoAoVivo jogo={jx} momento={null} prejogo />
-          )}
-
-          {perguntas.length > 0 && (
-            <div className="gm-card" style={{ margin: 0 }}>
-              <h2>Prevê o jogo</h2>
-              <p className="gm-sub">
-                Grátis. Acertas, ganhas EPCoins — não há dinheiro envolvido.
-              </p>
-              <PainelPrevisoes perguntas={perguntas} />
+        {/* ── Histórico do jogo ── */}
+        <div className="jogo-detalhes__bloco">
+          <h3>Histórico do jogo</h3>
+          <CabecalhoEquipas jogo={jx} />
+          {detalhes.comentario.length === 0 ? (
+            <p className="jogo-detalhes__nota">Aparece quando o jogo começar.</p>
+          ) : (
+            <div className="jogo-relato jogo-relato--ficha">
+              {detalhes.comentario.map((c, i) => {
+                const ic = c.tipo !== 'outro'
+                  ? <span className="relato-linha__ic">{EMOJI_EVENTO[c.tipo]}</span>
+                  : null;
+                if (c.equipa === null) {
+                  return (
+                    <div key={i} className={`relato-linha relato-linha--neutro${c.chave ? ' relato-linha--chave' : ''}`}>
+                      <span className="relato-linha__min">{c.minuto || '·'}</span>
+                      {ic}
+                      <span className="relato-linha__txt">{c.texto}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={i} className={`relato-linha relato-linha--${c.equipa}${c.chave ? ' relato-linha--chave' : ''}`}>
+                    <span className="relato-linha__lado relato-linha__lado--casa">
+                      {c.equipa === 'casa' && <><span className="relato-linha__txt">{c.texto}</span>{ic}</>}
+                    </span>
+                    <span className="relato-linha__min">{c.minuto || '·'}</span>
+                    <span className="relato-linha__lado relato-linha__lado--fora">
+                      {c.equipa === 'fora' && <>{ic}<span className="relato-linha__txt">{c.texto}</span></>}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
-
-          {/* Drops filtrados por este jogo, além dos gerais do Hub. */}
-          <DropWidget eventoId={jogo.id} />
         </div>
 
-        {/* ── Coluna direita: histórico do jogo ── */}
-        <div className="sala-jogo__lado sala-jogo__lado--social">
-          <div className="jogo-detalhes">
-            <div className="jogo-detalhes__bloco">
-              <h3>Histórico do jogo</h3>
-              <CabecalhoEquipas jogo={jx} />
-              {detalhes.comentario.length === 0 ? (
-                <p className="jogo-detalhes__nota">Aparece quando o jogo começar.</p>
-              ) : (
-                <div className="jogo-relato">
-                  {detalhes.comentario.map((c, i) => {
-                    const ic = c.tipo !== 'outro'
-                      ? <span className="relato-linha__ic">{EMOJI_EVENTO[c.tipo]}</span>
-                      : null;
-                    if (c.equipa === null) {
-                      return (
-                        <div key={i} className={`relato-linha relato-linha--neutro${c.chave ? ' relato-linha--chave' : ''}`}>
-                          <span className="relato-linha__min">{c.minuto || '·'}</span>
-                          {ic}
-                          <span className="relato-linha__txt">{c.texto}</span>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div key={i} className={`relato-linha relato-linha--${c.equipa}${c.chave ? ' relato-linha--chave' : ''}`}>
-                        <span className="relato-linha__lado relato-linha__lado--casa">
-                          {c.equipa === 'casa' && <><span className="relato-linha__txt">{c.texto}</span>{ic}</>}
-                        </span>
-                        <span className="relato-linha__min">{c.minuto || '·'}</span>
-                        <span className="relato-linha__lado relato-linha__lado--fora">
-                          {c.equipa === 'fora' && <>{ic}<span className="relato-linha__txt">{c.texto}</span></>}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+        {/* ── Previsões + drops ── */}
+        {perguntas.length > 0 && (
+          <div className="gm-card" style={{ margin: 0 }}>
+            <h2>Prevê o jogo</h2>
+            <p className="gm-sub">
+              Grátis. Acertas, ganhas EPCoins — não há dinheiro envolvido.
+            </p>
+            <PainelPrevisoes perguntas={perguntas} />
           </div>
-        </div>
+        )}
+        <DropWidget eventoId={jogo.id} />
       </div>
 
       <ChatFlutuante
