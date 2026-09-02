@@ -374,8 +374,21 @@
    as estatísticas, mas as 3 colunas terminam todas ao mesmo nível. */
 .sala-jogo__lado--jogo { justify-content: flex-end; }
 
-/* O chat estica-se até ao fundo da coluna. */
+/* O histórico estica-se até ao fundo da coluna, para ficar do mesmo tamanho
+   que o painel de estatísticas ao lado (as 3 colunas terminam ao mesmo nível). */
 .sala-jogo__lado--social { justify-content: stretch; }
+.sala-jogo__lado--social .jogo-detalhes { flex: 1; min-height: 0; }
+.sala-jogo__lado--social .jogo-detalhes__bloco {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sala-jogo__lado--social .jogo-relato {
+  flex: 1;
+  max-height: none;
+  min-height: 0;
+}
 
 .sala-jogo__chat {
   display: flex;
@@ -398,6 +411,8 @@
   /* O mini-campo/marcador passa a ocupar a largura toda; stats e chat lado a lado. */
   .sala-jogo__lado--jogo { grid-column: 1 / -1; order: -1; justify-content: flex-start; align-self: start; }
   .sala-jogo__lado--social .sala-jogo__mensagens { max-height: 52vh; }
+  /* Sem esticar as colunas, o histórico volta a ter um tecto próprio. */
+  .sala-jogo__lado--social .jogo-relato { flex: none; max-height: 60vh; }
 }
 
 @media (max-width: 720px) {
