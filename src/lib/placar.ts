@@ -613,7 +613,13 @@ function paraPortugalPT(texto: string): string {
  *  ESPN escreve em PT do Brasil ("Tentativa de carrinho…", "Escanteio…"). */
 function rotularDoTexto(texto: string): string | null {
   const s = texto.toLowerCase();
-  if (/\bgol!|\bgolo!|marca[ .]/.test(s) || /\bgol\b/.test(s)) return 'Golo';
+  // "Gol cancelado pelo VAR", "golo anulado", "descartado após revisão do VAR" —
+  // tem de vir ANTES da regra do golo, senão o "gol" da frase marca golo.
+  if (/gol(?:o)? (?:cancelad|anulad)|(?:cancelad|anulad|descartad)[oa].{0,30}var|disallowed|chalked off/.test(s))
+    return 'Golo anulado';
+  if (/\bv\.?a\.?r\.?\b|[áa]rbitro de v[íi]deo|revis[ãa]o de v[íi]deo|checagem do var|an[áa]lise do var/.test(s))
+    return 'VAR';
+  if (/\bgol!|\bgolo!|\bgol\b|\bgolo\b/.test(s)) return 'Golo';
   if (/p[êe]n[aá]lti|penalty/.test(s)) return 'Penálti';
   if (/cart[ãa]o amarelo|yellow card/.test(s)) return 'Amarelo';
   if (/cart[ãa]o vermelho|red card|expuls/.test(s)) return 'Vermelho';
@@ -635,7 +641,6 @@ function rotularDoTexto(texto: string): string | null {
   if (/grande chance|grande oportunidade|cara a cara/.test(s)) return 'Ocasião de golo';
   if (/finaliza|chute|remate|cabec|shot|attempt|header|pra fora|para fora|tentativa/.test(s)) return 'Remate';
   if (/cart[ãa]o/.test(s)) return 'Cartão';
-  if (/var\b|[áa]rbitro de v[íi]deo|revis[ãa]o de v[íi]deo/.test(s)) return 'VAR';
   if (/les[ãa]o|injury|atendimento|maca|departamento m[ée]dico|contus/.test(s)) return 'Lesão';
   if (/in[íi]cio|kick.?off|apito inicial|bola rolando|come[çc]a a (?:partida|etapa)|rolar a bola/.test(s)) return 'Início';
   if (/fim d[oa]|intervalo|half.?time|full.?time|end of|acr[ée]scimos|tempo adicional/.test(s)) return 'Fim da parte';
@@ -647,7 +652,7 @@ function rotularDoTexto(texto: string): string | null {
 
 /** Rótulos que passam pelo `destaque` central (golo, cartão…) e não pela `fase`. */
 const ROTULOS_NOTAVEIS = new Set([
-  'Golo', 'Autogolo', 'Amarelo', 'Vermelho', 'Segundo amarelo', 'Substituição',
+  'Golo', 'Autogolo', 'Golo anulado', 'Amarelo', 'Vermelho', 'Segundo amarelo', 'Substituição',
   'Penálti marcado', 'Penálti falhado', 'Penálti defendido', 'Golo de penálti',
 ]);
 
@@ -871,7 +876,11 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     const texto = (txt(c.text) ?? '').trim();
     const play = obj(c.play);
     const slug = txt(obj(play.type).type) ?? '';
-    if (!texto && !slug) continue;
+    const rotuloEspn = txt(obj(play.type).text) ?? '';
+    // Muitos micro-lances (drible, tentativa de carrinho, pontapé de baliza,
+    // lançamento lateral) chegam sem `text` e sem `type.type`, só com o rótulo
+    // em `type.text`. Sem os aceitar, nunca apareciam no painel "última jogada".
+    if (!texto && !slug && !rotuloEspn) continue;
     let equipa = ladoDe(txt(obj(play.team).displayName));
     if (!equipa && texto) {
       const t = texto.toLowerCase();
@@ -883,7 +892,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     linhas.push({
       texto,
       slug,
-      rotuloEspn: txt(obj(play.type).text) ?? '',
+      rotuloEspn,
       equipa,
       minuto: txt(obj(c.time).displayValue) ?? '',
       jogador: txt(atleta.displayName) ?? txt(atleta.shortName) ?? null,
@@ -946,8 +955,16 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
 
   const nome = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa' ? casaNome : lado === 'fora' ? foraNome : '';
-  const rotuloDe = (l: { slug: string; rotuloEspn: string; texto: string }) =>
-    l.rotuloEspn || (l.slug ? rotularLance(l.slug) : rotularDoTexto(l.texto) ?? '');
+  // Prioridade: mapa do slug (pt-PT fiável) → rótulo da ESPN passado por
+  // pt-PT (ex. "Tiro de meta" → "Pontapé de baliza") → varredura do texto.
+  const rotuloDe = (l: { slug: string; rotuloEspn: string; texto: string }) => {
+    if (l.slug) {
+      const r = rotularLance(l.slug);
+      if (r && r !== 'Lance') return r;
+    }
+    if (l.rotuloEspn) return paraPortugalPT(l.rotuloEspn);
+    return rotularDoTexto(l.texto) ?? '';
+  };
 
   // Quem tem a bola: com feed vivo é a equipa da última linha do relato com
   // equipa identificada (segue os passes e os roubos de bola linha a linha);

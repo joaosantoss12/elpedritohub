@@ -972,10 +972,9 @@ function CampoAoVivo(
         ? { nome: jogo.fora, logo: jogo.logoFora }
         : null;
 
-  // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
-  // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
-  // senão a fase corrente — que também mostra o escudo + nome de quem tem a
-  // posse, como se fosse um evento ("Melgar · Ataque").
+  // O evento ao centro segue SEMPRE a última linha do relato da ESPN (é o que
+  // estava a ficar atrasado — a cápsula prendia-se no `destaque`/`fase` enquanto
+  // o feed já tinha avançado). `destaque`/`fase` só entram como recurso.
   const time = terminado || prejogo ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
   const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
@@ -986,9 +985,15 @@ function CampoAoVivo(
     ? { texto: 'Ainda não começou', nota: jogo.relogio, time: null }
     : compensacao
       ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
-      : destaque
-        ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
-        : { texto: fase || 'Bola em jogo', nota: '', time };
+      : ultimaJogada
+        ? {
+            texto: ultimaJogada.rotulo || fase || 'Bola em jogo',
+            nota: ultimaJogada.minuto || minuto,
+            time: equipaDe(ultimaJogada.equipa) ?? time,
+          }
+        : destaque
+          ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
+          : { texto: fase || 'Bola em jogo', nota: '', time };
 
   const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
 
