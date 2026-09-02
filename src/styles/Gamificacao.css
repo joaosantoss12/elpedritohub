@@ -1285,3 +1285,77 @@
   background: none;
   cursor: pointer;
 }
+
+/* ── Procura de membros ao convidar ─────────────────────────── */
+.cla-procura {
+  position: relative;
+}
+
+.cla-procura__lista {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg-card, #14161c);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  max-height: 264px;
+  overflow-y: auto;
+}
+
+.cla-procura__lista li { margin: 0; }
+
+.cla-procura__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cla-procura__item:hover { background: var(--surface-sunken, rgba(255, 255, 255, 0.06)); }
+
+.cla-procura__av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cla-procura__av--vazio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-sunken, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.cla-procura__txt {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.cla-procura__txt strong {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cla-procura__txt span { font-size: 0.78rem; color: var(--text-muted); }

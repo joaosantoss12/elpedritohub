@@ -80,6 +80,14 @@ export interface ConviteEnviado {
   convidado_em: string;
 }
 
+/** Uma sugestão do dropdown de procura ao convidar. */
+export interface MembroSugerido {
+  user_id: string;
+  username: string;
+  nome: string | null;
+  avatar_url: string;
+}
+
 export interface PerfilPublico {
   username: string;
   badges: string[];
@@ -242,6 +250,24 @@ export async function carregarMeuPedidoCla(): Promise<MeuPedidoCla | null> {
     tag: l.tag as string,
     convite: Boolean(l.convite),
   };
+}
+
+/** Sugestões para o dropdown de convite (procura por username ou nome). */
+export async function procurarMembrosCla(q: string): Promise<MembroSugerido[]> {
+  const termo = q.trim();
+  if (termo.length < 2) return [];
+  const { data, error } = await supabase.rpc('cla_procurar_membros', { p_q: termo });
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((l) => {
+    const id = l.user_id as string;
+    const { data: { publicUrl } } = supabase.storage.from('profile_images').getPublicUrl(id);
+    return {
+      user_id: id,
+      username: (l.username as string) ?? 'membro',
+      nome: (l.nome as string) ?? null,
+      avatar_url: publicUrl,
+    };
+  });
 }
 
 /** O dono convida alguém pelo nome de utilizador. */

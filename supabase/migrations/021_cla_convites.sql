@@ -50,6 +50,34 @@ $fn$;
 grant execute on function public.cla_pedidos_recebidos() to authenticated;
 
 
+-- ─── PROCURAR MEMBROS PARA CONVIDAR (SÓ O DONO) ───────────────────────────
+-- Alimenta o dropdown de sugestões à medida que o dono escreve. Só devolve
+-- quem pode mesmo ser convidado (sem clã, não o próprio) e limita a poucos
+-- resultados para não servir de raspador da lista de membros.
+
+create or replace function public.cla_procurar_membros(p_q text)
+returns table (user_id uuid, username text, nome text)
+language sql stable security definer set search_path = public as $fn$
+  select m.id, m.username, m.nome
+    from public.membros m
+   where length(trim(coalesce(p_q, ''))) >= 2
+     and exists (select 1 from public.clas c where c.dono_id = auth.uid())
+     and m.id <> auth.uid()
+     and not exists (select 1 from public.cla_membros cm where cm.user_id = m.id)
+     and (
+       m.username ilike '%' || trim(p_q) || '%'
+       or m.nome   ilike '%' || trim(p_q) || '%'
+     )
+   order by
+     (lower(m.username) = lower(trim(p_q))) desc,
+     (m.username ilike trim(p_q) || '%') desc,
+     m.username
+   limit 8;
+$fn$;
+
+grant execute on function public.cla_procurar_membros(text) to authenticated;
+
+
 -- ─── CONVIDAR (SÓ O DONO) ─────────────────────────────────────────────────
 
 create or replace function public.cla_convidar(p_username text)

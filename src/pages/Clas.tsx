@@ -9,10 +9,10 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   cancelarConviteCla, cancelarPedidoCla, carregarCla, carregarConvitesEnviados,
   carregarMeuPedidoCla, carregarPedidosCla, carregarRankingClas, convidarParaCla,
-  criarCla, editarCla, listarClas, pedirParaEntrar, responderConviteCla,
-  responderPedidoCla, sairDoCla,
+  criarCla, editarCla, listarClas, pedirParaEntrar, procurarMembrosCla,
+  responderConviteCla, responderPedidoCla, sairDoCla,
   type Cla, type ClaListado, type ConviteEnviado, type LinhaRankingClas,
-  type MeuPedidoCla, type PedidoCla,
+  type MembroSugerido, type MeuPedidoCla, type PedidoCla,
 } from '../lib/comunidade';
 import '../styles/Gamificacao.css';
 
@@ -305,15 +305,38 @@ function MeuCla({
   onSair: () => void;
 }) {
   const [cor, setCor] = useState(cla.cor ?? '#8b5cf6');
-  const [convidado, setConvidado] = useState('');
   const cheio = cla.membros.length >= cla.max_membros;
+
+  const [busca, setBusca] = useState('');
+  const [sugestoes, setSugestoes] = useState<MembroSugerido[]>([]);
+  const [escolhido, setEscolhido] = useState<MembroSugerido | null>(null);
+  const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    if (escolhido && busca === escolhido.username) return;
+    const termo = busca.trim();
+    if (termo.length < 2) { setSugestoes([]); return; }
+    let vivo = true;
+    const t = setTimeout(async () => {
+      const r = await procurarMembrosCla(termo);
+      if (vivo) { setSugestoes(r); setAberto(true); }
+    }, 250);
+    return () => { vivo = false; clearTimeout(t); };
+  }, [busca, escolhido]);
+
+  function escolher(m: MembroSugerido) {
+    setEscolhido(m);
+    setBusca(m.username);
+    setAberto(false);
+  }
 
   function enviarConvite(e: React.FormEvent) {
     e.preventDefault();
-    const nome = convidado.trim();
-    if (!nome) return;
-    onConvidar(nome);
-    setConvidado('');
+    if (!escolhido) return;
+    onConvidar(escolhido.username);
+    setEscolhido(null);
+    setBusca('');
+    setSugestoes([]);
   }
 
   return (
@@ -375,18 +398,38 @@ function MeuCla({
         <div className='gm-card'>
           <h2>Convidar</h2>
           <p className='gm-sub'>
-            Convida alguém pelo nome de utilizador. A pessoa recebe o convite no
-            separador Clãs e decide se aceita.
+            Escreve o nome ou nome de utilizador, escolhe alguém da lista e
+            convida. A pessoa recebe o convite no separador Clãs.
           </p>
           <form onSubmit={enviarConvite} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input
-              value={convidado}
-              onChange={(e) => setConvidado(e.target.value)}
-              placeholder='Nome de utilizador'
-              maxLength={32}
-              style={{ ...campo, flex: '1 1 200px' }}
-            />
-            <button className='gm-btn' type='submit' disabled={ocupado || cheio}>
+            <div className='cla-procura' style={{ flex: '1 1 220px' }}>
+              <input
+                value={busca}
+                onChange={(e) => { setBusca(e.target.value); setEscolhido(null); }}
+                onFocus={() => sugestoes.length > 0 && setAberto(true)}
+                onBlur={() => setTimeout(() => setAberto(false), 150)}
+                placeholder='Nome ou nome de utilizador'
+                maxLength={32}
+                style={{ ...campo, width: '100%' }}
+              />
+              {aberto && sugestoes.length > 0 && (
+                <ul className='cla-procura__lista'>
+                  {sugestoes.map((m) => (
+                    <li key={m.user_id}>
+                      <button type='button' className='cla-procura__item'
+                        onMouseDown={(e) => { e.preventDefault(); escolher(m); }}>
+                        <Avatar src={m.avatar_url} nome={m.username} />
+                        <span className='cla-procura__txt'>
+                          {m.nome && <strong>{m.nome}</strong>}
+                          <span>@{m.username}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button className='gm-btn' type='submit' disabled={ocupado || cheio || !escolhido}>
               <UserPlus size={15} /> {cheio ? 'Clã cheio' : 'Convidar'}
             </button>
           </form>
@@ -483,6 +526,18 @@ function RankingClas({ ranking }: { ranking: LinhaRankingClas[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Avatar do membro; cai para a inicial se não houver imagem. */
+function Avatar({ src, nome }: { src: string; nome: string }) {
+  const [falhou, setFalhou] = useState(false);
+  if (falhou || !src) {
+    return <span className='cla-procura__av cla-procura__av--vazio'>{nome.charAt(0).toUpperCase()}</span>;
+  }
+  return (
+    <img src={src} alt='' className='cla-procura__av' loading='lazy'
+      onError={() => setFalhou(true)} />
   );
 }
 
