@@ -902,7 +902,7 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  bolaX: null, bolaY: null, bolaTrilho: [],
+  bolaX: null, bolaY: null, bolaTrilho: [], ultimaJogada: null,
 };
 
 type Ponto = { x: number; y: number };
@@ -1019,7 +1019,7 @@ function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY } = momento ?? MOMENTO_VAZIO;
+  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY, ultimaJogada } = momento ?? MOMENTO_VAZIO;
 
   // Nem todos os jogos têm feed ao vivo da ESPN (ligas fora da cobertura, ou
   // dados que ainda não abriram). Mostramos o campo na mesma, só que "vazio".
@@ -1126,9 +1126,28 @@ function CampoAoVivo(
             <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
           </div>
 
-          <p className="campo-live__lance">
-            {semFeed ? 'Sem cobertura ao vivo para este jogo — o campo fica sem lances.' : (legenda || 'Bola em jogo')}
-          </p>
+          {semFeed ? (
+            <p className="campo-live__lance">
+              Sem cobertura ao vivo para este jogo — o campo fica sem lances.
+            </p>
+          ) : ultimaJogada ? (
+            <div className="campo-live__ultima">
+              <div className="campo-live__ultima-cab">
+                {(() => {
+                  const t = equipaDe(ultimaJogada.equipa);
+                  return t?.logo
+                    ? <img className="campo-live__ultima-escudo" src={t.logo} alt="" />
+                    : <span className="campo-live__ultima-escudo campo-live__ultima-escudo--vazio">{EMOJI_EVENTO[ultimaJogada.tipo] ?? '•'}</span>;
+                })()}
+                <span className="campo-live__ultima-rotulo">{ultimaJogada.rotulo}</span>
+                {ultimaJogada.minuto && <span className="campo-live__ultima-min">{ultimaJogada.minuto}</span>}
+                <span className="campo-live__ultima-tag">Última jogada</span>
+              </div>
+              <p className="campo-live__ultima-txt">{ultimaJogada.descricao}</p>
+            </div>
+          ) : (
+            <p className="campo-live__lance">{legenda || 'Bola em jogo'}</p>
+          )}
         </>
       )}
     </div>

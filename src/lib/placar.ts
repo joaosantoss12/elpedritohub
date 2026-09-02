@@ -290,6 +290,17 @@ export interface MomentoJogo {
    *  para animar a bola a deslizar de lance em lance, no espírito do "LastPlays"
    *  da ESPN, em vez de aparecer só o último ponto. */
   bolaTrilho: { x: number; y: number }[];
+  /** O painel "última jogada" da ESPN: reconhece qualquer tipo de lance do
+   *  `commentary` (drible, interceção, lateral, alívio, desarme, cruzamento…),
+   *  não só golos e cartões. `null` quando o feed ainda não deu nenhum lance. */
+  ultimaJogada: {
+    rotulo: string;
+    descricao: string;
+    jogador: string | null;
+    equipa: 'casa' | 'fora' | null;
+    minuto: string;
+    tipo: TipoEvento;
+  } | null;
 }
 
 /** Placar/relógio lidos do mesmo summary, para a sala não mostrar dois
@@ -473,16 +484,97 @@ const EVENTO_NOTAVEL = new Set([
   'corner-awarded', 'offside', 'yellow-card', 'red-card', 'substitution',
 ]);
 
-/** Rótulo em PT para o último lance mostrado por baixo do campo. */
-const ROTULO_LANCE: Record<string, string> = {
-  'goal': 'Golo', 'own-goal': 'Autogolo',
-  'penalty---scored': 'Penálti', 'penalty---saved': 'Penálti defendido',
-  'penalty---missed': 'Penálti falhado',
+/**
+ * Rótulo em PT para QUALQUER tipo de lance do `commentary` da ESPN — não só os
+ * de `ROTULO_LANCE`. A ESPN publica dezenas de tipos (drible, interceção,
+ * lateral, alívio "sai", desarme, cruzamento, defesa…); aqui há um mapa dos
+ * conhecidos e, para o resto, palavras-chave no slug e por fim o próprio slug
+ * capitalizado. Usa-se no painel "última jogada" e na legenda por baixo do campo.
+ */
+const ROTULO_LANCE_COMPLETO: Record<string, string> = {
+  'goal': 'Golo', 'own-goal': 'Autogolo', 'penalty-goal': 'Golo de penálti',
+  'penalty---scored': 'Penálti marcado', 'penalty---saved': 'Penálti defendido',
+  'penalty---missed': 'Penálti falhado', 'penalty-won': 'Penálti', 'penalty-conceded': 'Penálti sofrido',
+  'yellow-card': 'Amarelo', 'red-card': 'Vermelho', 'second-yellow-card': 'Segundo amarelo',
+  'substitution': 'Substituição',
   'shot-on-target': 'Remate à baliza', 'shot-off-target': 'Remate para fora',
-  'shot-blocked': 'Remate bloqueado', 'shot-hit-woodwork': 'Bola ao poste',
-  'corner-awarded': 'Canto', 'offside': 'Fora de jogo', 'foul': 'Falta',
-  'yellow-card': 'Amarelo', 'red-card': 'Vermelho', 'substitution': 'Substituição',
+  'shot-blocked': 'Remate bloqueado', 'blocked-shot': 'Remate bloqueado',
+  'shot-hit-woodwork': 'Bola ao poste', 'shot-saved': 'Remate defendido',
+  'attempt-saved': 'Remate defendido', 'attempt-missed': 'Remate para fora',
+  'attempt-blocked': 'Remate bloqueado',
+  'corner-awarded': 'Canto', 'corner-kick': 'Canto', 'corner': 'Canto',
+  'offside': 'Fora de jogo', 'offside-call': 'Fora de jogo',
+  'foul': 'Falta', 'free-kick-won': 'Livre', 'free-kick-lost': 'Falta', 'free-kick': 'Livre',
+  'throw-in': 'Lateral', 'goal-kick': 'Pontapé de baliza',
+  'clearance': 'Alívio', 'interception': 'Interceção', 'interception-won': 'Interceção',
+  'dribble': 'Drible', 'take-on': 'Drible', 'successful-dribble': 'Drible',
+  'tackle': 'Desarme', 'tackle-won': 'Desarme', 'challenge': 'Disputa de bola',
+  'cross': 'Cruzamento', 'pass': 'Passe', 'key-pass': 'Passe de rutura',
+  'blocked-pass': 'Passe bloqueado', 'long-ball': 'Passe longo',
+  'save': 'Defesa', 'keeper-save': 'Defesa', 'penalty-save': 'Penálti defendido',
+  'keeper-pick-up': 'Bola para o guarda-redes', 'catch': 'Defesa',
+  'punch': 'Soco do guarda-redes', 'smother': 'Antecipação do guarda-redes',
+  'block': 'Bloqueio', 'header': 'Cabeceamento',
+  'aerial': 'Duelo aéreo', 'aerial-duel': 'Duelo aéreo', 'duel': 'Duelo', 'ground-duel': 'Duelo',
+  'hand-ball': 'Mão na bola', 'handball': 'Mão na bola',
+  'dispossessed': 'Perda de bola', 'ball-recovery': 'Recuperação de bola',
+  'miscontrol': 'Falha de controlo', 'error': 'Erro',
+  'dangerous-play': 'Jogo perigoso', 'delay': 'Jogo interrompido',
+  'delay-in-match': 'Jogo interrompido', 'game-restart': 'Recomeço do jogo',
+  'injury': 'Lesão', 'player-injured': 'Jogador lesionado', 'treatment': 'Assistência médica',
+  'var': 'VAR', 'var-decision': 'Decisão do VAR', 'video-review': 'Revisão de vídeo',
+  'kick-off': 'Pontapé de saída', 'half-time': 'Intervalo',
+  'end-of-half': 'Fim da parte', 'first-half-ends': 'Fim da 1.ª parte',
+  'second-half-ends': 'Fim da 2.ª parte', 'full-time': 'Fim do jogo',
+  'match-ends': 'Fim do jogo', 'game-ends': 'Fim do jogo',
+  'big-chance-missed': 'Ocasião falhada', 'big-chance-scored': 'Ocasião de golo',
+  'shot': 'Remate', 'attempt': 'Remate', 'penalty': 'Penálti', 'card': 'Cartão',
 };
+
+function rotularLance(slug: string): string {
+  const s = (slug || '').toLowerCase().trim();
+  if (!s) return 'Lance';
+  if (ROTULO_LANCE_COMPLETO[s]) return ROTULO_LANCE_COMPLETO[s];
+  if (/own[\s-]?goal/.test(s)) return 'Autogolo';
+  if (/goal/.test(s)) return 'Golo';
+  if (/red[\s-]?card|sent[\s-]?off/.test(s)) return 'Vermelho';
+  if (/yellow/.test(s)) return 'Amarelo';
+  if (/sub/.test(s)) return 'Substituição';
+  if (/penalt/.test(s)) return 'Penálti';
+  if (/corner/.test(s)) return 'Canto';
+  if (/offside/.test(s)) return 'Fora de jogo';
+  if (/free[\s-]?kick/.test(s)) return 'Livre';
+  if (/throw/.test(s)) return 'Lateral';
+  if (/clear/.test(s)) return 'Alívio';
+  if (/intercept/.test(s)) return 'Interceção';
+  if (/dribbl|take[\s-]?on/.test(s)) return 'Drible';
+  if (/tackl/.test(s)) return 'Desarme';
+  if (/cross/.test(s)) return 'Cruzamento';
+  if (/save|keeper|goalkeeper/.test(s)) return 'Defesa';
+  if (/block/.test(s)) return 'Bloqueio';
+  if (/head/.test(s)) return 'Cabeceamento';
+  if (/aerial|duel/.test(s)) return 'Duelo';
+  if (/hand[\s-]?ball/.test(s)) return 'Mão na bola';
+  if (/foul/.test(s)) return 'Falta';
+  if (/shot|attempt/.test(s)) return 'Remate';
+  if (/pass|ball/.test(s)) return 'Passe';
+  if (/injur/.test(s)) return 'Lesão';
+  if (/var|review/.test(s)) return 'VAR';
+  if (/whistle|start|kick[\s-]?off/.test(s)) return 'Pontapé de saída';
+  if (/end|full[\s-]?time/.test(s)) return 'Fim da parte';
+  return s.replace(/-+/g, ' ').replace(/^\w/, c => c.toUpperCase());
+}
+
+/** Do slug para o tipo de evento (ícone). Cobre mais casos que `tipoDoComentario`. */
+function tipoDoLance(slug: string): TipoEvento {
+  const s = (slug || '').toLowerCase();
+  if (/own[\s-]?goal/.test(s)) return 'golo';
+  if (s === 'goal' || /scored/.test(s) || s === 'penalty-goal') return 'golo';
+  if (/red[\s-]?card|second[\s-]?yellow|sent[\s-]?off/.test(s)) return 'cartao_vermelho';
+  if (/yellow/.test(s)) return 'cartao_amarelo';
+  if (/sub/.test(s)) return 'substituicao';
+  return 'outro';
+}
 
 const LABELS_ESTATISTICA: Record<string, string> = {
   possessionPct: 'Posse de bola',
@@ -649,7 +741,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
 
   interface Lance {
     t: number; slug: string; equipa: 'casa' | 'fora' | null; minuto: string;
-    x: number | null; y: number | null; wall: number;
+    x: number | null; y: number | null; wall: number; jogador: string | null;
   }
 
   const lances: Lance[] = [];
@@ -657,9 +749,10 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     const play = obj(c.play);
     const t = Number(txt(obj(play.clock).value) ?? txt(obj(c.time).value));
     if (!Number.isFinite(t)) continue;
-    const x = Number(txt(play.fieldPositionX));
-    const y = Number(txt(play.fieldPositionY));
+    const x = Number(txt(play.fieldPositionX) ?? txt(obj(play.fieldPosition).x));
+    const y = Number(txt(play.fieldPositionY) ?? txt(obj(play.fieldPosition).y));
     const wall = Date.parse(txt(play.wallclock) ?? '');
+    const atleta = obj(lista(play.athletesInvolved)[0]);
     lances.push({
       t,
       slug: txt(obj(play.type).type) ?? '',
@@ -668,6 +761,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
       x: Number.isFinite(x) ? x : null,
       y: Number.isFinite(y) ? y : null,
       wall: Number.isFinite(wall) ? wall : 0,
+      jogador: txt(atleta.displayName) ?? txt(atleta.shortName) ?? null,
     });
   }
   if (lances.length === 0) return null;
@@ -735,9 +829,11 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   // cápsula fechar.
   const ultimoFase = feedParado
     ? undefined
-    : [...lances].reverse().find(l => l.slug in FASE_LANCE && !EVENTO_NOTAVEL.has(l.slug));
+    : [...lances].reverse().find(l => l.slug && !EVENTO_NOTAVEL.has(l.slug));
   if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
-  const fase = ultimoFase ? FASE_LANCE[ultimoFase.slug] : posse ? 'Ataque' : 'Bola em jogo';
+  const fase = ultimoFase
+    ? (FASE_LANCE[ultimoFase.slug] ?? rotularLance(ultimoFase.slug))
+    : posse ? 'Ataque' : 'Bola em jogo';
 
   // Destaque ao centro: um evento marcante acabado de acontecer, com a equipa
   // do lance. Golos, penáltis e vermelhos ficam bem mais tempo do que um
@@ -751,12 +847,34 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     ? { texto: FASE_LANCE[notavel.slug], equipa: notavel.equipa }
     : null;
 
-  const ultimo = [...lances].reverse().find(l => l.slug in ROTULO_LANCE);
   const nome = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa' ? casaNome : lado === 'fora' ? foraNome : '';
-  const lance = ultimo
-    ? `${ROTULO_LANCE[ultimo.slug]}${ultimo.equipa ? ` · ${nome(ultimo.equipa)}` : ''}`
+
+  // O último lance com tipo — para a legenda por baixo do campo e para o painel
+  // "última jogada". Reconhece qualquer tipo (drible, interceção, lateral…).
+  const ultimo = [...lances].reverse().find(l => l.slug)
+    ?? lances[lances.length - 1];
+  const lance = ultimo?.slug
+    ? `${rotularLance(ultimo.slug)}${ultimo.equipa ? ` · ${nome(ultimo.equipa)}` : ''}`
     : '';
+
+  const ultimaJogada = ultimo?.slug
+    ? (() => {
+        const rot = rotularLance(ultimo.slug);
+        const eq = nome(ultimo.equipa);
+        const descricao = ultimo.jogador
+          ? `${ultimo.jogador}${eq ? ` (${eq})` : ''} ${rot}${ultimo.minuto ? ` aos ${ultimo.minuto}` : ''}`
+          : `${rot}${eq ? ` · ${eq}` : ''}${ultimo.minuto ? ` · ${ultimo.minuto}` : ''}`;
+        return {
+          rotulo: rot,
+          descricao,
+          jogador: ultimo.jogador,
+          equipa: ultimo.equipa,
+          minuto: ultimo.minuto,
+          tipo: tipoDoLance(ultimo.slug),
+        };
+      })()
+    : null;
 
   // Onde foi a última jogada, em % do campo. A casa ataca para a direita, por
   // isso o X da ESPN (0 = baliza da casa, 100 = baliza adversária) serve tal
@@ -783,8 +901,12 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const ultimaZona = feedParado
     ? null
     : [...lances].reverse().map(zonaAprox).find((p): p is { x: number; y: number } => p != null) ?? null;
-  const bolaX = comCoord?.x ?? ultimaZona?.x ?? null;
-  const bolaY = comCoord?.y ?? ultimaZona?.y ?? null;
+  // Com o feed congelado a bola não desaparece — fica pousada na última
+  // coordenada real que a ESPN publicou (como no LastPlays da ESPN), em vez de
+  // sumir do campo.
+  const ultimoReal = [...lances].reverse().find(l => l.x != null && l.y != null);
+  const bolaX = comCoord?.x ?? ultimaZona?.x ?? ultimoReal?.x ?? null;
+  const bolaY = comCoord?.y ?? ultimaZona?.y ?? ultimoReal?.y ?? null;
 
   // Rasto das últimas jogadas (antiga → recente). Com feed parado não se
   // inventa movimento — fica só o ponto atual, se houver. Com feed vivo usam-se
@@ -805,7 +927,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   }
 
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho, ultimaJogada,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
   };
 }
