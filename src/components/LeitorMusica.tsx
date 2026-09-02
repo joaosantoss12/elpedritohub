@@ -170,6 +170,12 @@ export function LeitorMusica() {
   // Só toca sozinho depois de o utilizador escolher algo (é o gesto que
   // desbloqueia o autoplay). À primeira carga fica em pausa.
   const autoTocarRef = useRef(false);
+  // Que config já está montada no player. Evita re-cue (que volta a faixa ao
+  // início e põe em pausa) quando o efeito re-corre sem a config ter mudado —
+  // p.ex. o Supabase renova o token ao voltar à tab e o objeto `user` muda de
+  // identidade.
+  const configMontadaRef = useRef<string | null>(null);
+  const autenticado = Boolean(user);
 
   // Cria o player quando há configuração.
   useEffect(() => {
@@ -211,8 +217,12 @@ export function LeitorMusica() {
       };
 
       const auto = autoTocarRef.current;
+      const chaveConfig = `${config.tipo}:${config.id}`;
 
       if (playerRef.current?.cueVideoById) {
+        // Já é a mesma faixa/playlist — não mexer, senão reinicia.
+        if (configMontadaRef.current === chaveConfig) { setPronto(true); return; }
+        configMontadaRef.current = chaveConfig;
         if (config.tipo === 'playlist') {
           if (auto) playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
           else playerRef.current.cuePlaylist({ list: config.id, listType: 'playlist' });
@@ -227,6 +237,7 @@ export function LeitorMusica() {
         return;
       }
 
+      configMontadaRef.current = chaveConfig;
       playerRef.current = new w.YT.Player('ep-yt-alvo', {
         height: '0',
         width: '0',
@@ -243,7 +254,9 @@ export function LeitorMusica() {
     });
 
     return () => { cancelado = true; };
-  }, [config, user]);
+    // `autenticado` (booleano) em vez de `user`: só reage a entrar/sair, não a
+    // cada renovação de token.
+  }, [config, autenticado]);
 
   // Relógio da barra de progresso. Também apanha os metadados quando a faixa
   // está só em fila (cue) — aí o `onStateChange` ainda não disparou, mas o
@@ -351,7 +364,8 @@ export function LeitorMusica() {
   const alternar = useCallback(() => {
     const p = playerRef.current;
     if (!p) return;
-    if (tocar) p.pauseVideo(); else p.playVideo();
+    if (tocar) { p.pauseVideo(); }
+    else { autoTocarRef.current = true; p.playVideo(); }
   }, [tocar]);
 
   const alternarAleatorio = () => {
