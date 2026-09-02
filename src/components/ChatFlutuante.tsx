@@ -28,12 +28,21 @@ const LARGURA = 360;
 const ALTURA = 520;
 const ICONE = 60;
 
-/* Arranca como ícone no canto inferior direito. */
+/* Arranca como ícone no canto inferior direito, mas acima da barra do leitor
+   de música quando ela está aberta (senão o ícone ficava por cima dela). */
+function margemBaixo() {
+  if (typeof document !== 'undefined'
+    && document.body.classList.contains('tem-leitor-musica')) {
+    return 88;
+  }
+  return MARGEM;
+}
+
 function posInicial() {
   if (typeof window === 'undefined') return { x: MARGEM, y: MARGEM };
   return {
     x: Math.max(MARGEM, window.innerWidth - ICONE - MARGEM),
-    y: Math.max(MARGEM, window.innerHeight - ICONE - MARGEM),
+    y: Math.max(MARGEM, window.innerHeight - ICONE - margemBaixo()),
   };
 }
 
@@ -46,6 +55,19 @@ export function ChatFlutuante({
 
   const fundoRef = useRef<HTMLDivElement>(null);
   const arrasto = useRef<{ px: number; py: number; baseX: number; baseY: number; moveu: boolean } | null>(null);
+  /* Enquanto o utilizador não arrastar, o ícone segue o canto — e sobe/desce
+     conforme a barra do leitor de música abre ou fecha. */
+  const mexido = useRef(false);
+
+  /* O leitor de música (barra em baixo) marca `body.tem-leitor-musica`. Sempre
+     que isso muda, reencosta o ícone ao canto por cima dela. */
+  useEffect(() => {
+    const recolocar = () => { if (!mexido.current) setPos(posInicial()); };
+    recolocar();
+    const mo = new MutationObserver(recolocar);
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => mo.disconnect();
+  }, []);
 
   /* Contagem de mensagens novas enquanto está fechado. */
   useEffect(() => {
@@ -88,7 +110,7 @@ export function ChatFlutuante({
     if (!a) return;
     const dx = e.clientX - a.px;
     const dy = e.clientY - a.py;
-    if (!a.moveu && Math.abs(dx) + Math.abs(dy) > 3) a.moveu = true;
+    if (!a.moveu && Math.abs(dx) + Math.abs(dy) > 3) { a.moveu = true; mexido.current = true; }
     if (!a.moveu) return;
     const larg = modo === 'aberto' ? LARGURA : ICONE;
     const alt = modo === 'aberto' ? ALTURA : ICONE;
