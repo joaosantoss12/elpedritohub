@@ -662,7 +662,7 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
                 {j.golos > 0 && <span>⚽{j.golos > 1 ? j.golos : ''}</span>}
                 {j.amarelo && <span>🟨</span>}
                 {j.vermelho && <span>🟥</span>}
-                {j.saiu && <span>🔻</span>}
+                {j.saiu && <span className="escala-jog__marca-saiu">↓</span>}
               </span>
             </span>
             <span className="escala-jog__nome">
