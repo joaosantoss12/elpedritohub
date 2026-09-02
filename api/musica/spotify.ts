@@ -13,8 +13,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * Precisa das variáveis de ambiente SPOTIFY_CLIENT_ID e SPOTIFY_CLIENT_SECRET.
  */
 
-const MAX_FAIXAS = 60;
-const CONCORRENCIA = 6;
+// Resolver 50+ faixas no YouTube demora — o default de 10s da Vercel não chega.
+export const config = { maxDuration: 60 };
+
+const MAX_FAIXAS = 50;
+const CONCORRENCIA = 10;
 
 type Faixa = { titulo: string; artista: string; videoId: string };
 
@@ -71,7 +74,14 @@ async function lerFaixasSpotify(
   const faixas: { titulo: string; artista: string }[] = [];
   while (url && faixas.length < MAX_FAIXAS) {
     const r: Response = await fetch(url, auth);
-    if (!r.ok) throw new Error('Lista do Spotify não encontrada ou privada.');
+    if (r.status === 404) {
+      throw new Error(
+        alvo.tipo === 'playlist'
+          ? 'Playlist não acessível. Tem de ser pública e feita por ti — as playlists do próprio Spotify (Descobertas, Rádio, "This Is…") não podem ser lidas.'
+          : 'Álbum do Spotify não encontrado.',
+      );
+    }
+    if (!r.ok) throw new Error(`Spotify respondeu ${r.status} ao ler a lista.`);
     const j = (await r.json()) as { items?: unknown[]; next?: string | null };
     for (const item of j.items ?? []) {
       const it = alvo.tipo === 'playlist' ? (item as { track?: SpItem }).track : (item as SpItem);
