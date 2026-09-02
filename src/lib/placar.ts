@@ -833,6 +833,50 @@ function idsDoJogo(json: Bruto): { idCasa: string | null; idFora: string | null 
 /** Coordenadas em % de cada lugar de uma formação ("4-2-3-1"), pela ordem do
  *  `formationPlace` da ESPN (1 = guarda-redes). A casa ocupa a metade
  *  esquerda; o campo do lado de fora é o espelho. */
+/** Ponto no campo (x = profundidade 5..47, y = largura 0..100) a partir do
+ *  nome/abreviatura da posição da ESPN ("Center Left Defender", "CD-L", …).
+ *  Assim um DM fica mais recuado que um AM, os alas ficam abertos, etc. */
+function pontoPorPosicao(nome: string, abbr: string): { x: number; y: number } {
+  const n = `${nome} ${abbr}`.toLowerCase();
+  let x = 27;
+  if (/goalkeeper|\bg\b|\bgk\b/.test(n)) x = 6;
+  else if (/sweeper|\bsw\b/.test(n)) x = 13;
+  else if (/wing.?back|\bwb\b/.test(n)) x = 22;
+  else if (/back|defender|\bcd\b|\blb\b|\brb\b|\bcb\b|\bd\b/.test(n)) x = 17;
+  else if (/defensive mid|\bdm\b/.test(n)) x = 25;
+  else if (/attacking mid|\bam\b/.test(n)) x = 37;
+  else if (/midfield|\bcm\b|\blm\b|\brm\b|\bm\b/.test(n)) x = 31;
+  else if (/forward|striker|wing|\bcf\b|\bst\b|\blw\b|\brw\b|\bw\b|\bf\b/.test(n)) x = 45;
+  let y = 50;
+  if (/center left|left center|-l\b/.test(n)) y = 37;
+  else if (/center right|right center|-r\b/.test(n)) y = 63;
+  else if (/\bleft\b|\blb\b|\blm\b|\blw\b|\blwb\b/.test(n)) y = 14;
+  else if (/\bright\b|\brb\b|\brm\b|\brw\b|\brwb\b/.test(n)) y = 86;
+  return { x, y };
+}
+
+/** Nivela a profundidade de cada linha e, só quando os jogadores ficariam
+ *  em cima uns dos outros, redistribui-os pela largura. */
+function espalharLinhas(pts: { x: number; y: number }[]): void {
+  const linhas = new Map<number, number[]>();
+  pts.forEach((p, i) => {
+    const k = Math.round(p.x / 5);
+    const arr = linhas.get(k) ?? [];
+    arr.push(i);
+    linhas.set(k, arr);
+  });
+  for (const idxs of linhas.values()) {
+    const mx = idxs.reduce((s, i) => s + pts[i].x, 0) / idxs.length;
+    idxs.forEach(i => { pts[i].x = mx; });
+    if (idxs.length < 2) continue;
+    idxs.sort((a, b) => pts[a].y - pts[b].y);
+    const colisao = idxs.some((idx, j) =>
+      j > 0 && pts[idx].y - pts[idxs[j - 1]].y < 12);
+    if (!colisao) continue;
+    idxs.forEach((idx, j) => { pts[idx].y = 12 + (j / (idxs.length - 1)) * 76; });
+  }
+}
+
 function coordsFormacao(formacao: string): { x: number; y: number }[] {
   const linhas = [1, ...formacao.split('-').map(n => parseInt(n, 10)).filter(Boolean)];
   const pts: { x: number; y: number }[] = [];
@@ -905,7 +949,7 @@ function eventosCrus(json: Bruto): EventoCru[] {
 /** O evento é um golo a contar para o marcador (inclui grande penalidade
  *  convertida, exclui autogolos)? */
 function eventoGolo(slug: string): boolean {
-  if (slug.includes('own')) return false;
+  if (/own|disallow|cancel|missed|saved|no-?goal|var|ruled-out/.test(slug)) return false;
   if (slug.includes('goal')) return true;
   return slug.includes('penalty') && slug.includes('scored');
 }
@@ -913,17 +957,28 @@ function eventoGolo(slug: string): boolean {
 /** Um nome de evento (displayName) refere-se a este atleta? Compara pelo
  *  apelido para aguentar "J. Solis" vs "Jhon Solis". */
 function mesmoJogador(nomeEvento: string, at: Bruto): boolean {
-  const alvo = (txt(at.displayName) ?? '').toLowerCase();
-  const e = nomeEvento.toLowerCase();
-  if (!e) return false;
-  if (alvo && (alvo === e || alvo.includes(e) || e.includes(alvo))) return true;
-  const apelido = alvo.split(' ').pop() ?? '';
-  return apelido.length > 2 && e.includes(apelido);
+  const alvo = (txt(at.displayName) ?? '').toLowerCase().trim();
+  const e = nomeEvento.toLowerCase().trim();
+  if (!e || !alvo) return false;
+  if (alvo === e) return true;
+  const palavras = (s: string) => s.split(/[\s\-]+/).filter(w => w.length > 1);
+  const pe = palavras(e);
+  const pa = palavras(alvo);
+  if (!pe.length || !pa.length) return false;
+  // Todas as palavras de um lado contidas no outro ("Gibbs-White" ⊂ "Morgan Gibbs-White").
+  if (pe.every(w => pa.includes(w)) || pa.every(w => pe.includes(w))) return true;
+  // Mesmo apelido — mas confirma a inicial do nome próprio quando ambos a têm,
+  // para não confundir "M. Gibbs-White" com um jogador chamado "D. White".
+  const apA = pa[pa.length - 1];
+  const apE = pe[pe.length - 1];
+  if (apA.length <= 2 || apA !== apE) return false;
+  if (pa.length > 1 && pe.length > 1) return pa[0][0] === pe[0][0];
+  return true;
 }
 
 function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): LadoEscalacao {
   const formacao = txt(roster.formation) ?? '';
-  const coords = coordsFormacao(formacao || '4-4-2');
+  const fallback = coordsFormacao(formacao || '4-4-2');
   const jogadores = lista(roster.roster).map(obj);
   const lado: 'casa' | 'fora' = casa ? 'casa' : 'fora';
   const meus = evs.filter(e => e.equipa === lado);
@@ -932,12 +987,22 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
   const semInicial = (n: string): string =>
     n.replace(/^(?:\p{L}\.[\s ]*)+/u, '').trim() || n;
 
-  const titulares: JogadorCampo[] = jogadores
-    .filter(p => p.starter === true)
+  const titularesRaw = jogadores.filter(p => p.starter === true);
+  const pts = titularesRaw.map((p, i) => {
+    const pos = obj(p.position);
+    const nome = txt(pos.name);
+    const abbr = txt(pos.abbreviation);
+    if (nome || abbr) return pontoPorPosicao(nome ?? '', abbr ?? '');
+    const lugar = Number(txt(p.formationPlace));
+    return fallback[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
+  });
+  espalharLinhas(pts);
+
+  const titulares: JogadorCampo[] = titularesRaw
     .map((p, i) => {
       const at = obj(p.athlete);
       const lugar = Number(txt(p.formationPlace));
-      const c = coords[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
+      const c = pts[i];
       // Golos e cartões contam só quando o jogador é o protagonista do lance
       // (não quando aparece como assistente).
       const meusLances = meus.filter(e => mesmoJogador(e.principal, at));

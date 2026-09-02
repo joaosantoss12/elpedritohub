@@ -587,7 +587,7 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
   // ataque (x) vira posição vertical; o eixo transversal (y) vira horizontal.
   const av = (x: number) => lado === 'casa' ? (x - 5) / 42 : (95 - x) / 42;
   const top = (x: number) => 90 - av(x) * 74;
-  const left = (y: number) => 4 + (y / 100) * 92;
+  const left = (y: number) => 3 + (y / 100) * 94;
 
   const entradas = dados.suplentes.filter(s => s.entrou);
 
