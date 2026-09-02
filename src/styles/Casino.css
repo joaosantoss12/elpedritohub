@@ -84,7 +84,7 @@
   line-height: 0;
 }
 .casino-hero__nome img {
-  width: min(420px, 74vw);
+  width: min(630px, 90vw);
   height: auto;
   filter: drop-shadow(0 6px 60px rgba(161, 124, 91, 0.55));
 }
