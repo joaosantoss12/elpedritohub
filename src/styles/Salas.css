@@ -534,6 +534,12 @@
   margin-bottom: 0.7rem;
 }
 
+.jogo-detalhes__nota {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: -0.3rem 0 0.7rem;
+}
+
 .jogo-eventos {
   display: flex;
   flex-direction: column;

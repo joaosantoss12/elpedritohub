@@ -503,20 +503,28 @@ function GrupoJogos({
  * posse (com escudo + nome) e mostra ao centro o último evento marcante —
  * golo, cartão, canto, fora de jogo, tempo de compensação…
  */
+// Antes do jogo (ou enquanto a ESPN ainda não abre o boxscore) mostramos as
+// estatísticas de sempre, todas a zero, em vez de um vazio.
+const ESTATISTICAS_ZERO = [
+  'Posse de bola', 'Remates totais', 'Remates à baliza', 'Defesas',
+  'Cantos', 'Faltas', 'Fora de jogo', 'Cartões amarelos', 'Cartões vermelhos',
+].map(nome => ({ nome, casa: '0', fora: '0' }));
+
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
   bolaX: null, bolaY: null,
 };
 
 function CampoAoVivo(
-  { jogo, momento, terminado = false }:
-  { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean },
+  { jogo, momento, terminado = false, prejogo = false }:
+  { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
   const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY } = momento ?? MOMENTO_VAZIO;
 
   // Nem todos os jogos têm feed ao vivo da ESPN (ligas fora da cobertura, ou
   // dados que ainda não abriram). Mostramos o campo na mesma, só que "vazio".
-  const semFeed = !terminado && (!momento || (!momento.lance && !momento.fase && !momento.posse));
+  const semFeed = !terminado && !prejogo
+    && (!momento || (!momento.lance && !momento.fase && !momento.posse));
 
   const equipaDe = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa'
@@ -529,12 +537,14 @@ function CampoAoVivo(
   // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
   // senão a fase corrente — que também mostra o escudo + nome de quem tem a
   // posse, como se fosse um evento ("Melgar · Ataque").
-  const time = terminado ? null : equipaDe(posse);
+  const time = terminado || prejogo ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
   const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
   const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
   const evento = terminado
     ? { texto: 'Fim do jogo', nota: '', time: null }
+    : prejogo
+    ? { texto: 'Ainda não começou', nota: jogo.relogio, time: null }
     : compensacao
       ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
       : destaque
@@ -548,7 +558,7 @@ function CampoAoVivo(
       <div className="campo-live__topo">
         <span className="campo-live__eq">{jogo.casa}</span>
         <span className="campo-live__min">
-          {!terminado && <span className="salas-dot" />} {jogo.relogio}
+          {!terminado && !prejogo && <span className="salas-dot" />} {jogo.relogio}
         </span>
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>
@@ -569,7 +579,7 @@ function CampoAoVivo(
 
         {/* Marca a posição da última jogada (a ESPN só dá coordenada por
             evento — salta pelo campo, não é bola em tempo real). */}
-        {!terminado && bolaX != null && bolaY != null && (
+        {!terminado && !prejogo && bolaX != null && bolaY != null && (
           <span
             className="campo-live__bola"
             style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
@@ -605,6 +615,8 @@ function CampoAoVivo(
             {jogo.logoFora && <img src={jogo.logoFora} alt="" />}
           </span>
         </div>
+      ) : prejogo ? (
+        <p className="campo-live__lance">Pontapé de saída às {jogo.relogio}</p>
       ) : (
         <>
           <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
@@ -736,7 +748,8 @@ function SalaJogo({
   };
 
   const jx = jogoExibido;
-  const temDetalhes = detalhes.eventos.length > 0 || detalhes.estatisticas.length > 0;
+  const estatisticas = detalhes.estatisticas.length > 0 ? detalhes.estatisticas : ESTATISTICAS_ZERO;
+  const semDadosReais = detalhes.estatisticas.length === 0;
 
   return (
     <div className="sala-jogo">
@@ -747,12 +760,13 @@ function SalaJogo({
       <div className="sala-jogo__grid">
         {/* ── Coluna esquerda: estatísticas + eventos ── */}
         <div className="sala-jogo__lado sala-jogo__lado--stats">
-          {temDetalhes ? (
             <div className="jogo-detalhes">
-              {detalhes.estatisticas.length > 0 && (
-                <div className="jogo-detalhes__bloco">
+              <div className="jogo-detalhes__bloco">
                   <h3>Estatísticas</h3>
-                  {detalhes.estatisticas.map(s => {
+                  {semDadosReais && (
+                    <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
+                  )}
+                  {estatisticas.map(s => {
                     const nc = parseFloat(String(s.casa).replace(',', '.'));
                     const nf = parseFloat(String(s.fora).replace(',', '.'));
                     const tot = (nc || 0) + (nf || 0);
@@ -773,8 +787,7 @@ function SalaJogo({
                       </div>
                     );
                   })}
-                </div>
-              )}
+              </div>
 
               {detalhes.eventos.length > 0 && (
                 <div className="jogo-detalhes__bloco">
@@ -796,11 +809,6 @@ function SalaJogo({
                 </div>
               )}
             </div>
-          ) : (
-            <p className="sala-jogo__vazio">
-              As estatísticas aparecem quando o jogo arranca.
-            </p>
-          )}
         </div>
 
         {/* ── Coluna do meio: marcador + mini-campo + previsões ── */}
@@ -845,6 +853,9 @@ function SalaJogo({
           )}
           {jx.estado === 'terminado' && (
             <CampoAoVivo jogo={jx} momento={jx.momento} terminado />
+          )}
+          {jx.estado === 'agendado' && (
+            <CampoAoVivo jogo={jx} momento={null} prejogo />
           )}
 
           {perguntas.length > 0 && (
