@@ -1691,10 +1691,10 @@
 .forma__cab {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 .forma__cab strong { font-size: 0.76rem; color: var(--text-white); }
+.forma__logo-eq { flex: none; width: 18px; height: 18px; object-fit: contain; }
 .forma__selo {
   flex: none;
   display: grid;

@@ -663,18 +663,21 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
   );
 }
 
-function FormaRecente({ titulo, jogos }: { titulo: string; jogos: ResultadoForma[] }) {
+function FormaRecente(
+  { titulo, logo, jogos }: { titulo: string; logo: string | null; jogos: ResultadoForma[] },
+) {
   if (jogos.length === 0) return null;
   return (
     <div className="forma">
       <div className="forma__cab">
+        {logo && <img className="forma__logo-eq" src={logo} alt="" />}
         <strong>{titulo}</strong>
       </div>
       <ul className="forma__lista">
         {jogos.map((g, i) => (
           <li key={i}>
             <span className={`forma__selo forma__selo--${g.resultado}`}>{g.resultado}</span>
-            <span className="forma__via">{g.emCasa ? 'vs' : '@'}</span>
+            <span className="forma__via">vs</span>
             {g.logoAdversario && <img className="forma__logo" src={g.logoAdversario} alt="" />}
             <span className="forma__adv">{g.adversario}</span>
             <span className="forma__placar">{g.placar}</span>
@@ -688,7 +691,6 @@ function FormaRecente({ titulo, jogos }: { titulo: string; jogos: ResultadoForma
 function ConfrontosH2H({ h2h }: { h2h: HeadToHead }) {
   return (
     <div className="h2h">
-      <p className="h2h__resumo">{h2h.resumo}</p>
       <ul className="h2h__lista">
         {h2h.jogos.map((g, i) => (
           <li key={i}>
@@ -1346,8 +1348,8 @@ function SalaJogo({
         {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
           <div className="jogo-detalhes__bloco">
             <h3>Forma recente</h3>
-            <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
-            <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
+            <FormaRecente titulo={jx.casa} logo={jx.logoCasa} jogos={detalhes.formaCasa} />
+            <FormaRecente titulo={jx.fora} logo={jx.logoFora} jogos={detalhes.formaFora} />
           </div>
         )}
         </div>
