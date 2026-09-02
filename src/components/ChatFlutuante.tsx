@@ -26,12 +26,14 @@ interface Props {
 const MARGEM = 16;
 const LARGURA = 360;
 const ALTURA = 520;
+const ICONE = 60;
 
+/* Arranca como ícone no canto inferior direito. */
 function posInicial() {
   if (typeof window === 'undefined') return { x: MARGEM, y: MARGEM };
   return {
-    x: Math.max(MARGEM, window.innerWidth - LARGURA - MARGEM),
-    y: Math.max(MARGEM, window.innerHeight - ALTURA - MARGEM),
+    x: Math.max(MARGEM, window.innerWidth - ICONE - MARGEM),
+    y: Math.max(MARGEM, window.innerHeight - ICONE - MARGEM),
   };
 }
 
@@ -116,9 +118,15 @@ export function ChatFlutuante({
     );
   }
 
+  // O painel é maior que o ícone: encosta-o à vista a partir da posição do ícone.
   const estiloPainel = modo === 'full'
     ? undefined
-    : { left: pos.x, top: pos.y, width: LARGURA, height: ALTURA };
+    : {
+        left: Math.max(MARGEM, Math.min(pos.x, window.innerWidth - LARGURA - MARGEM)),
+        top: Math.max(MARGEM, Math.min(pos.y, window.innerHeight - ALTURA - MARGEM)),
+        width: LARGURA,
+        height: ALTURA,
+      };
 
   return (
     <div className={`chat-flut chat-flut--${modo}`} style={estiloPainel}>
