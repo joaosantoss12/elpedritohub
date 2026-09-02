@@ -289,6 +289,10 @@ export interface MomentoJogo {
   /** `true` = coordenada mesmo publicada pela ESPN; `false` = zona estimada
    *  pelo tipo de lance. Só para debug. */
   bolaReal: boolean;
+  /** Coordenadas REAIS dos últimos lances (cronológico), para a bola percorrer
+   *  o ataque lance a lance em vez de saltar direto ao último ponto. Vazio
+   *  quando a ESPN não publica posições ou o feed secou. */
+  bolaPassos: { x: number; y: number }[];
   /** O painel "última jogada" da ESPN: reconhece qualquer tipo de lance do
    *  `commentary` (drible, interceção, lateral, alívio, desarme, cruzamento…),
    *  não só golos e cartões. `null` quando o feed ainda não deu nenhum lance. */
@@ -1046,8 +1050,23 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const bolaY = comCoord?.y ?? ultimaZona?.y ?? ultimoReal?.y ?? null;
   const bolaReal = comCoord?.x != null || (ultimaZona?.x == null && ultimoReal?.x != null);
 
+  // Passos reais: as coordenadas publicadas pela ESPN nos últimos lances. A
+  // bola percorre-as em sequência (o "ataque a formar-se"); sem elas fica
+  // parada na última posição — a ESPN não dá feed posicional contínuo público.
+  const bolaPassos: { x: number; y: number }[] = [];
+  if (!feedParado) {
+    const reais = lances
+      .filter(l => l.x != null && l.y != null)
+      .slice(-6)
+      .map(l => ({ x: l.x as number, y: l.y as number }));
+    for (const p of reais) {
+      const u = bolaPassos[bolaPassos.length - 1];
+      if (!u || Math.hypot(u.x - p.x, u.y - p.y) > 0.8) bolaPassos.push(p);
+    }
+  }
+
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaReal, ultimaJogada,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaReal, bolaPassos, ultimaJogada,
     minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
 }

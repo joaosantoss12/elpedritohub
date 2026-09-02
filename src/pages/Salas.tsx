@@ -902,8 +902,39 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  bolaX: null, bolaY: null, bolaReal: false, ultimaJogada: null,
+  bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
+
+/** A bola percorre as coordenadas reais que a ESPN publicou nos últimos lances
+ *  (o ataque a formar-se), com a transição CSS a suavizar cada passo. Quando só
+ *  há um ponto — ou nenhum — fica parada nele. Não há feed posicional contínuo
+ *  público, por isso entre lances a bola não "deriva" como no LastPlays. */
+function BolaViva(
+  { passos, x, y, estim }:
+  { passos: { x: number; y: number }[]; x: number; y: number; estim: boolean },
+) {
+  const chave = passos.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
+  const [idx, setIdx] = useState(() => Math.max(0, passos.length - 1));
+  useEffect(() => {
+    if (passos.length < 2) { setIdx(Math.max(0, passos.length - 1)); return; }
+    let i = Math.max(0, passos.length - 4); // arranca uns lances atrás
+    setIdx(i);
+    const t = window.setInterval(() => {
+      i += 1;
+      setIdx(i);
+      if (i >= passos.length - 1) window.clearInterval(t);
+    }, 750);
+    return () => window.clearInterval(t);
+  }, [chave]); // eslint-disable-line react-hooks/exhaustive-deps
+  const p = passos[Math.min(idx, passos.length - 1)] ?? { x, y };
+  return (
+    <span
+      className={`campo-live__bola${estim ? ' campo-live__bola--estim' : ''}`}
+      style={{ left: `${p.x}%`, top: `${p.y}%` }}
+      aria-hidden="true"
+    />
+  );
+}
 
 function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
@@ -1001,10 +1032,11 @@ function CampoAoVivo(
         )}
 
         {!terminado && !prejogo && bolaX != null && bolaY != null && (
-          <span
-            className={`campo-live__bola${debug && !bolaReal ? ' campo-live__bola--estim' : ''}`}
-            style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
-            aria-hidden="true"
+          <BolaViva
+            passos={momento?.bolaPassos ?? []}
+            x={bolaX}
+            y={bolaY}
+            estim={debug && !bolaReal}
           />
         )}
 
@@ -1139,6 +1171,7 @@ function SalaJogo({
     const puxar = () => {
       carregarDetalhesJogo(jogo.ligaSlug, jogo.id).then(d => {
         if (!vivo) return;
+        // (o .catch abaixo engole falhas de rede / extensões que embrulham o fetch)
         // A ESPN às vezes devolve o summary sem o boxscore/relato preenchidos
         // (entre partes, logo após o apito, ou por lentidão do feed). Nesses
         // casos ficava tudo a zero de repente — o Atlético-MG vs Cruzeiro fazia
@@ -1155,7 +1188,7 @@ function SalaJogo({
           h2h: d.h2h ?? prev.h2h,
           classificacao: d.classificacao ?? prev.classificacao,
         }));
-      });
+      }).catch(() => { /* rede / extensão a embrulhar o fetch — mantém o último estado */ });
     };
     puxar();
     const t = window.setInterval(puxar, INTERVALO_LIVE);
