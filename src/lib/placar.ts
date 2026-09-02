@@ -855,8 +855,9 @@ function pontoPorPosicao(nome: string, abbr: string): { x: number; y: number } {
   return { x, y };
 }
 
-/** Nivela a profundidade de cada linha e, só quando os jogadores ficariam
- *  em cima uns dos outros, redistribui-os pela largura. */
+/** Nivela a profundidade de cada linha e distribui os jogadores pela largura
+ *  de forma uniforme, mantendo a ordem esquerda→direita dada pela posição.
+ *  Linhas maiores abrem mais (alas); linhas de 2-3 ficam mais ao centro. */
 function espalharLinhas(pts: { x: number; y: number }[]): void {
   const linhas = new Map<number, number[]>();
   pts.forEach((p, i) => {
@@ -868,12 +869,13 @@ function espalharLinhas(pts: { x: number; y: number }[]): void {
   for (const idxs of linhas.values()) {
     const mx = idxs.reduce((s, i) => s + pts[i].x, 0) / idxs.length;
     idxs.forEach(i => { pts[i].x = mx; });
-    if (idxs.length < 2) continue;
+    const n = idxs.length;
+    if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; continue; }
     idxs.sort((a, b) => pts[a].y - pts[b].y);
-    const colisao = idxs.some((idx, j) =>
-      j > 0 && pts[idx].y - pts[idxs[j - 1]].y < 12);
-    if (!colisao) continue;
-    idxs.forEach((idx, j) => { pts[idx].y = 12 + (j / (idxs.length - 1)) * 76; });
+    const margem = n >= 4 ? 10 : n === 3 ? 22 : 34;
+    idxs.forEach((idx, j) => {
+      pts[idx].y = margem + (j / (n - 1)) * (100 - 2 * margem);
+    });
   }
 }
 
