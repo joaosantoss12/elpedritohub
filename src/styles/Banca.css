@@ -11,17 +11,34 @@
 .banca-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.8rem;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Mesmo cabeçalho das outras páginas do Hub (.salas-header, .gm-topo):
+   eyebrow dourado + h1 900 uppercase + subtítulo cinza. */
+.banca-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+  margin-bottom: 0.75rem;
 }
 
 .banca-title {
-  font-size: 2.2rem;
+  font-size: 2.6rem;
   font-weight: 900;
+  text-transform: uppercase;
   color: var(--text-white);
-  margin: 0 0 0.3rem;
-  letter-spacing: -0.5px;
+  margin: 0 0 0.6rem;
+  letter-spacing: -1px;
+  line-height: 1.05;
 }
 
 .banca-title span {
@@ -1241,6 +1258,10 @@
   .banca-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .banca-title {
+    font-size: 1.8rem;
   }
 
   .banca-form__row {

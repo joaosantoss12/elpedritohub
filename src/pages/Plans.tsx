@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Loader2, X, ShieldCheck, Lock, Zap } from 'lucide-react';
+import { Check, Loader2, X, ShieldCheck, Lock, Zap, Crown } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import TelegramGate from '../components/TelegramGate';
 import FunilVip from '../components/FunilVip';
@@ -149,7 +149,8 @@ export default function Plans() {
 
       <div className="plans-wrapper">
         <div className="plans-header">
-          <h1 className="plans-title">Escolhe o teu Plano VIP</h1>
+          <div className="plans-eyebrow"><Crown size={14} /> ACESSO VIP</div>
+          <h1 className="plans-title">Escolhe o teu <span>Plano VIP</span></h1>
           <p className="plans-subtitle">Pagamento único · acesso imediato ao grupo VIP no Telegram</p>
           {isActive && (
             <div className="plans-active-badge">✓ Já tens uma subscrição VIP ativa</div>

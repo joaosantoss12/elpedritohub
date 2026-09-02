@@ -558,7 +558,8 @@ export default function Support() {
         <div className="sp-wrapper">
           <div className="sp-header">
             <div>
-              <h1 className="sp-title">Apoio ao Cliente</h1>
+              <div className="sp-eyebrow"><MessageSquare size={14} /> SUPORTE</div>
+              <h1 className="sp-title">Apoio ao <span>Cliente</span></h1>
               <p className="sp-subtitle">A nossa equipa responde o mais brevemente possível.</p>
             </div>
             <button className="sp-btn-primary" onClick={() => setShowCreate(true)}>

@@ -9,8 +9,9 @@ import {
 import {
   Plus, ChevronLeft, ChevronRight, X, Target, CheckCircle, XCircle, Clock,
   Calendar, Pencil, Trash2, Lock as LockIcon, ShieldCheck, Download,
-  Wallet, TrendingUp, Flame,
+  Wallet, TrendingUp, Flame, GraduationCap,
 } from 'lucide-react';
+import { TutorialBanca } from '../components/TutorialBanca';
 import {
   carregarTips, calcularStats, fmtPercent, fmtRoi, VERTICAL_LABELS, type RaioxTip,
 } from '../lib/raiox';
@@ -165,6 +166,7 @@ export default function BancaManagement() {
   const [apostas, setApostas] = useState<Aposta[]>([]);
   const [, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingAposta, setEditingAposta] = useState<Aposta | null>(null);
   const [editForm, setEditForm] = useState({
@@ -493,14 +495,20 @@ export default function BancaManagement() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
       <Navbar />
 
+      <TutorialBanca aberto={showTutorial} aoFechar={() => setShowTutorial(false)} />
+
       <div className="banca-container">
         {/* Header */}
         <div className="banca-header">
           <div>
+            <div className="banca-eyebrow"><Wallet size={14} /> GESTÃO DE BANCA</div>
             <h1 className="banca-title">A tua <span>Banca</span></h1>
             <p className="banca-subtitle">{periodLabel}</p>
           </div>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <button className="banca-btn-ghost" onClick={() => setShowTutorial(true)}>
+              <GraduationCap size={16} /> Tutorial
+            </button>
             <button
               className="banca-btn-ghost"
               onClick={exportExcel}
