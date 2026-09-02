@@ -460,7 +460,6 @@
 .placar--vivo { border-color: rgba(34, 197, 94, 0.35); }
 
 .placar__liga {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -480,13 +479,13 @@
 }
 
 .placar__relogio {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
+  padding-left: 0.5rem;
+  margin-left: 0.15rem;
+  border-left: 1px solid var(--border-color);
+  color: var(--text-muted);
 }
 
 .placar__relogio.vivo { color: var(--green-success); }
@@ -1402,7 +1401,7 @@
 .escalacoes__campo {
   position: relative;
   width: 100%;
-  max-width: 340px;
+  max-width: 400px;
   margin: 0 auto;
   aspect-ratio: 3 / 4;
   border-radius: 12px;
@@ -1432,26 +1431,31 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 46px;
+  gap: 3px;
+  width: 64px;
 }
 .escala-jog--gr .escala-jog__nome { background: rgba(244, 196, 48, 0.22); }
-.escala-jog__camisa { position: relative; width: 34px; height: 34px; }
+.escala-jog__camisa { position: relative; width: 48px; height: 48px; }
 .escala-jog__marcas {
+  position: absolute;
+  top: -5px;
+  right: -9px;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 1px;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   line-height: 1;
-  margin-top: -4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .escala-jog__marcas:empty { display: none; }
 .camisola { display: block; width: 100%; height: 100%; }
 .escala-jog__nome {
-  max-width: 54px;
-  padding: 2px 4px;
+  max-width: 72px;
+  padding: 2px 5px;
   border-radius: 4px;
-  font-size: 0.55rem;
-  line-height: 1;
+  font-size: 0.6rem;
+  line-height: 1.05;
   background: rgba(0, 0, 0, 0.62);
   color: #fff;
   white-space: nowrap;

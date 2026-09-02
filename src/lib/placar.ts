@@ -1074,13 +1074,14 @@ function mapearClassificacao(
 ): Classificacao | null {
   const raiz = obj(json.standings);
   let entradas = lista(raiz.entries).map(obj);
-  let titulo = txt(raiz.displayName) ?? txt(raiz.name) ?? '';
+  let titulo = (txt(raiz.header) ?? txt(raiz.displayName) ?? txt(raiz.name) ?? '')
+    .replace(/\s*standings\s*$/i, '');
   if (entradas.length === 0) {
     for (const g of lista(raiz.groups).map(obj)) {
       const es = lista(obj(g.standings).entries).map(obj);
       if (es.length) {
         entradas = es;
-        titulo = txt(g.header) ?? txt(g.name) ?? titulo;
+        titulo = (txt(g.header) ?? txt(g.name) ?? titulo).replace(/\s*standings\s*$/i, '');
         break;
       }
     }
@@ -1089,13 +1090,17 @@ function mapearClassificacao(
 
   const linhas: LinhaClassificacao[] = entradas.map((e, i) => {
     const stats = lista(e.stats);
+    // Na classificação do summary, `team` é só o nome (string) e o emblema
+    // vem numa lista `logo`/`logos`; o id fica à parte, em `e.id`.
     const time = obj(e.team);
-    const id = txt(time.id);
+    const id = txt(e.id) ?? txt(time.id);
     const rank = Number(valorStat(stats, 'rank'));
     return {
       posicao: Number.isFinite(rank) && rank > 0 ? rank : i + 1,
-      equipa: txt(time.shortDisplayName) ?? txt(time.displayName) ?? txt(time.abbreviation) ?? '',
-      logo: logoEquipa(time),
+      equipa: txt(e.team) ?? txt(time.shortDisplayName) ?? txt(time.displayName)
+        ?? txt(time.abbreviation) ?? '',
+      logo: txt(obj(lista(e.logo)[0]).href) ?? logoEquipa(time)
+        ?? (id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png` : null),
       jogos: valorStat(stats, 'gamesPlayed'),
       vitorias: valorStat(stats, 'wins'),
       empates: valorStat(stats, 'ties'),

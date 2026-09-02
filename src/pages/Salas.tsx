@@ -559,8 +559,8 @@ function Camisola({ cor, numero, escuro }: { cor: string; numero: string; escuro
       <path d="M139.43,611.54c-11.65,23.29-19.43,38.46-19.43,38.46,0,0,91.73,151.42,230,130,0,0,4.42-17.69,11.19-40.59-82.3-6.5-148.23-39.82-221.75-127.87Z" fill="#000000" opacity="0.35" />
       <path d="M1300.57,611.54c-73.52,88.05-139.46,121.37-221.75,127.87,6.77,22.9,11.19,40.59,11.19,40.59,138.27,21.42,230-130,230-130,0,0-7.78-15.17-19.43-38.46Z" fill="#000000" opacity="0.35" />
       <text
-        x="720" y="760" textAnchor="middle" dominantBaseline="central"
-        fontSize="360" fontWeight="800"
+        x="720" y="770" textAnchor="middle" dominantBaseline="central"
+        fontSize="470" fontWeight="800"
         fill={escuro ? '#1a1410' : '#fff'}
       >
         {numero}
@@ -629,12 +629,12 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
                 numero={j.numero}
                 escuro={j.guardaRedes ? true : escuro}
               />
-            </span>
-            <span className="escala-jog__marcas" aria-hidden="true">
-              {j.golos > 0 && <span>⚽{j.golos > 1 ? j.golos : ''}</span>}
-              {j.amarelo && <span>🟨</span>}
-              {j.vermelho && <span>🟥</span>}
-              {j.saiu && <span>🔻</span>}
+              <span className="escala-jog__marcas" aria-hidden="true">
+                {j.golos > 0 && <span>⚽{j.golos > 1 ? j.golos : ''}</span>}
+                {j.amarelo && <span>🟨</span>}
+                {j.vermelho && <span>🟥</span>}
+                {j.saiu && <span>🔻</span>}
+              </span>
             </span>
             <span className="escala-jog__nome">
               {j.guardaRedes && <span className="escala-jog__gr">GR</span>}
@@ -1245,10 +1245,12 @@ function SalaJogo({
                 <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
               )}
               <span>{jx.liga}</span>
-            </span>
-            <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
-              {estaAoVivo(jx) && <span className="salas-dot" />}
-              {jx.relogio}
+              {jx.relogio && (
+                <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
+                  {estaAoVivo(jx) && <span className="salas-dot" />}
+                  {jx.relogio}
+                </span>
+              )}
             </span>
           </div>
 
