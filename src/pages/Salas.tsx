@@ -12,7 +12,7 @@ import {
   carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
   type Escalacoes, type LadoEscalacao, type ResultadoForma, type HeadToHead,
-  type EventoJogo, type Classificacao,
+  type EventoJogo, type Classificacao, type EstatisticaJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
 import {
@@ -574,8 +574,41 @@ function Camisola({ cor, numero, escuro }: { cor: string; numero: string; escuro
  * formação), campo na vertical com o guarda-redes em baixo e as camisolas
  * com os ícones de golo / cartão / saída, e as substituições por baixo.
  */
-function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
+/** Barras casa-vs-fora de uma lista de estatísticas de jogo. */
+function ListaEstatisticas({ estatisticas }: { estatisticas: EstatisticaJogo[] }) {
+  return (
+    <>
+      {estatisticas.map(s => {
+        const nc = parseFloat(String(s.casa).replace(',', '.'));
+        const nf = parseFloat(String(s.fora).replace(',', '.'));
+        const tot = (nc || 0) + (nf || 0);
+        const pc = tot > 0 ? Math.round((nc / tot) * 100) : 50;
+        return (
+          <div key={s.nome} className="jogo-stat">
+            <span className="jogo-stat__valor">{s.casa}</span>
+            <span className="jogo-stat__nome">{s.nome}</span>
+            <span className="jogo-stat__valor">{s.fora}</span>
+            <span
+              className="jogo-stat__barra"
+              role="img"
+              aria-label={`${s.nome}: ${s.casa} contra ${s.fora}`}
+            >
+              <span className="jogo-stat__barra-casa" style={{ width: `${pc}%` }} />
+              <span className="jogo-stat__barra-fora" style={{ width: `${100 - pc}%` }} />
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function EscalacoesESPN(
+  { esc, jogo, estatisticas }:
+  { esc: Escalacoes; jogo: JogoAoVivo; estatisticas: EstatisticaJogo[] },
+) {
   const [lado, setLado] = useState<'casa' | 'fora'>('casa');
+  const [vista, setVista] = useState<'campo' | 'stats'>('campo');
   const dados: LadoEscalacao = esc[lado];
   const corCru = lado === 'casa' ? esc.corCasa : esc.corFora;
   const cor = corCru && /^[0-9a-fA-F]{6}$/.test(corCru)
@@ -616,6 +649,33 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
         })}
       </div>
 
+      <div className="escalacoes__vista-abas" role="tablist">
+        <button
+          type="button" role="tab" aria-selected={vista === 'campo'}
+          className={`escalacoes__vista-aba${vista === 'campo' ? ' escalacoes__vista-aba--on' : ''}`}
+          onClick={() => setVista('campo')}
+        >
+          Campo
+        </button>
+        <button
+          type="button" role="tab" aria-selected={vista === 'stats'}
+          className={`escalacoes__vista-aba${vista === 'stats' ? ' escalacoes__vista-aba--on' : ''}`}
+          onClick={() => setVista('stats')}
+        >
+          Estatísticas
+        </button>
+      </div>
+
+      {vista === 'stats' ? (
+        <div className="escalacoes__stats">
+          <CabecalhoEquipas jogo={jogo} />
+          {estatisticas.length === 0 ? (
+            <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
+          ) : (
+            <ListaEstatisticas estatisticas={estatisticas} />
+          )}
+        </div>
+      ) : (
       <div className="escalacoes__campo">
         {dados.titulares.map((j, i) => (
           <span
@@ -643,6 +703,7 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
           </span>
         ))}
       </div>
+      )}
 
       <div className="escalacoes__subs-bloco">
         <strong>Substituições</strong>
@@ -1307,7 +1368,9 @@ function SalaJogo({
         {/* ── Corpo em três colunas, ao estilo da ficha da ESPN ── */}
         <div className="ficha-corpo">
         <div className="ficha-corpo__esq">
-        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
+        {detalhes.escalacoes && (
+          <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} estatisticas={detalhes.estatisticas} />
+        )}
         </div>
 
         <div className="ficha-corpo__meio">
@@ -1328,27 +1391,7 @@ function SalaJogo({
             {semDadosReais && (
               <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
             )}
-            {estatisticas.map(s => {
-              const nc = parseFloat(String(s.casa).replace(',', '.'));
-              const nf = parseFloat(String(s.fora).replace(',', '.'));
-              const tot = (nc || 0) + (nf || 0);
-              const pc = tot > 0 ? Math.round((nc / tot) * 100) : 50;
-              return (
-                <div key={s.nome} className="jogo-stat">
-                  <span className="jogo-stat__valor">{s.casa}</span>
-                  <span className="jogo-stat__nome">{s.nome}</span>
-                  <span className="jogo-stat__valor">{s.fora}</span>
-                  <span
-                    className="jogo-stat__barra"
-                    role="img"
-                    aria-label={`${s.nome}: ${s.casa} contra ${s.fora}`}
-                  >
-                    <span className="jogo-stat__barra-casa" style={{ width: `${pc}%` }} />
-                    <span className="jogo-stat__barra-fora" style={{ width: `${100 - pc}%` }} />
-                  </span>
-                </div>
-              );
-            })}
+            <ListaEstatisticas estatisticas={estatisticas} />
         </div>
 
         {/* ── Histórico do jogo ── */}
