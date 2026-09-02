@@ -1593,13 +1593,15 @@
 .escala-jog__camisa { position: relative; width: 48px; height: 48px; }
 .escala-jog__marcas {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   gap: 2px;
   line-height: 1;
+  z-index: 3;
 }
 .escala-jog__marcas:empty { display: none; }
 .escala-jog__marcas span {
