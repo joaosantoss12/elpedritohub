@@ -1142,7 +1142,9 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   };
   const penC = penHdr('home');
   const penF = penHdr('away');
-  const penaltis = penC != null || penF != null
+  // `shootoutScore` está a 0 em quase todos os jogos — só é desempate se
+  // algum lado já converteu pelo menos um penálti.
+  const penaltis = (penC ?? 0) > 0 || (penF ?? 0) > 0
     ? { casa: penC ?? 0, fora: penF ?? 0 }
     : null;
 
@@ -1182,9 +1184,12 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
   const penCasa = penDe(casa);
   const penFora = penDe(fora);
   const nomeTipo = (txt(tipo.name) ?? '').toUpperCase();
-  const emPenaltis = penCasa != null || penFora != null
-    || /SHOOTOUT|PENALT/.test(nomeTipo)
-    || /\bp[êe]n(?:s|alti|álti)|shootout|desempate|grandes penalidades/i.test(detail);
+  // `shootoutScore` vem a 0/"0" em quase todos os jogos — só conta como desempate
+  // se algum lado já marcou penáltis OU o estado do jogo o diz explicitamente.
+  const temPenMarcados = (penCasa ?? 0) > 0 || (penFora ?? 0) > 0;
+  const estadoDizPen = /SHOOTOUT|PENALTY_?SHOOTOUT/.test(nomeTipo)
+    || /\bpens?\b|shootout|grandes penalidades|disputa de p[êe]naltis/i.test(detail);
+  const emPenaltis = temPenMarcados || estadoDizPen;
 
   let relogio: string;
   if (estado === 'intervalo') relogio = 'Intervalo';
