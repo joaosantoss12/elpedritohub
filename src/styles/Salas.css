@@ -1259,9 +1259,75 @@
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  max-width: 860px;
+  max-width: 1120px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Corpo da ficha ao estilo ESPN: escalações fixas à esquerda, o resto à
+   direita. Abaixo de 900px volta a ser uma coluna só. */
+.ficha-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+.ficha-grid__esq,
+.ficha-grid__dir {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-width: 0;
+}
+.ficha-grid__esq { position: sticky; top: 1rem; }
+@media (max-width: 900px) {
+  .ficha-grid { grid-template-columns: 1fr; }
+  .ficha-grid__esq { position: static; }
+}
+
+/* Separadores de equipa (escudo + formação) */
+.escalacoes__abas {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.7rem;
+}
+.escalacoes__aba {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--surface-sunken);
+  color: var(--text-gray);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.escalacoes__aba img { width: 20px; height: 20px; object-fit: contain; }
+.escalacoes__aba--on {
+  border-color: var(--gold-primary);
+  color: var(--text-white);
+  background: var(--bg-card);
+}
+.escalacoes__entrou {
+  margin-left: 0.4rem;
+  font-size: 0.6rem;
+  font-style: normal;
+  color: var(--green-success);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.placar__forma {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Dois blocos lado a lado quando há largura; empilham abaixo de 720px. */
@@ -1367,6 +1433,12 @@
   max-width: 64px;
 }
 .escala-pin--saiu { opacity: 0.4; }
+
+/* Campo com uma equipa só (coluna estreita): guarda-redes junto à baliza
+   esquerda, avançados à direita. Alvos mais compactos. */
+.escalacoes__campo { aspect-ratio: 16 / 11; }
+.escalacoes__campo .escala-pin { width: 52px; }
+.escalacoes__campo .escala-pin__nome { max-width: 52px; }
 
 .escala-bancos {
   display: grid;

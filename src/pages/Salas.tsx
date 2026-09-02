@@ -486,44 +486,74 @@ function CronologiaJogo({ eventos }: { eventos: DetalhesJogo['eventos'] }) {
   );
 }
 
-/** Campo com as duas formações em cima. */
-function CampoEscalacoes({ esc, jogo: j }: { esc: Escalacoes; jogo: JogoAoVivo }) {
-  const pino = (jog: Escalacoes['casa']['titulares'][number], lado: 'casa' | 'fora', i: number) => (
-    <span
-      key={`${lado}-${i}`}
-      className={`escala-pin escala-pin--${lado}${jog.saiu ? ' escala-pin--saiu' : ''}`}
-      style={{ left: `${jog.x}%`, top: `${jog.y}%` }}
-    >
-      <span className="escala-pin__n">{jog.numero}</span>
-      <span className="escala-pin__nome">{jog.nome}</span>
-    </span>
-  );
-  return (
-    <>
-      <div className="escala-formacoes">
-        <span>{j.casa} · {esc.casa.formacao || '—'}</span>
-        <span>{esc.fora.formacao || '—'} · {j.fora}</span>
-      </div>
-      <div className="escala-campo">
-        {esc.casa.titulares.map((jog, i) => pino(jog, 'casa', i))}
-        {esc.fora.titulares.map((jog, i) => pino(jog, 'fora', i))}
-      </div>
-    </>
-  );
-}
+/**
+ * Formações e escalações no estilo da ESPN: um separador por equipa (escudo +
+ * formação), o campo mostra só a equipa escolhida a ocupar toda a relva, e os
+ * suplentes ficam numa lista logo por baixo — com marca de quem entrou.
+ */
+function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
+  const [lado, setLado] = useState<'casa' | 'fora'>('casa');
+  const dados: LadoEscalacao = esc[lado];
+  const nomeEq = lado === 'casa' ? jogo.casa : jogo.fora;
 
-function BancoEquipa({ titulo, lado }: { titulo: string; lado: LadoEscalacao }) {
-  if (lado.suplentes.length === 0) return null;
+  // As coordenadas guardadas põem as duas equipas no mesmo campo (casa à
+  // esquerda, fora à direita e espelhada). Aqui só entra uma equipa de cada
+  // vez, por isso re-escala-se o eixo de ataque para ela ocupar a relva toda:
+  // guarda-redes junto à baliza esquerda, avançados à direita.
+  const px = (x: number) =>
+    lado === 'casa' ? ((x - 5) / 42) * 84 + 8 : ((95 - x) / 42) * 84 + 8;
+
   return (
-    <div className="escala-banco">
-      <strong>{titulo}</strong>
-      <ul>
-        {lado.suplentes.map((s, i) => (
-          <li key={i} className={s.entrou ? 'escala-banco__entrou' : undefined}>
-            <span>{s.numero}</span> {s.nome}
-          </li>
+    <div className="jogo-detalhes__bloco escalacoes">
+      <h3>Formações e escalações</h3>
+
+      <div className="escalacoes__abas" role="tablist">
+        {(['casa', 'fora'] as const).map(l => {
+          const nome = l === 'casa' ? jogo.casa : jogo.fora;
+          const logo = l === 'casa' ? jogo.logoCasa : jogo.logoFora;
+          const form = (l === 'casa' ? esc.casa : esc.fora).formacao;
+          return (
+            <button
+              key={l}
+              type="button"
+              role="tab"
+              aria-selected={lado === l}
+              className={`escalacoes__aba${lado === l ? ' escalacoes__aba--on' : ''}`}
+              onClick={() => setLado(l)}
+            >
+              {logo && <img src={logo} alt="" />}
+              <span>{form || nome}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="escala-campo escalacoes__campo">
+        {dados.titulares.map((j, i) => (
+          <span
+            key={i}
+            className={`escala-pin escala-pin--${lado}${j.saiu ? ' escala-pin--saiu' : ''}`}
+            style={{ left: `${px(j.x)}%`, top: `${j.y}%` }}
+          >
+            <span className="escala-pin__n">{j.numero}</span>
+            <span className="escala-pin__nome">{j.nome}</span>
+          </span>
         ))}
-      </ul>
+      </div>
+
+      {dados.suplentes.length > 0 && (
+        <div className="escala-banco escalacoes__banco">
+          <strong>Suplentes · {nomeEq}</strong>
+          <ul>
+            {dados.suplentes.map((s, i) => (
+              <li key={i} className={s.entrou ? 'escala-banco__entrou' : undefined}>
+                <span>{s.numero}</span> {s.nome}
+                {s.entrou && <em className="escalacoes__entrou">entrou</em>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -1086,6 +1116,9 @@ function SalaJogo({
                   </span>
                 )}
               </strong>
+              {detalhes.escalacoes?.casa.formacao && (
+                <span className="placar__forma">{detalhes.escalacoes.casa.formacao}</span>
+              )}
             </div>
             <div className="placar__resultado">
               <span>{jx.golosCasa ?? '–'}</span>
@@ -1102,6 +1135,9 @@ function SalaJogo({
                   </span>
                 )}
               </strong>
+              {detalhes.escalacoes?.fora.formacao && (
+                <span className="placar__forma">{detalhes.escalacoes.fora.formacao}</span>
+              )}
             </div>
           </div>
 
@@ -1122,18 +1158,14 @@ function SalaJogo({
         {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
         {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
 
-        {/* ── Escalações no campo ── */}
-        {detalhes.escalacoes && (
-          <div className="jogo-detalhes__bloco">
-            <h3>Escalações</h3>
-            <CampoEscalacoes esc={detalhes.escalacoes} jogo={jx} />
-            <div className="escala-bancos">
-              <BancoEquipa titulo={jx.casa} lado={detalhes.escalacoes.casa} />
-              <BancoEquipa titulo={jx.fora} lado={detalhes.escalacoes.fora} />
-            </div>
-          </div>
-        )}
+        {/* ── Corpo em duas colunas, no espírito da ficha da ESPN:
+             à esquerda as formações e o banco; à direita tudo o resto. ── */}
+        <div className="ficha-grid">
+        <div className="ficha-grid__esq">
+        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
+        </div>
 
+        <div className="ficha-grid__dir">
         {/* ── Estatísticas + Líderes ── */}
         <div className="ficha-2col">
           <div className="jogo-detalhes__bloco">
@@ -1229,6 +1261,8 @@ function SalaJogo({
             </div>
           )}
         </div>
+        </div>{/* /.ficha-grid__dir */}
+        </div>{/* /.ficha-grid */}
 
         {/* ── Previsões + drops ── */}
         {perguntas.length > 0 && (
