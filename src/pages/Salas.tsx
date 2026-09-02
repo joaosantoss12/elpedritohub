@@ -603,12 +603,8 @@ function ListaEstatisticas({ estatisticas }: { estatisticas: EstatisticaJogo[] }
   );
 }
 
-function EscalacoesESPN(
-  { esc, jogo, estatisticas }:
-  { esc: Escalacoes; jogo: JogoAoVivo; estatisticas: EstatisticaJogo[] },
-) {
+function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
   const [lado, setLado] = useState<'casa' | 'fora'>('casa');
-  const [vista, setVista] = useState<'campo' | 'stats'>('campo');
   const dados: LadoEscalacao = esc[lado];
   const corCru = lado === 'casa' ? esc.corCasa : esc.corFora;
   const cor = corCru && /^[0-9a-fA-F]{6}$/.test(corCru)
@@ -649,33 +645,6 @@ function EscalacoesESPN(
         })}
       </div>
 
-      <div className="escalacoes__vista-abas" role="tablist">
-        <button
-          type="button" role="tab" aria-selected={vista === 'campo'}
-          className={`escalacoes__vista-aba${vista === 'campo' ? ' escalacoes__vista-aba--on' : ''}`}
-          onClick={() => setVista('campo')}
-        >
-          Campo
-        </button>
-        <button
-          type="button" role="tab" aria-selected={vista === 'stats'}
-          className={`escalacoes__vista-aba${vista === 'stats' ? ' escalacoes__vista-aba--on' : ''}`}
-          onClick={() => setVista('stats')}
-        >
-          Estatísticas
-        </button>
-      </div>
-
-      {vista === 'stats' ? (
-        <div className="escalacoes__stats">
-          <CabecalhoEquipas jogo={jogo} />
-          {estatisticas.length === 0 ? (
-            <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
-          ) : (
-            <ListaEstatisticas estatisticas={estatisticas} />
-          )}
-        </div>
-      ) : (
       <div className="escalacoes__campo">
         {dados.titulares.map((j, i) => (
           <span
@@ -703,7 +672,6 @@ function EscalacoesESPN(
           </span>
         ))}
       </div>
-      )}
 
       <div className="escalacoes__subs-bloco">
         <strong>Substituições</strong>
@@ -1174,6 +1142,7 @@ function SalaJogo({
     classificacao: null,
   });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
+  const [vistaMeio, setVistaMeio] = useState<'campo' | 'stats'>('campo');
 
   // O jogo tal como se mostra: o que veio da lista, com o placar, o relógio e
   // o estado do próprio summary por cima — a mesma fonte do mini-campo, para
@@ -1368,9 +1337,7 @@ function SalaJogo({
         {/* ── Corpo em três colunas, ao estilo da ficha da ESPN ── */}
         <div className="ficha-corpo">
         <div className="ficha-corpo__esq">
-        {detalhes.escalacoes && (
-          <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} estatisticas={detalhes.estatisticas} />
-        )}
+        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
         </div>
 
         <div className="ficha-corpo__meio">
@@ -1379,19 +1346,40 @@ function SalaJogo({
           <CronologiaJogo eventos={detalhes.eventos} />
         )}
 
-        {/* ── Momentum / mini-campo ── */}
-        {estaAoVivo(jx) && <CampoAoVivo jogo={jx} momento={jx.momento} />}
-        {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
-        {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
-
-        {/* ── Estatísticas ── */}
+        {/* ── Mini-campo ao vivo ⇄ estatísticas ── */}
         <div className="jogo-detalhes__bloco">
-            <h3>Estatísticas</h3>
-            <CabecalhoEquipas jogo={jx} />
-            {semDadosReais && (
-              <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
-            )}
-            <ListaEstatisticas estatisticas={estatisticas} />
+          <div className="meio-vista__abas" role="tablist">
+            <button
+              type="button" role="tab" aria-selected={vistaMeio === 'campo'}
+              className={`meio-vista__aba${vistaMeio === 'campo' ? ' meio-vista__aba--on' : ''}`}
+              onClick={() => setVistaMeio('campo')}
+            >
+              Campo ao vivo
+            </button>
+            <button
+              type="button" role="tab" aria-selected={vistaMeio === 'stats'}
+              className={`meio-vista__aba${vistaMeio === 'stats' ? ' meio-vista__aba--on' : ''}`}
+              onClick={() => setVistaMeio('stats')}
+            >
+              Estatísticas
+            </button>
+          </div>
+
+          {vistaMeio === 'campo' ? (
+            <>
+              {estaAoVivo(jx) && <CampoAoVivo jogo={jx} momento={jx.momento} />}
+              {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
+              {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
+            </>
+          ) : (
+            <>
+              <CabecalhoEquipas jogo={jx} />
+              {semDadosReais && (
+                <p className="jogo-detalhes__nota">Atualizam quando o jogo começar.</p>
+              )}
+              <ListaEstatisticas estatisticas={estatisticas} />
+            </>
+          )}
         </div>
 
         {/* ── Histórico do jogo ── */}

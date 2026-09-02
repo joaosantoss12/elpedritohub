@@ -866,17 +866,21 @@ function espalharLinhas(pts: { x: number; y: number }[]): void {
     arr.push(i);
     linhas.set(k, arr);
   });
-  for (const idxs of linhas.values()) {
-    const mx = idxs.reduce((s, i) => s + pts[i].x, 0) / idxs.length;
-    idxs.forEach(i => { pts[i].x = mx; });
+  // Distribui as linhas uniformemente em profundidade (GR atrás → avançados
+  // à frente), para que nenhuma formação fique com bandas apertadas ou vazias.
+  const chaves = [...linhas.keys()].sort((a, b) => a - b);
+  chaves.forEach((chave, r) => {
+    const idxs = linhas.get(chave)!;
+    const x = chaves.length > 1 ? 6 + (r / (chaves.length - 1)) * 40 : 26;
+    idxs.forEach(i => { pts[i].x = x; });
     const n = idxs.length;
-    if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; continue; }
+    if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; return; }
     idxs.sort((a, b) => pts[a].y - pts[b].y);
     const margem = n >= 4 ? 10 : n === 3 ? 22 : 34;
     idxs.forEach((idx, j) => {
       pts[idx].y = margem + (j / (n - 1)) * (100 - 2 * margem);
     });
-  }
+  });
 }
 
 function coordsFormacao(formacao: string): { x: number; y: number }[] {

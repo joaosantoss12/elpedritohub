@@ -1397,32 +1397,31 @@
   color: var(--text-white);
   background: var(--bg-card);
 }
-.escalacoes__vista-abas {
+.meio-vista__abas {
   display: flex;
   gap: 0.3rem;
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.75rem;
   padding: 0.2rem;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   background: var(--surface-sunken);
 }
-.escalacoes__vista-aba {
+.meio-vista__aba {
   flex: 1;
-  padding: 0.35rem 0.5rem;
+  padding: 0.4rem 0.5rem;
   border: 0;
   border-radius: 7px;
   background: transparent;
   color: var(--text-gray);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
 }
-.escalacoes__vista-aba--on {
+.meio-vista__aba--on {
   background: var(--bg-card);
   color: var(--text-white);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
-.escalacoes__stats { margin-bottom: 0.6rem; }
 
 /* ── Campo vertical com camisolas (estilo ESPN) ── */
 .escalacoes__campo {
