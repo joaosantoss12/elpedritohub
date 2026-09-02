@@ -917,15 +917,24 @@ function eventosCrus(json: Bruto): EventoCru[] {
   const comp = obj(lista(obj(json.header).competitions)[0]);
   const equipas = lista(comp.competitors).map(obj);
   const casaComp = obj(equipas.find(c => c.homeAway === 'home')?.team ?? {});
+  const foraComp = obj(equipas.find(c => c.homeAway === 'away')?.team ?? {});
   const idCasa = txt(casaComp.id);
-  const nomeCasa = (txt(casaComp.displayName) ?? txt(casaComp.name) ?? '').toLowerCase();
+  const idFora = txt(foraComp.id);
+  const nomesLado = (t: Bruto): string[] =>
+    [txt(t.displayName), txt(t.name), txt(t.shortDisplayName), txt(t.abbreviation)]
+      .map(x => (x ?? '').toLowerCase()).filter(Boolean);
+  const nomesCasa = nomesLado(casaComp);
+  const nomesFora = nomesLado(foraComp);
 
   // O lado por id (details) ou, quando só há o nome (commentary), pelo nome.
+  // Nunca "adivinha": se não bate com nenhuma equipa, devolve null.
   const lado = (t: Bruto): 'casa' | 'fora' | null => {
     const id = txt(t.id);
-    if (id && idCasa) return id === idCasa ? 'casa' : 'fora';
-    const nome = (txt(t.displayName) ?? txt(t.name) ?? '').toLowerCase();
-    if (nome && nomeCasa) return nome === nomeCasa ? 'casa' : 'fora';
+    if (id && idCasa && id === idCasa) return 'casa';
+    if (id && idFora && id === idFora) return 'fora';
+    const nomes = nomesLado(t);
+    if (nomes.some(n => nomesCasa.includes(n))) return 'casa';
+    if (nomes.some(n => nomesFora.includes(n))) return 'fora';
     return null;
   };
 
@@ -960,26 +969,31 @@ function eventoGolo(slug: string): boolean {
   return slug.includes('penalty') && slug.includes('scored');
 }
 
-/** Um nome de evento (displayName) refere-se a este atleta? Compara pelo
- *  apelido para aguentar "J. Solis" vs "Jhon Solis". */
-function mesmoJogador(nomeEvento: string, at: Bruto): boolean {
-  const alvo = (txt(at.displayName) ?? '').toLowerCase().trim();
-  const e = nomeEvento.toLowerCase().trim();
-  if (!e || !alvo) return false;
-  if (alvo === e) return true;
-  const palavras = (s: string) => s.split(/[\s\-]+/).filter(w => w.length > 1);
-  const pe = palavras(e);
-  const pa = palavras(alvo);
+/** Um nome de evento (displayName) refere-se a este atleta? Aguenta
+ *  "J. Solis" vs "Jhon Solis" sem confundir jogadores que só partilham o
+ *  apelido ("Jota Silva" vs "Thiago Silva"). */
+function palavrasNome(s: string): string[] {
+  return s.toLowerCase().split(/[\s.\-]+/).filter(w => w.length > 1);
+}
+function nomesBatem(pe: string[], pa: string[]): boolean {
   if (!pe.length || !pa.length) return false;
-  // Todas as palavras de um lado contidas no outro ("Gibbs-White" ⊂ "Morgan Gibbs-White").
-  if (pe.every(w => pa.includes(w)) || pa.every(w => pe.includes(w))) return true;
-  // Mesmo apelido — mas confirma a inicial do nome próprio quando ambos a têm,
-  // para não confundir "M. Gibbs-White" com um jogador chamado "D. White".
-  const apA = pa[pa.length - 1];
-  const apE = pe[pe.length - 1];
-  if (apA.length <= 2 || apA !== apE) return false;
-  if (pa.length > 1 && pe.length > 1) return pa[0][0] === pe[0][0];
-  return true;
+  const [curto, longo] = pe.length <= pa.length ? [pe, pa] : [pa, pe];
+  // Nome com uma só palavra: só casa se for o apelido do outro ("Solis").
+  if (curto.length === 1) return curto[0] === longo[longo.length - 1];
+  // Caso contrário, todas as palavras do mais curto têm de estar no mais longo.
+  return curto.every(w => longo.includes(w));
+}
+function mesmoJogador(nomeEvento: string, at: Bruto): boolean {
+  const e = nomeEvento.toLowerCase().trim();
+  if (!e) return false;
+  const pe = palavrasNome(e);
+  for (const bruto of [txt(at.displayName), txt(at.shortName)]) {
+    const alvo = (bruto ?? '').toLowerCase().trim();
+    if (!alvo) continue;
+    if (alvo === e) return true;
+    if (nomesBatem(pe, palavrasNome(alvo))) return true;
+  }
+  return false;
 }
 
 function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): LadoEscalacao {
