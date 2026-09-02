@@ -85,15 +85,15 @@ async function lerFaixasSpotify(
     return { nome: j.name ?? 'Faixa', faixas: [juntar(j)] };
   }
 
-  const base =
-    alvo.tipo === 'playlist'
-      ? `https://api.spotify.com/v1/playlists/${alvo.id}/tracks?limit=100&fields=items(track(name,artists(name))),next`
-      : `https://api.spotify.com/v1/albums/${alvo.id}/tracks?limit=50`;
+  const recurso = alvo.tipo === 'playlist'
+    ? `https://api.spotify.com/v1/playlists/${alvo.id}/tracks`
+    : `https://api.spotify.com/v1/albums/${alvo.id}/tracks`;
 
-  let url: string | null = base;
+  // Paginação por `offset` explícito (não confiar no `next` — com `fields`
+  // vinha por vezes truncado e parava na 1.ª página de 100).
   const faixas: { titulo: string; artista: string }[] = [];
-  while (url && faixas.length < MAX_FAIXAS) {
-    const r: Response = await fetch(url, auth);
+  for (let offset = 0; offset < MAX_FAIXAS; offset += 100) {
+    const r: Response = await fetch(`${recurso}?limit=100&offset=${offset}`, auth);
     if (r.status === 404) {
       throw new Error(
         alvo.tipo === 'playlist'
@@ -103,12 +103,13 @@ async function lerFaixasSpotify(
     }
     if (!r.ok) throw new Error(`Spotify respondeu ${r.status} ao ler a lista.`);
     const j = (await r.json()) as { items?: unknown[]; next?: string | null };
-    for (const item of j.items ?? []) {
+    const itens = j.items ?? [];
+    for (const item of itens) {
       const it = alvo.tipo === 'playlist' ? (item as { track?: SpItem }).track : (item as SpItem);
       const f = juntar(it);
       if (f.titulo) faixas.push(f);
     }
-    url = j.next ?? null;
+    if (itens.length < 100 && !j.next) break;
   }
 
   // O nome da coleção fica num pedido à parte (o de faixas não o traz).
