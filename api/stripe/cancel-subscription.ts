@@ -35,7 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const subscription = await stripe.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
-    const periodEnd = subscription.cancel_at ?? subscription.current_period_end;
+    // Nas versões recentes da API do Stripe o `current_period_end` saiu da
+    // subscrição e passou para cada item; com `cancel_at_period_end` o
+    // `cancel_at` vem preenchido e é o que interessa.
+    const item = subscription.items?.data?.[0] as { current_period_end?: number } | undefined;
+    const periodEnd = subscription.cancel_at ?? item?.current_period_end;
     if (!periodEnd) {
       return res.status(500).json({ error: 'Não foi possível obter a data de cancelamento' });
     }
