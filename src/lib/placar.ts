@@ -928,6 +928,10 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
   const lado: 'casa' | 'fora' = casa ? 'casa' : 'fora';
   const meus = evs.filter(e => e.equipa === lado);
 
+  // "T. Wilke" → "Wilke": tira as iniciais abreviadas do início do nome.
+  const semInicial = (n: string): string =>
+    n.replace(/^(?:\p{L}\.[\s ]*)+/u, '').trim() || n;
+
   const titulares: JogadorCampo[] = jogadores
     .filter(p => p.starter === true)
     .map((p, i) => {
@@ -940,7 +944,7 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
       const pos = txt(obj(p.position).abbreviation);
       return {
         numero: txt(p.jersey) ?? '',
-        nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
+        nome: semInicial(txt(at.shortName) ?? txt(at.displayName) ?? ''),
         x: casa ? c.x : 100 - c.x,
         y: c.y,
         saiu: p.subbedOut === true,
@@ -979,7 +983,7 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         : null;
       return {
         numero: txt(p.jersey) ?? '',
-        nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
+        nome: semInicial(txt(at.shortName) ?? txt(at.displayName) ?? ''),
         entrou,
         minuto: troca?.minuto ?? null,
         saiuPor: saiuPor ? nomeCurto(saiuPor) : null,
