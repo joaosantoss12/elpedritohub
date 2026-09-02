@@ -217,12 +217,30 @@ export function LeitorMusica() {
     return () => { cancelado = true; };
   }, [config, user]);
 
-  // Relógio da barra de progresso.
+  // Relógio da barra de progresso. Também apanha os metadados quando a faixa
+  // está só em fila (cue) — aí o `onStateChange` ainda não disparou, mas o
+  // `getVideoData`/`getPlaylist` já respondem passado um instante.
   useEffect(() => {
     if (!pronto) return;
     const t = setInterval(() => {
       const p = playerRef.current;
-      if (!p?.getCurrentTime || arrastarRef.current) return;
+      if (!p?.getCurrentTime) return;
+
+      const d = p.getVideoData?.();
+      if (d?.video_id) {
+        setVideoId(prev => (prev === d.video_id ? prev : d.video_id));
+        if (d.title) {
+          setTitulo(prev => (prev ? prev : d.title));
+          setAutor(prev => (prev ? prev : d.author ?? ''));
+        }
+      }
+      const arr: string[] = p.getPlaylist?.() ?? [];
+      if (Array.isArray(arr) && arr.length) {
+        setLista(prev => (prev.length === arr.length ? prev : arr));
+        setIndiceLista(p.getPlaylistIndex?.() ?? -1);
+      }
+
+      if (arrastarRef.current) return;
       setAtual(p.getCurrentTime() ?? 0);
       const dur = p.getDuration?.() ?? 0;
       if (dur && dur !== total) setTotal(dur);
@@ -276,6 +294,31 @@ export function LeitorMusica() {
     });
     return () => { vivo = false; };
   }, [verLista, lista, titulos]);
+
+  // Faixa "atual" mesmo antes de tocar: o player em fila já sabe o índice da
+  // playlist, por isso dá para mostrar capa/favorito à primeira carga.
+  const videoIdAtual = videoId || (indiceLista >= 0 ? lista[indiceLista] : '') || '';
+
+  // Se ainda não temos título/autor da faixa atual (típico com a playlist só
+  // em fila), vai buscá-los ao oEmbed — assim a barra fica completa em pausa.
+  useEffect(() => {
+    if (!videoIdAtual || titulo) return;
+    let vivo = true;
+    void (async () => {
+      try {
+        const r = await fetch(
+          `https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=${videoIdAtual}`,
+        );
+        if (!r.ok || !vivo) return;
+        const j = await r.json();
+        if (!vivo) return;
+        setTitulo(j.title ?? '');
+        setAutor(j.author_name ?? '');
+        setTitulos(prev => (videoIdAtual in prev ? prev : { ...prev, [videoIdAtual]: String(j.title ?? '') }));
+      } catch { /* sem rede — fica o fallback "A carregar…" */ }
+    })();
+    return () => { vivo = false; };
+  }, [videoIdAtual, titulo]);
 
   const alternar = useCallback(() => {
     const p = playerRef.current;
@@ -350,9 +393,9 @@ export function LeitorMusica() {
         {aberto && (
           <div className="leitor-musica__corpo">
             <div className="leitor-musica__faixa">
-              {videoId ? (
+              {videoIdAtual ? (
                 <img
-                  src={`https://i.ytimg.com/vi/${videoId}/default.jpg`}
+                  src={`https://i.ytimg.com/vi/${videoIdAtual}/default.jpg`}
                   alt=""
                   className="leitor-musica__capa"
                 />
@@ -365,13 +408,13 @@ export function LeitorMusica() {
                 <strong>{titulo || (config ? 'A carregar…' : 'Sem música configurada')}</strong>
                 <em>{autor || (config ? '' : 'Carrega em Configurar para escolher')}</em>
               </span>
-              {videoId && (
+              {videoIdAtual && (
                 <button
-                  className={`leitor-musica__fav${favSet.has(videoId) ? ' leitor-musica__fav--on' : ''}`}
-                  onClick={() => alternarFavorita({ id: videoId, titulo, autor })}
-                  title={favSet.has(videoId) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                  className={`leitor-musica__fav${favSet.has(videoIdAtual) ? ' leitor-musica__fav--on' : ''}`}
+                  onClick={() => alternarFavorita({ id: videoIdAtual, titulo, autor })}
+                  title={favSet.has(videoIdAtual) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                 >
-                  <Heart size={16} fill={favSet.has(videoId) ? 'currentColor' : 'none'} />
+                  <Heart size={16} fill={favSet.has(videoIdAtual) ? 'currentColor' : 'none'} />
                 </button>
               )}
             </div>
@@ -523,7 +566,7 @@ export function LeitorMusica() {
                 {favoritas.map(f => (
                   <li
                     key={f.id}
-                    className={f.id === videoId ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
+                    className={f.id === videoIdAtual ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
                     onClick={() => tocarFaixaSolta(f.id)}
                   >
                     <img src={`https://i.ytimg.com/vi/${f.id}/default.jpg`} alt="" />
