@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Settings, ChevronDown, ChevronUp, Music,
+  Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -107,6 +107,14 @@ export function LeitorMusica() {
   });
   const [mudo, setMudo] = useState(false);
 
+  const [lista, setLista] = useState<string[]>([]);
+  const [indiceLista, setIndiceLista] = useState(-1);
+  const [verLista, setVerLista] = useState(false);
+  const [titulos, setTitulos] = useState<Record<string, string>>({});
+  const [aleatorio, setAleatorio] = useState<boolean>(() => {
+    try { return localStorage.getItem('ep-musica-shuffle') === 'sim'; } catch { return false; }
+  });
+
   const playerRef = useRef<any>(null);
   const arrastarRef = useRef(false);
   // Só toca sozinho depois de o utilizador escolher algo (é o gesto que
@@ -124,21 +132,30 @@ export function LeitorMusica() {
       const alvo = document.getElementById('ep-yt-alvo');
       if (!alvo) return;
 
+      const sincronizarLista = (p: any) => {
+        const arr: string[] = p.getPlaylist?.() ?? [];
+        setLista(Array.isArray(arr) ? arr : []);
+        setIndiceLista(p.getPlaylistIndex?.() ?? -1);
+      };
+
       const comum = {
         events: {
           onReady: (e: any) => {
             setPronto(true);
-            e.target.setVolume(volume);
+            e.target.setVolume(mudo ? 0 : volume);
+            if (config.tipo === 'playlist') e.target.setShuffle?.(aleatorio);
             const d = e.target.getVideoData?.();
             if (d) { setTitulo(d.title ?? ''); setAutor(d.author ?? ''); }
+            sincronizarLista(e.target);
           },
           onStateChange: (e: any) => {
-            // 1 = a tocar, 2 = em pausa, 0 = fim
+            // 1 = a tocar, 2 = em pausa, 0 = fim, 5 = em fila
             setTocar(e.data === 1);
             const d = e.target.getVideoData?.();
             if (d?.title) { setTitulo(d.title); setAutor(d.author ?? ''); }
-            setVideoId(e.target.getVideoData?.()?.video_id ?? '');
+            setVideoId(d?.video_id ?? '');
             setTotal(e.target.getDuration?.() ?? 0);
+            sincronizarLista(e.target);
           },
         },
       };
@@ -155,6 +172,7 @@ export function LeitorMusica() {
           playerRef.current.cueVideoById(config.id);
         }
         playerRef.current.setVolume(mudo ? 0 : volume);
+        if (config.tipo === 'playlist') playerRef.current.setShuffle?.(aleatorio);
         setPronto(true);
         return;
       }
@@ -206,11 +224,51 @@ export function LeitorMusica() {
     return () => document.body.classList.remove('tem-leitor-musica');
   }, [user, aberto]);
 
+  // Vai buscar os títulos das faixas da playlist quando a lista abre (oEmbed
+  // do YouTube, sem chave de API). Guarda o que já tiver.
+  useEffect(() => {
+    if (!verLista) return;
+    const emFalta = lista.filter(id => id && !(id in titulos));
+    if (emFalta.length === 0) return;
+    let vivo = true;
+    void Promise.all(
+      emFalta.slice(0, 60).map(async id => {
+        try {
+          const r = await fetch(
+            `https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=${id}`,
+          );
+          if (!r.ok) return [id, ''] as const;
+          const j = await r.json();
+          return [id, String(j.title ?? '')] as const;
+        } catch {
+          return [id, ''] as const;
+        }
+      }),
+    ).then(pares => {
+      if (!vivo) return;
+      setTitulos(prev => {
+        const prox = { ...prev };
+        for (const [id, t] of pares) prox[id] = t;
+        return prox;
+      });
+    });
+    return () => { vivo = false; };
+  }, [verLista, lista, titulos]);
+
   const alternar = useCallback(() => {
     const p = playerRef.current;
     if (!p) return;
     if (tocar) p.pauseVideo(); else p.playVideo();
   }, [tocar]);
+
+  const alternarAleatorio = () => {
+    setAleatorio(a => {
+      const prox = !a;
+      try { localStorage.setItem('ep-musica-shuffle', prox ? 'sim' : 'nao'); } catch { /* privado */ }
+      playerRef.current?.setShuffle?.(prox);
+      return prox;
+    });
+  };
 
   const guardarConfig = () => {
     const c = interpretarLink(rascunho);
@@ -267,6 +325,16 @@ export function LeitorMusica() {
 
             <div className="leitor-musica__centro">
               <div className="leitor-musica__botoes">
+                {temPlaylist && (
+                  <button
+                    className={aleatorio ? 'leitor-musica__on' : ''}
+                    onClick={alternarAleatorio}
+                    disabled={!pronto}
+                    title={aleatorio ? 'Aleatório ligado' : 'Aleatório'}
+                  >
+                    <Shuffle size={16} />
+                  </button>
+                )}
                 <button
                   onClick={() => playerRef.current?.previousVideo?.()}
                   disabled={!temPlaylist || !pronto}
@@ -289,6 +357,15 @@ export function LeitorMusica() {
                 >
                   <SkipForward size={18} />
                 </button>
+                {temPlaylist && (
+                  <button
+                    className={verLista ? 'leitor-musica__on' : ''}
+                    onClick={() => setVerLista(v => !v)}
+                    title="Lista de faixas"
+                  >
+                    <ListMusic size={16} />
+                  </button>
+                )}
               </div>
 
               <div className="leitor-musica__progresso">
@@ -342,6 +419,29 @@ export function LeitorMusica() {
           </div>
         )}
 
+        {verLista && aberto && temPlaylist && (
+          <div className="leitor-musica__lista">
+            <div className="leitor-musica__lista-topo">
+              <span>Faixas da playlist ({lista.length})</span>
+              <button onClick={() => setVerLista(false)} title="Fechar">
+                <ChevronDown size={16} />
+              </button>
+            </div>
+            <ul>
+              {lista.map((id, i) => (
+                <li
+                  key={`${id}-${i}`}
+                  className={i === indiceLista ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
+                  onClick={() => playerRef.current?.playVideoAt?.(i)}
+                >
+                  <img src={`https://i.ytimg.com/vi/${id}/default.jpg`} alt="" />
+                  <span>{titulos[id] ?? '…'}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {aConfigurar && aberto && (
           <div className="leitor-musica__painel">
             <label>Link do YouTube (vídeo ou playlist)</label>
@@ -385,12 +485,15 @@ export function LeitorMusica() {
         }
         .leitor-musica__aba:hover { color: var(--gold-primary); }
         .leitor-musica__corpo {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr) minmax(0, 1fr);
-          align-items: center; gap: 1.2rem;
-          padding: 0.7rem 1.4rem; max-width: 1400px; margin: 0 auto;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 1.2rem; padding: 0.7rem 1.6rem;
         }
-        .leitor-musica__faixa { display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+        .leitor-musica__faixa {
+          display: flex; align-items: center; gap: 0.7rem;
+          min-width: 0; flex: 0 1 280px;
+        }
+        .leitor-musica__centro { flex: 0 1 480px; }
+        .leitor-musica__direita { flex: 0 1 280px; }
         .leitor-musica__capa {
           width: 42px; height: 42px; border-radius: 8px; object-fit: cover;
           flex-shrink: 0; border: 1px solid var(--border-color);
@@ -486,6 +589,39 @@ export function LeitorMusica() {
         }
         .leitor-musica__ok { background: var(--gold-primary); color: #0d1220; border-color: transparent; }
         .leitor-musica__cancel { background: transparent; color: var(--text-gray); }
+
+        .leitor-musica__botoes button.leitor-musica__on { color: var(--gold-primary); }
+
+        .leitor-musica__lista {
+          position: absolute; left: 50%; transform: translateX(-50%);
+          bottom: calc(100% + 8px); width: min(420px, calc(100vw - 32px));
+          max-height: 320px; display: flex; flex-direction: column;
+          background: var(--bg-card); border: 1px solid var(--border-strong);
+          border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden;
+        }
+        .leitor-musica__lista-topo {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0.7rem 0.9rem; font-size: 0.72rem; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted);
+          border-bottom: 1px solid var(--border-color);
+        }
+        .leitor-musica__lista-topo button {
+          background: none; border: none; color: var(--text-gray); cursor: pointer;
+          display: flex; padding: 0;
+        }
+        .leitor-musica__lista ul { list-style: none; margin: 0; padding: 0.35rem; overflow-y: auto; }
+        .leitor-musica__faixa-item {
+          display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem;
+          border-radius: 8px; cursor: pointer; font-size: 0.8rem; color: var(--text-gray);
+        }
+        .leitor-musica__faixa-item:hover { background: var(--surface-sunken); color: var(--text-white); }
+        .leitor-musica__faixa-item--atual { color: var(--gold-primary); }
+        .leitor-musica__faixa-item img {
+          width: 40px; height: 30px; border-radius: 4px; object-fit: cover; flex-shrink: 0;
+        }
+        .leitor-musica__faixa-item span {
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         body.tem-leitor-musica .gm-drop { bottom: 92px; }
 
