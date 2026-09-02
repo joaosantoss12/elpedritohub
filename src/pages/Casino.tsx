@@ -34,10 +34,6 @@ export default function Casino() {
           <h1 className="casino-hero__nome">
             <img src="/captainslogo.png" alt="CaptainsBet" />
           </h1>
-          <p className="casino-hero__tagline">
-            As mesmas slots que vês a pagar aqui em baixo. Regista-te pelo link
-            oficial e apoia o projeto sem pagar mais por isso.
-          </p>
           <a
             className="casino-hero__cta"
             href={CASINO_URL}
