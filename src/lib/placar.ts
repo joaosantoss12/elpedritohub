@@ -1335,6 +1335,16 @@ function espalharLinhas(pts: { x: number; y: number }[]): void {
     idxs.forEach((idx, j) => {
       pts[idx].y = margem + (j / (n - 1)) * (100 - 2 * margem);
     });
+    // Curva estilo ESPN: numa linha larga (4+), os jogadores das pontas
+    // (alas) sobem — mais ofensivos — e os do meio ficam recuados, formando
+    // um arco côncavo em vez de uma fila reta.
+    if (n >= 4) {
+      const amp = n >= 5 ? 7 : 4;
+      idxs.forEach(idx => {
+        const dist = Math.abs(pts[idx].y - 50) / 50; // 0 no centro … 1 na ponta
+        pts[idx].x = Math.min(x + amp * dist, 47);
+      });
+    }
   });
 }
 
