@@ -374,22 +374,12 @@
    as estatísticas, mas as 3 colunas terminam todas ao mesmo nível. */
 .sala-jogo__lado--jogo { justify-content: flex-end; }
 
-/* O histórico estica-se até ao fundo da coluna, para ficar do mesmo tamanho
-   que o painel de estatísticas ao lado (as 3 colunas terminam ao mesmo nível). */
-.sala-jogo__lado--social { justify-content: stretch; min-height: 0; }
-.sala-jogo__lado--social .jogo-detalhes { flex: 1; min-height: 0; }
-/* O bloco enche a coluna (que a grelha põe à altura das estatísticas) e a
-   lista rola por dentro. O `minmax(0,1fr)` faz o bloco não "contar" a lista
-   toda na altura — senão era ela a esticar a linha da grelha. */
-.sala-jogo__lado--social .jogo-detalhes__bloco {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-}
+/* O bloco do histórico não pode crescer com os eventos: a lista tem um tecto
+   e passa a rolar por dentro, para o painel ficar do tamanho do das
+   estatísticas ao lado. */
+.sala-jogo__lado--social { min-height: 0; }
 .sala-jogo__lado--social .jogo-relato {
-  min-height: 0;
-  max-height: none;
+  max-height: clamp(320px, 46vh, 520px);
   overflow-y: auto;
 }
 

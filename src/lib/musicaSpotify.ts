@@ -24,6 +24,15 @@ export function eLinkSpotify(s: string): boolean {
 
 export async function resolverSpotify(url: string): Promise<ListaSpotify> {
   const r = await fetch(`/api/musica/spotify?url=${encodeURIComponent(url.trim())}`);
+  // Em `npm run dev` (Vite puro) não há funções `api/` — o pedido devolve o
+  // index.html da SPA, que não é JSON. Isto só funciona no site publicado
+  // (ou com `vercel dev`).
+  const ct = r.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) {
+    throw new Error(
+      'O leitor de Spotify só corre no site publicado (a função /api não existe em localhost).',
+    );
+  }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) {
     throw new Error(typeof j?.error === 'string' ? j.error : 'Não foi possível ler o Spotify.');
