@@ -1,8 +1,37 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { verifyTelegramIdToken } from '../_lib/telegramAuth.js';
-import { signSession, sessionCookieHeader } from '../_lib/session.js';
+import { signSession, verifySession, sessionCookieHeader, SESSION_COOKIE } from '../_lib/session.js';
+
+/* As três rotas do Telegram (login/logout/me) vivem numa só função para não
+   estourar o limite de 12 Serverless Functions do plano Hobby. O caminho
+   `/api/telegram/<acao>` mantém-se igual para o frontend. */
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const acao = Array.isArray(req.query.acao) ? req.query.acao[0] : req.query.acao;
+
+  if (acao === 'me') return me(req, res);
+  if (acao === 'logout') return logout(req, res);
+  if (acao === 'login') return login(req, res);
+  return res.status(404).json({ error: 'Rota desconhecida' });
+}
+
+function me(req: VercelRequest, res: VercelResponse) {
+  const session = verifySession(req.cookies?.[SESSION_COOKIE]);
+  if (!session) {
+    return res.status(200).json({ loggedIn: false });
+  }
+  return res.status(200).json({ loggedIn: true, user: session });
+}
+
+function logout(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  res.setHeader('Set-Cookie', sessionCookieHeader('', 0));
+  return res.status(200).json({ ok: true });
+}
+
+async function login(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
