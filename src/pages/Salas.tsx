@@ -1092,8 +1092,14 @@ function SalaJogo({
       </button>
 
       <div className="sala-jogo__ficha">
-        {/* ── Cabeçalho: placar ── */}
-        <div className={estaAoVivo(jx) ? 'placar placar--vivo' : 'placar'}>
+        {/* ── Topo: escalações · placar · forma/confrontos, três colunas ── */}
+        <div className="ficha-topo">
+        <div className="ficha-topo__esq">
+        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
+        </div>
+
+        {/* ── Placar ── */}
+        <div className={estaAoVivo(jx) ? 'placar placar--vivo ficha-topo__meio' : 'placar ficha-topo__meio'}>
           <div className="placar__liga">
             {bandeiraDaLiga(jogo.ligaSlug) && (
               <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
@@ -1148,6 +1154,23 @@ function SalaJogo({
           )}
         </div>
 
+        <div className="ficha-topo__dir">
+        {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
+          <div className="jogo-detalhes__bloco">
+            <h3>Forma recente</h3>
+            <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
+            <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
+          </div>
+        )}
+        {detalhes.h2h && (
+          <div className="jogo-detalhes__bloco">
+            <h3>Confrontos diretos</h3>
+            <ConfrontosH2H h2h={detalhes.h2h} />
+          </div>
+        )}
+        </div>
+        </div>{/* /.ficha-topo */}
+
         {/* ── Cronologia dos lances-chave ── */}
         {detalhes.eventos.length > 0 && jx.estado !== 'agendado' && (
           <CronologiaJogo eventos={detalhes.eventos} />
@@ -1158,14 +1181,6 @@ function SalaJogo({
         {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
         {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
 
-        {/* ── Corpo em duas colunas, no espírito da ficha da ESPN:
-             à esquerda as formações e o banco; à direita tudo o resto. ── */}
-        <div className="ficha-grid">
-        <div className="ficha-grid__esq">
-        {detalhes.escalacoes && <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />}
-        </div>
-
-        <div className="ficha-grid__dir">
         {/* ── Estatísticas + Líderes ── */}
         <div className="ficha-2col">
           <div className="jogo-detalhes__bloco">
@@ -1206,25 +1221,6 @@ function SalaJogo({
           )}
         </div>
 
-        {/* ── Forma recente + confrontos diretos ── */}
-        {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0 || detalhes.h2h) && (
-          <div className="ficha-2col">
-            {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
-              <div className="jogo-detalhes__bloco">
-                <h3>Forma recente</h3>
-                <FormaRecente titulo={jx.casa} jogos={detalhes.formaCasa} />
-                <FormaRecente titulo={jx.fora} jogos={detalhes.formaFora} />
-              </div>
-            )}
-            {detalhes.h2h && (
-              <div className="jogo-detalhes__bloco">
-                <h3>Confrontos diretos</h3>
-                <ConfrontosH2H h2h={detalhes.h2h} />
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── Histórico do jogo ── */}
         <div className="jogo-detalhes__bloco">
           <h3>Histórico do jogo</h3>
@@ -1261,8 +1257,6 @@ function SalaJogo({
             </div>
           )}
         </div>
-        </div>{/* /.ficha-grid__dir */}
-        </div>{/* /.ficha-grid */}
 
         {/* ── Previsões + drops ── */}
         {perguntas.length > 0 && (

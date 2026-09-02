@@ -1264,25 +1264,26 @@
   width: 100%;
 }
 
-/* Corpo da ficha ao estilo ESPN: escalações fixas à esquerda, o resto à
-   direita. Abaixo de 900px volta a ser uma coluna só. */
-.ficha-grid {
+/* Topo da ficha ao estilo ESPN: escalações à esquerda, placar (estreito) ao
+   centro, forma recente + confrontos à direita. Abaixo de 1000px empilha,
+   com o placar sempre primeiro. */
+.ficha-topo {
   display: grid;
-  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px) minmax(0, 1fr);
   gap: 1.1rem;
   align-items: start;
 }
-.ficha-grid__esq,
-.ficha-grid__dir {
+.ficha-topo__esq,
+.ficha-topo__dir {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   min-width: 0;
 }
-.ficha-grid__esq { position: sticky; top: 1rem; }
-@media (max-width: 900px) {
-  .ficha-grid { grid-template-columns: 1fr; }
-  .ficha-grid__esq { position: static; }
+.ficha-topo__meio { align-self: stretch; }
+@media (max-width: 1000px) {
+  .ficha-topo { grid-template-columns: 1fr; }
+  .ficha-topo__meio { order: -1; }
 }
 
 /* Separadores de equipa (escudo + formação) */
