@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft,
@@ -902,118 +902,8 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  bolaX: null, bolaY: null, bolaTrilho: [], ultimaJogada: null,
+  bolaX: null, bolaY: null, ultimaJogada: null,
 };
-
-type Ponto = { x: number; y: number };
-
-/** Passa uma linha quebrada a curva suave (Catmull-Rom → Bézier cúbica). É o que
- *  tira o ar "de régua e esquadro" ao rasto e o aproxima do traço da ESPN. */
-function curvaSuave(pts: Ponto[]): string {
-  if (pts.length === 0) return '';
-  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
-  const d = [`M ${pts[0].x} ${pts[0].y}`];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6;
-    const c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6;
-    const c2y = p2.y - (p3.y - p1.y) / 6;
-    d.push(`C ${c1x} ${c1y} ${c2x} ${c2y} ${p2.x} ${p2.y}`);
-  }
-  return d.join(' ');
-}
-
-/**
- * A bola das "últimas jogadas", no espírito do LastPlays da ESPN. A ESPN usa
- * uma animação Rive alimentada por um feed posicional ao segundo que não é
- * público; aqui a bola percorre a curva que liga as coordenadas por lance do
- * `commentary`, travando à chegada de cada uma (como quem recebe e reorienta)
- * e deixando um rasto que se desvanece para trás.
- */
-function BolaAoVivo({ trilho }: { trilho: Ponto[] }) {
-  const chave = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
-  const caminhoRef = useRef<SVGPathElement | null>(null);
-  const rafRef = useRef(0);
-  const [bola, setBola] = useState<Ponto>(() => trilho[trilho.length - 1] ?? { x: 50, y: 50 });
-
-  const d = useMemo(() => curvaSuave(trilho), [chave]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    cancelAnimationFrame(rafRef.current);
-    const fim = trilho[trilho.length - 1];
-    if (!fim) return;
-    const path = caminhoRef.current;
-    const reduz = typeof matchMedia === 'function'
-      && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (trilho.length < 2 || !path || reduz) { setBola(fim); return; }
-
-    const totalLen = path.getTotalLength();
-    if (!totalLen) { setBola(fim); return; }
-
-    const N = trilho.length - 1;
-    // Arranca nos últimos ~5 lances — mais do que isso e a bola "teleporta"
-    // para o princípio do campo a cada atualização do feed.
-    let seg = Math.max(0, N - 5);
-    let t0 = 0;
-    const SEG_MS = 600;   // tempo a viajar entre dois lances
-    const PAUSA_MS = 150; // travagem/controlo à chegada
-
-    const passo = (ts: number) => {
-      if (!t0) t0 = ts;
-      const dt = ts - t0;
-      const local = Math.min(1, dt / SEG_MS);
-      const suave = 1 - Math.pow(1 - local, 3); // easeOutCubic: chega a abrandar
-      const frac = Math.min(1, (seg + suave) / N);
-      const pt = path.getPointAtLength(frac * totalLen);
-      setBola({ x: pt.x, y: pt.y });
-      if (dt >= SEG_MS + PAUSA_MS) {
-        seg += 1;
-        t0 = ts;
-        if (seg >= N) { setBola(fim); return; }
-      }
-      rafRef.current = requestAnimationFrame(passo);
-    };
-    rafRef.current = requestAnimationFrame(passo);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [chave]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (trilho.length === 0) return null;
-
-  return (
-    <>
-      <svg
-        className="campo-live__rasto"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          ref={caminhoRef}
-          d={d}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="0.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          pathLength={1}
-          className="campo-live__rasto-traco"
-        />
-        {trilho.slice(-6).map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={0.7} fill="currentColor" opacity={0.25 + i * 0.1} />
-        ))}
-      </svg>
-      <span
-        className="campo-live__bola campo-live__bola--anim"
-        style={{ left: `${bola.x}%`, top: `${bola.y}%` }}
-        aria-hidden="true"
-      />
-    </>
-  );
-}
 
 function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
@@ -1077,17 +967,16 @@ function CampoAoVivo(
           />
         )}
 
-        {/* Bola das últimas jogadas: desliza pelo trilho de coordenadas do
-            feed e deixa rasto, à maneira do LastPlays da ESPN. */}
-        {!terminado && !prejogo && (momento?.bolaTrilho?.length
-          ? <BolaAoVivo trilho={momento.bolaTrilho} />
-          : bolaX != null && bolaY != null && (
-              <span
-                className="campo-live__bola"
-                style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
-                aria-hidden="true"
-              />
-            ))}
+        {/* Bola da última jogada: a ESPN só dá uma coordenada por lance do
+            `commentary`, por isso a bola desliza (transição CSS) de lance em
+            lance a acompanhar o jogo — sem rasto nem linhas. */}
+        {!terminado && !prejogo && bolaX != null && bolaY != null && (
+          <span
+            className="campo-live__bola"
+            style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+            aria-hidden="true"
+          />
+        )}
 
         <div className="campo-live__evento-wrap">
           {evento.time && (

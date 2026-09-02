@@ -286,10 +286,6 @@ export interface MomentoJogo {
    *  salta pelo campo a acompanhar o jogo. */
   bolaX: number | null;
   bolaY: number | null;
-  /** As últimas jogadas com coordenada (antiga → recente), em % do campo. Serve
-   *  para animar a bola a deslizar de lance em lance, no espírito do "LastPlays"
-   *  da ESPN, em vez de aparecer só o último ponto. */
-  bolaTrilho: { x: number; y: number }[];
   /** O painel "última jogada" da ESPN: reconhece qualquer tipo de lance do
    *  `commentary` (drible, interceção, lateral, alívio, desarme, cruzamento…),
    *  não só golos e cartões. `null` quando o feed ainda não deu nenhum lance. */
@@ -565,32 +561,80 @@ function rotularLance(slug: string): string {
   return s.replace(/-+/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
+/** A ESPN só publica o relato em PT do Brasil. Passa a frase (e os rótulos) para
+ *  PT de Portugal — vocabulário de futebol, que é onde a diferença se nota. */
+const PT_BR_PARA_PT: [RegExp, string][] = [
+  [/\bgol\b/gi, 'golo'],
+  [/\bgols\b/gi, 'golos'],
+  [/\bgoleiros?\b/gi, 'guarda-redes'],
+  [/\bzagueiros?\b/gi, 'defesa central'],
+  [/\bvolante(s)?\b/gi, 'trinco'],
+  [/\bmeia(s)?\b/gi, 'médio'],
+  [/\bmeio-campista(s)?\b/gi, 'médio'],
+  [/\batacante(s)?\b/gi, 'avançado'],
+  [/\bescanteio(s)?\b/gi, 'canto'],
+  [/\btiro de meta\b/gi, 'pontapé de baliza'],
+  [/\bp[êe]nalti(s)?\b/gi, 'penálti'],
+  [/\bimpedimento(s)?\b/gi, 'fora de jogo'],
+  [/\bchute(s)?\b/gi, 'remate'],
+  [/\bchutou\b/gi, 'rematou'],
+  [/\bchuta\b/gi, 'remata'],
+  [/\bcobran[çc]a\b/gi, 'marcação'],
+  [/\btorcida\b/gi, 'adeptos'],
+  [/\btorcedores\b/gi, 'adeptos'],
+  [/\bgramado\b/gi, 'relvado'],
+  [/\bbandeirinha\b/gi, 'fiscal de linha'],
+  [/\btravess[ãa]o\b/gi, 'barra'],
+  [/\brebote\b/gi, 'ressalto'],
+  [/\bprimeiro tempo\b/gi, 'primeira parte'],
+  [/\bsegundo tempo\b/gi, 'segunda parte'],
+  [/\bacr[ée]scimos\b/gi, 'compensação'],
+  [/\b(o |a )?time\b/gi, 'equipa'],
+  [/\barremesso lateral\b/gi, 'lançamento lateral'],
+];
+function paraPortugalPT(texto: string): string {
+  let s = texto;
+  for (const [re, alvo] of PT_BR_PARA_PT) {
+    s = s.replace(re, (match: string) =>
+      // mantém a maiúscula inicial do original
+      /^[A-ZÀ-Þ]/.test(match) ? alvo.charAt(0).toUpperCase() + alvo.slice(1) : alvo);
+  }
+  return s;
+}
+
 /** Rótulo curto a partir da frase do relato (quando a linha não traz tipo). A
- *  ESPN.br escreve em PT ("Tentativa de carrinho…", "Escanteio…", "Falta de…"). */
+ *  ESPN escreve em PT do Brasil ("Tentativa de carrinho…", "Escanteio…"). */
 function rotularDoTexto(texto: string): string | null {
   const s = texto.toLowerCase();
   if (/\bgol!|\bgolo!|marca[ .]/.test(s) || /\bgol\b/.test(s)) return 'Golo';
   if (/p[êe]n[aá]lti|penalty/.test(s)) return 'Penálti';
   if (/cart[ãa]o amarelo|yellow card/.test(s)) return 'Amarelo';
   if (/cart[ãa]o vermelho|red card|expuls/.test(s)) return 'Vermelho';
-  if (/substitui[çc]|substitution/.test(s)) return 'Substituição';
+  if (/substitui[çc]|substitution|entra na vaga|\bsai\b[^.]*\bentra\b|\bentra\b[^.]*\bsai\b/.test(s)) return 'Substituição';
   if (/escanteio|c[óo]rner|corner/.test(s)) return 'Canto';
-  if (/impedimento|offside|fora de jogo/.test(s)) return 'Fora de jogo';
-  if (/lateral|arremesso|throw.?in/.test(s)) return 'Lateral';
-  if (/tiro de meta|goal ?kick|pontap[ée] de baliza/.test(s)) return 'Pontapé de baliza';
-  if (/carrinho|desarme|tackle/.test(s)) return 'Desarme';
+  if (/impedimento|offside|fora de jogo|está impedido/.test(s)) return 'Fora de jogo';
+  if (/arremesso lateral|lateral cobrad|arremesso|throw.?in|linha lateral/.test(s)) return 'Lateral';
+  if (/tiro de meta|goal ?kick|pontap[ée] de baliza|recuo para o goleiro|bola com o goleiro/.test(s)) return 'Pontapé de baliza';
+  if (/carrinho|desarme|tackle|dividida/.test(s)) return 'Desarme';
   if (/intercep/.test(s)) return 'Interceção';
-  if (/cruzamento|cross\b/.test(s)) return 'Cruzamento';
+  if (/cruzamento|cruza(?:r|do|ndo)?\b|levantou na [aá]rea/.test(s)) return 'Cruzamento';
   if (/drible|dribl/.test(s)) return 'Drible';
-  if (/defesa|defende|defendida|save\b/.test(s)) return 'Defesa';
-  if (/bloqueio|bloquead|block/.test(s)) return 'Bloqueio';
+  if (/defesa|defende|defendida|defendeu|save\b|espalma|encaixa/.test(s)) return 'Defesa';
+  if (/bloqueio|bloquead|block|travad/.test(s)) return 'Bloqueio';
+  if (/livre|cobran[çc]a de falta|falta perigosa|tiro livre|free.?kick/.test(s)) return 'Livre';
   if (/falta|foul/.test(s)) return 'Falta';
-  if (/m[ãa]o na bola|hand ?ball/.test(s)) return 'Mão na bola';
-  if (/finaliza|chute|remate|cabec|shot|attempt|header/.test(s)) return 'Remate';
-  if (/les[ãa]o|injury|atendimento/.test(s)) return 'Lesão';
-  if (/in[íi]cio|kick.?off|apito inicial|come[çc]a/.test(s)) return 'Início';
-  if (/fim d[oa]|intervalo|half.?time|full.?time|end of/.test(s)) return 'Fim da parte';
-  if (/passe|pass\b/.test(s)) return 'Passe';
+  if (/m[ãa]o na bola|hand ?ball|tocou com o bra[çc]o/.test(s)) return 'Mão na bola';
+  if (/na trave|no poste|no travess[ãa]o|woodwork/.test(s)) return 'Bola ao poste';
+  if (/grande chance|grande oportunidade|cara a cara/.test(s)) return 'Ocasião de golo';
+  if (/finaliza|chute|remate|cabec|shot|attempt|header|pra fora|para fora|tentativa/.test(s)) return 'Remate';
+  if (/cart[ãa]o/.test(s)) return 'Cartão';
+  if (/var\b|[áa]rbitro de v[íi]deo|revis[ãa]o de v[íi]deo/.test(s)) return 'VAR';
+  if (/les[ãa]o|injury|atendimento|maca|departamento m[ée]dico|contus/.test(s)) return 'Lesão';
+  if (/in[íi]cio|kick.?off|apito inicial|bola rolando|come[çc]a a (?:partida|etapa)|rolar a bola/.test(s)) return 'Início';
+  if (/fim d[oa]|intervalo|half.?time|full.?time|end of|acr[ée]scimos|tempo adicional/.test(s)) return 'Fim da parte';
+  if (/recupera(?:ção| a bola)|roubada|roubou a bola/.test(s)) return 'Recuperação de bola';
+  if (/perde a bola|perdeu a bola|desarmado/.test(s)) return 'Perda de bola';
+  if (/passe|pass\b|troca de passes|toca para|lan[çc]a/.test(s)) return 'Passe';
   return null;
 }
 
@@ -733,7 +777,7 @@ function mapearComentario(json: Bruto, casaNome: string, foraNome: string): Come
     const slug = txt(obj(play.type).type) ?? '';
     linhas.push({
       minuto: txt(obj(c.time).displayValue) ?? '',
-      texto,
+      texto: paraPortugalPT(texto),
       equipa: ladoDe(txt(obj(play.team).displayName)),
       chave: EVENTO_NOTAVEL.has(slug),
       tipo: tipoDoComentario(slug),
@@ -918,7 +962,9 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
         const r = rotuloDe(l);
         return r && !ROTULOS_NOTAVEIS.has(r);
       });
-  const fase = linhaFase ? rotuloDe(linhaFase) : posse ? 'Ataque' : 'Bola em jogo';
+  // Nunca inventamos "Ataque" — ou é o rótulo real da última linha do relato,
+  // ou fica "Bola em jogo" (a bola no campo é que conta a história).
+  const fase = linhaFase ? rotuloDe(linhaFase) : 'Bola em jogo';
 
   // Destaque ao centro: um evento marcante acabado de acontecer, com a equipa
   // do lance. Golos, penáltis e vermelhos ficam bem mais tempo do que um
@@ -947,7 +993,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     ? (() => {
         const rot = rotuloDe(ultimaLinha) || 'Lance';
         const eq = nome(ultimaLinha.equipa);
-        const descricao = ultimaLinha.texto
+        const descricao = (ultimaLinha.texto && paraPortugalPT(ultimaLinha.texto))
           || (ultimaLinha.jogador
             ? `${ultimaLinha.jogador}${eq ? ` (${eq})` : ''} ${rot}${ultimaLinha.minuto ? ` aos ${ultimaLinha.minuto}` : ''}`
             : `${rot}${eq ? ` · ${eq}` : ''}${ultimaLinha.minuto ? ` · ${ultimaLinha.minuto}` : ''}`);
@@ -996,23 +1042,8 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const bolaX = comCoord?.x ?? ultimaZona?.x ?? ultimoReal?.x ?? null;
   const bolaY = comCoord?.y ?? ultimaZona?.y ?? ultimoReal?.y ?? null;
 
-  // Rasto das últimas jogadas (antiga → recente). SÓ se desenha quando a ESPN
-  // publica coordenadas a sério (raro fora das ligas grandes). Com a zona
-  // aproximada a curva suave dava voltas e mandava a bola para o canto — aí
-  // fica só a bola a deslizar de zona em zona (transição CSS), sem rasto.
-  const trilhoReal = lances
-    .filter(l => l.x != null && l.y != null)
-    .map(l => ({ x: l.x as number, y: l.y as number }));
-  const bolaTrilho: { x: number; y: number }[] = [];
-  if (!feedParado && trilhoReal.length >= 2) {
-    for (const p of trilhoReal.slice(-16)) {
-      const ult = bolaTrilho[bolaTrilho.length - 1];
-      if (!ult || Math.hypot(ult.x - p.x, ult.y - p.y) > 1.2) bolaTrilho.push(p);
-    }
-  }
-
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho, ultimaJogada,
+    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, ultimaJogada,
     minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
 }
@@ -1510,7 +1541,7 @@ function mapearClassificacao(
  *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
   try {
-    const res = await fetch(`${BASE}/${ligaSlug}/summary?event=${eventoId}`);
+    const res = await fetch(`${BASE}/${ligaSlug}/summary?event=${eventoId}&lang=pt&region=pt`);
     if (!res.ok) return DETALHES_VAZIO;
     const json = obj(await res.json());
     const { casa, fora } = nomesDoSummary(json);

@@ -1137,36 +1137,9 @@
   animation: campo-live-bola 1.6s ease-in-out infinite;
   z-index: 2;
 }
-/* Quando é o `requestAnimationFrame` a mover a bola (trilho suave), a transição
-   de CSS só atrasava — o movimento já vem interpolado quadro a quadro. */
-.campo-live__bola--anim {
-  transition: none;
-}
-
 @keyframes campo-live-bola {
   0%, 100% { box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 0 0 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6); }
   50%      { box-shadow: 0 0 0 2px rgba(17, 23, 38, 0.75), 0 0 0 7px rgba(255, 255, 255, 0), 0 2px 8px rgba(0, 0, 0, 0.6); }
-}
-
-/* Rasto das últimas jogadas — linha que liga os pontos por onde a bola passou. */
-.campo-live__rasto {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  color: rgba(255, 255, 255, 0.4);
-  overflow: visible;
-}
-/* Traço contínuo por baixo dos pontos: tracejado a "correr" na direção da bola,
-   como o fio de momentum da ESPN. `pathLength` é 1, por isso as unidades do
-   dash são fração do percurso. */
-.campo-live__rasto-traco {
-  stroke-dasharray: 0.05 0.035;
-  animation: campo-live-fluxo 0.9s linear infinite;
-}
-@keyframes campo-live-fluxo {
-  to { stroke-dashoffset: -0.085; }
 }
 
 /* Cápsula do evento ao centro: equipa (escudo + nome) por cima, e por baixo
@@ -1336,7 +1309,6 @@
   .campo-live__bola,
   .campo-live__posse-lado { transition: none; animation: none; }
   .campo-live__bola { animation: none; }
-  .campo-live__rasto-traco { animation: none; }
 }
 
 /* ═══ FICHA DO JOGO (estilo ESPN) ══════════════════════════════ */
