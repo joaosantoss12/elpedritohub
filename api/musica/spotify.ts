@@ -104,26 +104,58 @@ async function lerFaixasSpotify(
   return { nome, faixas: faixas.slice(0, MAX_FAIXAS) };
 }
 
-async function buscarNoYouTube(termo: string): Promise<string | null> {
-  const url =
-    `https://www.youtube.com/results?search_query=${encodeURIComponent(termo)}` +
-    `&sp=EgIQAQ%253D%253D&hl=en&gl=US`;
+const UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+
+// Chave "web" pública do InnerTube — a mesma que o próprio site do YouTube usa.
+const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+
+/* A API interna do YouTube (a que o yt-dlp usa) é bem mais fiável a partir de
+   IPs de datacenter do que raspar a página de resultados — esta última costuma
+   vir sem `videoId` nenhum quando é a Vercel a pedir. Fica o raspar como
+   plano B. */
+async function pesquisaInnerTube(termo: string): Promise<string | null> {
   try {
-    const r = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-        Cookie: 'CONSENT=YES+1',
+    const r = await fetch(
+      `https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}&prettyPrint=false`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
+        body: JSON.stringify({
+          context: {
+            client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en', gl: 'US' },
+          },
+          query: termo,
+          params: 'EgIQAQ%3D%3D', // só vídeos
+        }),
       },
-    });
+    );
     if (!r.ok) return null;
-    const html = await r.text();
-    const m = html.match(/"videoId":"([\w-]{11})"/);
+    const txt = await r.text();
+    const m = txt.match(/"videoId":"([\w-]{11})"/);
     return m ? m[1] : null;
   } catch {
     return null;
   }
+}
+
+async function raspaResultados(termo: string): Promise<string | null> {
+  try {
+    const r = await fetch(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(termo)}` +
+        `&sp=EgIQAQ%253D%253D&hl=en&gl=US`,
+      { headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9', Cookie: 'CONSENT=YES+1' } },
+    );
+    if (!r.ok) return null;
+    const m = (await r.text()).match(/"videoId":"([\w-]{11})"/);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+async function buscarNoYouTube(termo: string): Promise<string | null> {
+  return (await pesquisaInnerTube(termo)) ?? (await raspaResultados(termo));
 }
 
 async function resolverVideos(
@@ -157,7 +189,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     const resolvidas = await resolverVideos(faixas);
     if (resolvidas.length === 0) {
-      return res.status(502).json({ error: 'Não consegui encontrar estas músicas no YouTube.' });
+      return res.status(502).json({
+        error:
+          `Li ${faixas.length} faixa(s) do Spotify mas o YouTube não devolveu ` +
+          'nenhum resultado (costuma ser bloqueio aos servidores). Tenta outra vez.',
+      });
     }
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
     return res.status(200).json({
