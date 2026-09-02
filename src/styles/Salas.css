@@ -544,6 +544,8 @@
   color: var(--text-gray);
   font-variant-numeric: tabular-nums;
 }
+.placar__ht--pen { color: var(--gold-light); margin-top: 0.3rem; }
+.placar__ht--pen span { color: var(--gold-light); }
 
 /* ── Estatísticas + eventos ──────────────────────────────────── */
 
@@ -1036,6 +1038,30 @@
   max-width: 40%;
 }
 .campo-live__eq--dir { text-align: right; }
+
+.campo-live__pen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--gold-tint);
+  border: 1px solid var(--border-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.campo-live__pen strong {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--text-white);
+  font-variant-numeric: tabular-nums;
+}
+.campo-live__pen em { color: var(--text-gray); font-style: normal; }
 
 .campo-live__min {
   display: inline-flex;

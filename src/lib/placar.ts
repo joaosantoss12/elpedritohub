@@ -284,6 +284,9 @@ export interface MomentoJogo {
    *  Vem do texto do relato ("serão jogados mais 5 minutos"), NÃO do relógio —
    *  o relógio só diz quanto já passou. `null` enquanto não houver anúncio. */
   compensacao: number | null;
+  /** Desempate por grandes penalidades a decorrer, com o total marcado por
+   *  cada equipa. `null` fora da marcação de penáltis. */
+  penaltis: { casa: number; fora: number } | null;
   /** Onde foi a última jogada, em % do campo (a casa ataca para a direita, por
    *  isso x≈100 é a baliza adversária). `null` quando o feed não dá posição.
    *  Não é a bola em tempo real — a ESPN só dá coordenada por evento — mas
@@ -320,6 +323,10 @@ export interface PatchVivo {
   /** Resultado ao intervalo (1.ª parte). `null` até o jogo lá chegar. */
   htCasa: number | null;
   htFora: number | null;
+  /** Desempate por grandes penalidades — golos marcados na marca da cal.
+   *  `null` enquanto o jogo não for a penáltis. */
+  penCasa: number | null;
+  penFora: number | null;
 }
 
 /** Uma linha do relato minuto-a-minuto (feed `commentary` da ESPN). */
@@ -637,6 +644,13 @@ function minutosCompensacao(texto: string): number | null {
  *  ESPN escreve em PT do Brasil ("Tentativa de carrinho…", "Escanteio…"). */
 function rotularDoTexto(texto: string): string | null {
   const s = texto.toLowerCase();
+  // Desempate por penáltis: "O chute 1/5 de FRO é gol!", "O remate 3/5 do SAS
+  // é defendido!". Tem de vir ANTES da regra do golo (a frase tem "gol").
+  if (/\b(?:chute|remate|penal\w*|cobran[çc]a)\s*\d\s*\/\s*\d/.test(s) || /disputa de p[êe]naltis|marca(?:ção)? de grandes penalidades/.test(s)) {
+    if (/n[ãa]o é gol|para fora|pela linha|por cima|defendid|defendeu|defesa|na trave|no poste|na barra|perdeu|isolou|desperdi/.test(s))
+      return 'Penálti falhado';
+    return 'Penálti marcado';
+  }
   // "Gol cancelado pelo VAR", "golo anulado", "descartado após revisão do VAR" —
   // tem de vir ANTES da regra do golo, senão o "gol" da frase marca golo.
   if (/gol(?:o)? (?:cancelad|anulad)|(?:cancelad|anulad|descartad)[oa].{0,30}var|disallowed|chalked off/.test(s))
@@ -1115,8 +1129,21 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     if (n != null) compensacao = n;
   }
 
+  // Desempate por penáltis: `competitor.shootoutScore` no header (o `score`
+  // fica preso no resultado do fim do prolongamento).
+  const csHdr = lista(obj(lista(obj(json.header).competitions)[0]).competitors).map(obj);
+  const penHdr = (ha: string) => {
+    const n = Number(txt(obj(csHdr.find(c => c.homeAway === ha)).shootoutScore));
+    return Number.isFinite(n) ? n : null;
+  };
+  const penC = penHdr('home');
+  const penF = penHdr('away');
+  const penaltis = penC != null || penF != null
+    ? { casa: penC ?? 0, fora: penF ?? 0 }
+    : null;
+
   return {
-    casa, fora, posse, fase, destaque, lance, compensacao,
+    casa, fora, posse, fase, destaque, lance, compensacao, penaltis,
     bolaX, bolaY, bolaReal, bolaPassos, ultimaJogada,
     minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
@@ -1141,9 +1168,24 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
     return Number.isFinite(n) ? n : null;
   };
 
+  // Desempate por grandes penalidades: a ESPN põe o total de penáltis marcados
+  // em `competitor.shootoutScore` (o `score` fica no resultado do fim do tempo
+  // regulamentar/prolongamento). `status.type` costuma trazer "Pens"/"Shootout".
+  const penDe = (c: Bruto) => {
+    const n = Number(txt(c.shootoutScore));
+    return Number.isFinite(n) ? n : null;
+  };
+  const penCasa = penDe(casa);
+  const penFora = penDe(fora);
+  const nomeTipo = (txt(tipo.name) ?? '').toUpperCase();
+  const emPenaltis = penCasa != null || penFora != null
+    || /SHOOTOUT|PENALT/.test(nomeTipo)
+    || /\bp[êe]n(?:s|alti|álti)|shootout|desempate|grandes penalidades/i.test(detail);
+
   let relogio: string;
   if (estado === 'intervalo') relogio = 'Intervalo';
   else if (estado === 'terminado') relogio = 'Final';
+  else if (emPenaltis) relogio = 'Grandes penalidades';
   else if (estado === 'ao_vivo') relogio = txt(st.displayClock) ?? txt(st.clock) ?? detail;
   else relogio = detail;
 
@@ -1162,6 +1204,8 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
 
   return {
     golosCasa: golo(casa), golosFora: golo(fora), estado, relogio, htCasa, htFora,
+    penCasa: emPenaltis ? (penCasa ?? 0) : null,
+    penFora: emPenaltis ? (penFora ?? 0) : null,
   };
 }
 
@@ -1298,9 +1342,13 @@ function eventosCrus(json: Bruto): EventoCru[] {
     };
   };
 
+  // Os penáltis do desempate (período ≥ 5, ou `play.shootout`) NÃO são golos do
+  // jogo — não podem entrar na tira de golos nem no contador do marcador.
+  const noDesempate = (p: Bruto) =>
+    p.shootout === true || Number(txt(obj(p.period).number)) >= 5;
   const daCommentary = lista(json.commentary).map(obj)
     .map(c => obj(c.play))
-    .filter(p => Object.keys(p).length > 0)
+    .filter(p => Object.keys(p).length > 0 && !noDesempate(p))
     .map(norm);
   if (daCommentary.length > 0) return daCommentary;
   return lista(comp.details).map(obj).map(norm);

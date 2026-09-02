@@ -902,7 +902,7 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
-  compensacao: null,
+  compensacao: null, penaltis: null,
   bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
 
@@ -941,7 +941,7 @@ function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase, compensacao, bolaX, bolaY, bolaReal, ultimaJogada } = momento ?? MOMENTO_VAZIO;
+  const { casa, fora, lance, minuto, posse, fase, compensacao, penaltis, bolaX, bolaY, bolaReal, ultimaJogada } = momento ?? MOMENTO_VAZIO;
 
   // O anúncio dos acréscimos aparece ao centro só uns segundos (como na ESPN);
   // depois disso fica só o "(+X)" ao lado do relógio.
@@ -1019,6 +1019,13 @@ function CampoAoVivo(
         </span>
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>
+
+      {penaltis && (
+        <div className="campo-live__pen">
+          <span>Grandes penalidades</span>
+          <strong>{penaltis.casa}<em> — </em>{penaltis.fora}</strong>
+        </div>
+      )}
 
       <div className="campo-live__relva">
         <span className="campo-live__meio" aria-hidden="true" />
@@ -1347,6 +1354,12 @@ function SalaJogo({
           {detalhes.vivo?.htCasa != null && detalhes.vivo?.htFora != null && (
             <p className="placar__ht">
               Intervalo <span>{detalhes.vivo.htCasa} : {detalhes.vivo.htFora}</span>
+            </p>
+          )}
+
+          {detalhes.vivo?.penCasa != null && detalhes.vivo?.penFora != null && (
+            <p className="placar__ht placar__ht--pen">
+              Grandes penalidades <span>{detalhes.vivo.penCasa} : {detalhes.vivo.penFora}</span>
             </p>
           )}
         </div>
