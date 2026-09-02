@@ -565,6 +565,41 @@ function rotularLance(slug: string): string {
   return s.replace(/-+/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
 
+/** Rótulo curto a partir da frase do relato (quando a linha não traz tipo). A
+ *  ESPN.br escreve em PT ("Tentativa de carrinho…", "Escanteio…", "Falta de…"). */
+function rotularDoTexto(texto: string): string | null {
+  const s = texto.toLowerCase();
+  if (/\bgol!|\bgolo!|marca[ .]/.test(s) || /\bgol\b/.test(s)) return 'Golo';
+  if (/p[êe]n[aá]lti|penalty/.test(s)) return 'Penálti';
+  if (/cart[ãa]o amarelo|yellow card/.test(s)) return 'Amarelo';
+  if (/cart[ãa]o vermelho|red card|expuls/.test(s)) return 'Vermelho';
+  if (/substitui[çc]|substitution/.test(s)) return 'Substituição';
+  if (/escanteio|c[óo]rner|corner/.test(s)) return 'Canto';
+  if (/impedimento|offside|fora de jogo/.test(s)) return 'Fora de jogo';
+  if (/lateral|arremesso|throw.?in/.test(s)) return 'Lateral';
+  if (/tiro de meta|goal ?kick|pontap[ée] de baliza/.test(s)) return 'Pontapé de baliza';
+  if (/carrinho|desarme|tackle/.test(s)) return 'Desarme';
+  if (/intercep/.test(s)) return 'Interceção';
+  if (/cruzamento|cross\b/.test(s)) return 'Cruzamento';
+  if (/drible|dribl/.test(s)) return 'Drible';
+  if (/defesa|defende|defendida|save\b/.test(s)) return 'Defesa';
+  if (/bloqueio|bloquead|block/.test(s)) return 'Bloqueio';
+  if (/falta|foul/.test(s)) return 'Falta';
+  if (/m[ãa]o na bola|hand ?ball/.test(s)) return 'Mão na bola';
+  if (/finaliza|chute|remate|cabec|shot|attempt|header/.test(s)) return 'Remate';
+  if (/les[ãa]o|injury|atendimento/.test(s)) return 'Lesão';
+  if (/in[íi]cio|kick.?off|apito inicial|come[çc]a/.test(s)) return 'Início';
+  if (/fim d[oa]|intervalo|half.?time|full.?time|end of/.test(s)) return 'Fim da parte';
+  if (/passe|pass\b/.test(s)) return 'Passe';
+  return null;
+}
+
+/** Rótulos que passam pelo `destaque` central (golo, cartão…) e não pela `fase`. */
+const ROTULOS_NOTAVEIS = new Set([
+  'Golo', 'Autogolo', 'Amarelo', 'Vermelho', 'Segundo amarelo', 'Substituição',
+  'Penálti marcado', 'Penálti falhado', 'Penálti defendido', 'Golo de penálti',
+]);
+
 /** Do slug para o tipo de evento (ícone). Cobre mais casos que `tipoDoComentario`. */
 function tipoDoLance(slug: string): TipoEvento {
   const s = (slug || '').toLowerCase();
@@ -766,7 +801,51 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   }
   if (lances.length === 0) return null;
 
-  const agora = Math.max(...lances.map(l => l.t));
+  // Todas as linhas do relato — incluindo as que não trazem `play` estruturado.
+  // A ESPN só marca tipo/coordenada nos lances "chave", mas o texto avança
+  // linha a linha; é isto que mantém o painel "última jogada" a par da ESPN
+  // (com a frase inteira dela, ex. "Gol! Sassuolo 1, Frosinone 1. Aleksa
+  // Terzic…") em vez de preso no último evento com tipo.
+  interface Linha {
+    texto: string; slug: string; rotuloEspn: string;
+    equipa: 'casa' | 'fora' | null; minuto: string; jogador: string | null;
+  }
+  const minParaSeg = (m: string) => {
+    const base = Number((m.match(/(\d+)/) ?? [])[1]);
+    const extra = Number((m.match(/\+\s*(\d+)/) ?? [])[1]) || 0;
+    return Number.isFinite(base) ? (base + extra) * 60 : 0;
+  };
+  const linhas: Linha[] = [];
+  for (const c of coment) {
+    const texto = (txt(c.text) ?? '').trim();
+    const play = obj(c.play);
+    const slug = txt(obj(play.type).type) ?? '';
+    if (!texto && !slug) continue;
+    let equipa = ladoDe(txt(obj(play.team).displayName));
+    if (!equipa && texto) {
+      const t = texto.toLowerCase();
+      const ec = t.includes(casaBaixo);
+      const ef = t.includes(foraBaixo);
+      equipa = ec && !ef ? 'casa' : ef && !ec ? 'fora' : null;
+    }
+    const atleta = obj(lista(play.athletesInvolved)[0]);
+    linhas.push({
+      texto,
+      slug,
+      rotuloEspn: txt(obj(play.type).text) ?? '',
+      equipa,
+      minuto: txt(obj(c.time).displayValue) ?? '',
+      jogador: txt(atleta.displayName) ?? txt(atleta.shortName) ?? null,
+    });
+  }
+
+  // "Agora" = o mais recente entre os lances com relógio e o minuto da última
+  // linha de texto. Sem isto, um jogo cujo feed estruturado parou mas o texto
+  // continua a andar ficava marcado como "parado".
+  const agora = Math.max(
+    ...lances.map(l => l.t),
+    ...linhas.map(l => minParaSeg(l.minuto)),
+  );
   const JANELA = 6 * 60;
 
   // O relógio a sério vem do header (continua a andar mesmo quando o feed de
@@ -814,28 +893,32 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const feedParado = relogioAgora - agora > 150
     || (wallRecente > 0 && Date.now() - wallRecente > 150_000);
 
-  // Quem tem a bola: com feed vivo é a equipa do último lance; com feed
-  // parado, o lado com mais pressão na janela. A falta passa a posse a quem
-  // a sofreu.
+  const nome = (lado: 'casa' | 'fora' | null) =>
+    lado === 'casa' ? casaNome : lado === 'fora' ? foraNome : '';
+  const rotuloDe = (l: { slug: string; rotuloEspn: string; texto: string }) =>
+    l.rotuloEspn || (l.slug ? rotularLance(l.slug) : rotularDoTexto(l.texto) ?? '');
+
+  // Quem tem a bola: com feed vivo é a equipa da última linha do relato com
+  // equipa identificada (segue os passes e os roubos de bola linha a linha);
+  // com feed parado, o lado com mais pressão na janela.
   let posse: 'casa' | 'fora' | null;
   if (feedParado) {
     posse = presCasa > presFora ? 'casa' : presFora > presCasa ? 'fora' : null;
   } else {
-    posse = [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
+    posse = [...linhas].reverse().find(l => l.equipa)?.equipa
+      ?? [...lances].reverse().find(l => l.equipa)?.equipa ?? null;
   }
-  // A `fase` é só o estado corrente (Ataque, Canto, Livre, Falta…). Os
-  // momentos grandes — golo, cartão, penálti — passam sempre pelo `destaque`,
-  // nunca por aqui, senão ficavam a mostrar "Golo" sem equipa depois de a
-  // cápsula fechar.
-  const ultimoFase = feedParado
+
+  // A `fase` ao centro segue a última linha do relato (não fica presa no último
+  // evento com tipo). Golo, cartão e penálti passam pelo `destaque`, não por
+  // aqui, senão ficava "Golo" sem contexto depois de a cápsula fechar.
+  const linhaFase = feedParado
     ? undefined
-    : [...lances].reverse().find(l => l.slug && !EVENTO_NOTAVEL.has(l.slug));
-  // Não se troca a posse na falta: o campo ao centro mostra a equipa do lance
-  // (quem fez a falta), para bater certo com o painel "última jogada". Antes
-  // dizia "Sassuolo FALTA" quando a falta era do Frosinone.
-  const fase = ultimoFase
-    ? (FASE_LANCE[ultimoFase.slug] ?? rotularLance(ultimoFase.slug))
-    : posse ? 'Ataque' : 'Bola em jogo';
+    : [...linhas].reverse().find(l => {
+        const r = rotuloDe(l);
+        return r && !ROTULOS_NOTAVEIS.has(r);
+      });
+  const fase = linhaFase ? rotuloDe(linhaFase) : posse ? 'Ataque' : 'Bola em jogo';
 
   // Destaque ao centro: um evento marcante acabado de acontecer, com a equipa
   // do lance. Golos, penáltis e vermelhos ficam bem mais tempo do que um
@@ -849,31 +932,34 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     ? { texto: FASE_LANCE[notavel.slug], equipa: notavel.equipa }
     : null;
 
-  const nome = (lado: 'casa' | 'fora' | null) =>
-    lado === 'casa' ? casaNome : lado === 'fora' ? foraNome : '';
-
-  // O último lance com tipo — para a legenda por baixo do campo e para o painel
-  // "última jogada". Reconhece qualquer tipo (drible, interceção, lateral…).
-  const ultimo = [...lances].reverse().find(l => l.slug)
-    ?? lances[lances.length - 1];
-  const lance = ultimo?.slug
-    ? `${rotularLance(ultimo.slug)}${ultimo.equipa ? ` · ${nome(ultimo.equipa)}` : ''}`
-    : '';
-
-  const ultimaJogada = ultimo?.slug
+  // Painel "última jogada": a linha mais recente do relato, com a FRASE inteira
+  // da ESPN (ex. "Gol! Sassuolo 1, Frosinone 1. Aleksa Terzic (Frosinone)
+  // finalização com o pé esquerdo… Assistência de Luis Hasa."), o rótulo dela
+  // ("Gol", "Falta", "Tentativa de carrinho"…) e o escudo da equipa.
+  const ultimaLinha = linhas[linhas.length - 1] ?? null;
+  const lance = ultimaLinha
     ? (() => {
-        const rot = rotularLance(ultimo.slug);
-        const eq = nome(ultimo.equipa);
-        const descricao = ultimo.jogador
-          ? `${ultimo.jogador}${eq ? ` (${eq})` : ''} ${rot}${ultimo.minuto ? ` aos ${ultimo.minuto}` : ''}`
-          : `${rot}${eq ? ` · ${eq}` : ''}${ultimo.minuto ? ` · ${ultimo.minuto}` : ''}`;
+        const r = rotuloDe(ultimaLinha);
+        return `${r}${ultimaLinha.equipa ? ` · ${nome(ultimaLinha.equipa)}` : ''}`;
+      })()
+    : '';
+  const ultimaJogada = ultimaLinha
+    ? (() => {
+        const rot = rotuloDe(ultimaLinha) || 'Lance';
+        const eq = nome(ultimaLinha.equipa);
+        const descricao = ultimaLinha.texto
+          || (ultimaLinha.jogador
+            ? `${ultimaLinha.jogador}${eq ? ` (${eq})` : ''} ${rot}${ultimaLinha.minuto ? ` aos ${ultimaLinha.minuto}` : ''}`
+            : `${rot}${eq ? ` · ${eq}` : ''}${ultimaLinha.minuto ? ` · ${ultimaLinha.minuto}` : ''}`);
         return {
           rotulo: rot,
           descricao,
-          jogador: ultimo.jogador,
-          equipa: ultimo.equipa,
-          minuto: ultimo.minuto,
-          tipo: tipoDoLance(ultimo.slug),
+          jogador: ultimaLinha.jogador,
+          equipa: ultimaLinha.equipa,
+          minuto: ultimaLinha.minuto,
+          tipo: ultimaLinha.slug
+            ? tipoDoLance(ultimaLinha.slug)
+            : classificarTipoEvento(ultimaLinha.texto),
         };
       })()
     : null;
@@ -927,7 +1013,7 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
 
   return {
     casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho, ultimaJogada,
-    minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
+    minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
 }
 
