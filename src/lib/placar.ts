@@ -830,7 +830,9 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const ultimoFase = feedParado
     ? undefined
     : [...lances].reverse().find(l => l.slug && !EVENTO_NOTAVEL.has(l.slug));
-  if (ultimoFase?.slug === 'foul' && posse) posse = posse === 'casa' ? 'fora' : 'casa';
+  // Não se troca a posse na falta: o campo ao centro mostra a equipa do lance
+  // (quem fez a falta), para bater certo com o painel "última jogada". Antes
+  // dizia "Sassuolo FALTA" quando a falta era do Frosinone.
   const fase = ultimoFase
     ? (FASE_LANCE[ultimoFase.slug] ?? rotularLance(ultimoFase.slug))
     : posse ? 'Ataque' : 'Bola em jogo';
@@ -908,22 +910,19 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   const bolaX = comCoord?.x ?? ultimaZona?.x ?? ultimoReal?.x ?? null;
   const bolaY = comCoord?.y ?? ultimaZona?.y ?? ultimoReal?.y ?? null;
 
-  // Rasto das últimas jogadas (antiga → recente). Com feed parado não se
-  // inventa movimento — fica só o ponto atual, se houver. Com feed vivo usam-se
-  // as coordenadas reais quando existem; quando não, a zona aproximada de cada
-  // lance. Pontos praticamente colados são fundidos, senão a bola treme parada.
+  // Rasto das últimas jogadas (antiga → recente). SÓ se desenha quando a ESPN
+  // publica coordenadas a sério (raro fora das ligas grandes). Com a zona
+  // aproximada a curva suave dava voltas e mandava a bola para o canto — aí
+  // fica só a bola a deslizar de zona em zona (transição CSS), sem rasto.
   const trilhoReal = lances
     .filter(l => l.x != null && l.y != null)
     .map(l => ({ x: l.x as number, y: l.y as number }));
-  const trilhoCru = feedParado
-    ? (bolaX != null && bolaY != null ? [{ x: bolaX, y: bolaY }] : [])
-    : trilhoReal.length > 0
-      ? trilhoReal
-      : lances.map(zonaAprox).filter((p): p is { x: number; y: number } => p != null);
   const bolaTrilho: { x: number; y: number }[] = [];
-  for (const p of trilhoCru.slice(-16)) {
-    const ult = bolaTrilho[bolaTrilho.length - 1];
-    if (!ult || Math.hypot(ult.x - p.x, ult.y - p.y) > 1.2) bolaTrilho.push(p);
+  if (!feedParado && trilhoReal.length >= 2) {
+    for (const p of trilhoReal.slice(-16)) {
+      const ult = bolaTrilho[bolaTrilho.length - 1];
+      if (!ult || Math.hypot(ult.x - p.x, ult.y - p.y) > 1.2) bolaTrilho.push(p);
+    }
   }
 
   return {
