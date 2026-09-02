@@ -325,6 +325,8 @@ export interface JogadorCampo {
   y: number;
   /** Foi substituído — mostra-se a seta de saída. */
   saiu: boolean;
+  /** É o guarda-redes — camisola de cor distinta e etiqueta "GR". */
+  guardaRedes: boolean;
   /** Golos marcados no jogo (para o ícone de bola na camisola). */
   golos: number;
   amarelo: boolean;
@@ -365,8 +367,13 @@ export interface LiderJogo {
 /** Um dos últimos cinco jogos de uma equipa. */
 export interface ResultadoForma {
   resultado: 'V' | 'E' | 'D';
-  /** "2-1 vs Millonarios" já montado para mostrar. */
-  texto: string;
+  /** Resultado "2-1" do jogo. */
+  placar: string;
+  /** Jogou em casa (vs) ou fora (@). */
+  emCasa: boolean;
+  /** Nome e emblema do adversário, para mostrar em vez das iniciais. */
+  adversario: string;
+  logoAdversario: string | null;
   data: string;
 }
 
@@ -375,6 +382,8 @@ export interface ConfrontoH2H {
   data: string;
   casa: string;
   fora: string;
+  logoCasa: string | null;
+  logoFora: string | null;
   golosCasa: number | null;
   golosFora: number | null;
 }
@@ -867,12 +876,14 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
       const lugar = Number(txt(p.formationPlace));
       const c = coords[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
       const seus = meus.filter(e => e.nomes.some(n => mesmoJogador(n, at)));
+      const pos = txt(obj(p.position).abbreviation);
       return {
         numero: txt(p.jersey) ?? '',
         nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
         x: casa ? c.x : 100 - c.x,
         y: c.y,
         saiu: p.subbedOut === true,
+        guardaRedes: lugar === 1 || pos === 'G' || pos === 'GK',
         golos: seus.filter(e => e.slug.includes('goal') && !e.slug.includes('own')).length,
         amarelo: seus.some(e => e.slug.includes('yellow')),
         vermelho: seus.some(e => e.slug.includes('red')),
@@ -967,19 +978,26 @@ function mapearLideres(json: Bruto, idCasa: string | null, idFora: string | null
     .filter(l => l.casa || l.fora);
 }
 
+/** Emblema de uma equipa, tolerando `logo` string ou `logos[].href`. */
+function logoEquipa(t: Bruto): string | null {
+  return txt(obj(t).logo) ?? txt(obj(lista(obj(t).logos)[0]).href) ?? null;
+}
+
 function mapearForma(json: Bruto, id: string | null): ResultadoForma[] {
   const bloco = obj(lista(json.lastFiveGames).find(b => txt(obj(obj(b).team).id) === id) ?? {});
   return lista(bloco.events).map(obj).map((e): ResultadoForma => {
     const r = (txt(e.gameResult) ?? '').toUpperCase();
     const resultado = r === 'W' ? 'V' : r === 'L' ? 'D' : 'E';
-    const adversario = txt(obj(e.opponent).abbreviation) ?? txt(obj(e.opponent).displayName) ?? '';
-    const via = txt(e.atVs) === 'vs' ? 'vs' : '@';
+    const adv = obj(e.opponent);
     return {
       resultado,
-      texto: `${txt(e.score) ?? ''} ${via} ${adversario}`.trim(),
+      placar: txt(e.score) ?? '',
+      emCasa: txt(e.atVs) === 'vs',
+      adversario: txt(adv.displayName) ?? txt(adv.abbreviation) ?? '',
+      logoAdversario: logoEquipa(adv),
       data: txt(e.gameDate) ?? '',
     };
-  }).filter(f => f.texto);
+  }).filter(f => f.placar);
 }
 
 function mapearH2H(json: Bruto): HeadToHead | null {
@@ -1000,8 +1018,10 @@ function mapearH2H(json: Bruto): HeadToHead | null {
       };
       return {
         data: txt(e.date) ?? '',
-        casa: txt(obj(casa.team).abbreviation) ?? txt(obj(casa.team).displayName) ?? '',
-        fora: txt(obj(fora.team).abbreviation) ?? txt(obj(fora.team).displayName) ?? '',
+        casa: txt(obj(casa.team).displayName) ?? txt(obj(casa.team).abbreviation) ?? '',
+        fora: txt(obj(fora.team).displayName) ?? txt(obj(fora.team).abbreviation) ?? '',
+        logoCasa: logoEquipa(obj(casa.team)),
+        logoFora: logoEquipa(obj(fora.team)),
         golosCasa: golo(casa),
         golosFora: golo(fora),
       };

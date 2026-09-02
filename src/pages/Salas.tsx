@@ -571,8 +571,8 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
   // O campo é vertical: guarda-redes em baixo, avançados em cima. O eixo de
   // ataque (x) vira posição vertical; o eixo transversal (y) vira horizontal.
   const av = (x: number) => lado === 'casa' ? (x - 5) / 42 : (95 - x) / 42;
-  const top = (x: number) => 90 - av(x) * 80;
-  const left = (y: number) => 10 + (y / 100) * 80;
+  const top = (x: number) => 92 - av(x) * 84;
+  const left = (y: number) => 4 + (y / 100) * 92;
 
   const entradas = dados.suplentes.filter(s => s.entrou);
 
@@ -605,11 +605,15 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
         {dados.titulares.map((j, i) => (
           <span
             key={i}
-            className={`escala-jog${j.saiu ? ' escala-jog--saiu' : ''}`}
+            className={`escala-jog${j.saiu ? ' escala-jog--saiu' : ''}${j.guardaRedes ? ' escala-jog--gr' : ''}`}
             style={{ left: `${left(j.y)}%`, top: `${top(j.x)}%` }}
           >
             <span className="escala-jog__camisa">
-              <Camisola cor={cor} numero={j.numero} escuro={escuro} />
+              <Camisola
+                cor={j.guardaRedes ? '#f4c430' : cor}
+                numero={j.numero}
+                escuro={j.guardaRedes ? true : escuro}
+              />
               {j.saiu && <span className="escala-jog__ic escala-jog__ic--saiu">▾</span>}
               {j.vermelho
                 ? <span className="escala-jog__ic escala-jog__ic--vermelho" />
@@ -620,7 +624,10 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
                 </span>
               )}
             </span>
-            <span className="escala-jog__nome">{j.nome}</span>
+            <span className="escala-jog__nome">
+              {j.guardaRedes && <span className="escala-jog__gr">GR</span>}
+              {j.nome}
+            </span>
           </span>
         ))}
       </div>
@@ -662,16 +669,17 @@ function FormaRecente({ titulo, jogos }: { titulo: string; jogos: ResultadoForma
     <div className="forma">
       <div className="forma__cab">
         <strong>{titulo}</strong>
-        <span className="forma__selos">
-          {jogos.map((g, i) => (
-            <span key={i} className={`forma__selo forma__selo--${g.resultado}`} title={g.texto}>
-              {g.resultado}
-            </span>
-          ))}
-        </span>
       </div>
       <ul className="forma__lista">
-        {jogos.map((g, i) => <li key={i}>{g.texto}</li>)}
+        {jogos.map((g, i) => (
+          <li key={i}>
+            <span className={`forma__selo forma__selo--${g.resultado}`}>{g.resultado}</span>
+            <span className="forma__via">{g.emCasa ? 'vs' : '@'}</span>
+            {g.logoAdversario && <img className="forma__logo" src={g.logoAdversario} alt="" />}
+            <span className="forma__adv">{g.adversario}</span>
+            <span className="forma__placar">{g.placar}</span>
+          </li>
+        ))}
       </ul>
     </div>
   );
@@ -684,9 +692,15 @@ function ConfrontosH2H({ h2h }: { h2h: HeadToHead }) {
       <ul className="h2h__lista">
         {h2h.jogos.map((g, i) => (
           <li key={i}>
-            <span className="h2h__eq">{g.casa}</span>
+            <span className="h2h__eq">
+              {g.logoCasa && <img src={g.logoCasa} alt="" />}
+              <span>{g.casa}</span>
+            </span>
             <span className="h2h__placar">{g.golosCasa ?? '–'} : {g.golosFora ?? '–'}</span>
-            <span className="h2h__eq h2h__eq--dir">{g.fora}</span>
+            <span className="h2h__eq h2h__eq--dir">
+              <span>{g.fora}</span>
+              {g.logoFora && <img src={g.logoFora} alt="" />}
+            </span>
           </li>
         ))}
       </ul>
@@ -1175,10 +1189,12 @@ function SalaJogo({
         {/* ── Placar em faixa larga, ao estilo da ESPN ── */}
         <div className={estaAoVivo(jx) ? 'placar placar--faixa placar--vivo' : 'placar placar--faixa'}>
           <div className="placar__liga">
-            {bandeiraDaLiga(jogo.ligaSlug) && (
-              <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
-            )}
-            <span>{jx.liga}</span>
+            <span className="placar__liga-nome">
+              {bandeiraDaLiga(jogo.ligaSlug) && (
+                <img className="liga-bandeira" src={bandeiraDaLiga(jogo.ligaSlug)!} alt="" />
+              )}
+              <span>{jx.liga}</span>
+            </span>
             <span className={estaAoVivo(jx) ? 'placar__relogio vivo' : 'placar__relogio'}>
               {estaAoVivo(jx) && <span className="salas-dot" />}
               {jx.relogio}
