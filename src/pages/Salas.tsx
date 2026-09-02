@@ -903,6 +903,7 @@ const ESTATISTICAS_ZERO = [
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
   bolaX: null, bolaY: null, bolaTrilho: [],
+  lanceJogador: null, lanceTexto: '', lanceLado: null,
 };
 
 type Ponto = { x: number; y: number };
@@ -934,7 +935,9 @@ function curvaSuave(pts: Ponto[]): string {
  * `commentary`, travando à chegada de cada uma (como quem recebe e reorienta)
  * e deixando um rasto que se desvanece para trás.
  */
-function BolaAoVivo({ trilho }: { trilho: Ponto[] }) {
+type EtiquetaBola = { nome: string; numero: string; posicao: string };
+
+function BolaAoVivo({ trilho, etiqueta }: { trilho: Ponto[]; etiqueta?: EtiquetaBola | null }) {
   const chave = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
   const caminhoRef = useRef<SVGPathElement | null>(null);
   const rafRef = useRef(0);
@@ -1011,6 +1014,21 @@ function BolaAoVivo({ trilho }: { trilho: Ponto[] }) {
         style={{ left: `${bola.x}%`, top: `${bola.y}%` }}
         aria-hidden="true"
       />
+      {etiqueta && (
+        <span
+          className="campo-live__tag"
+          style={{ left: `${bola.x}%`, top: `${bola.y}%` }}
+        >
+          <strong>{etiqueta.nome}</strong>
+          {(etiqueta.numero || etiqueta.posicao) && (
+            <em>
+              {[etiqueta.numero && `#${etiqueta.numero}`, etiqueta.posicao]
+                .filter(Boolean)
+                .join('  ·  ')}
+            </em>
+          )}
+        </span>
+      )}
     </>
   );
 }
@@ -1019,7 +1037,10 @@ function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY } = momento ?? MOMENTO_VAZIO;
+  const {
+    casa, fora, lance, minuto, posse, bolaX, bolaY,
+    lanceJogador, lanceTexto, lanceLado,
+  } = momento ?? MOMENTO_VAZIO;
 
   // Nem todos os jogos têm feed ao vivo da ESPN (ligas fora da cobertura, ou
   // dados que ainda não abriram). Mostramos o campo na mesma, só que "vazio".
@@ -1033,28 +1054,33 @@ function CampoAoVivo(
         ? { nome: jogo.fora, logo: jogo.logoFora }
         : null;
 
-  // O evento ao centro: tempo de compensação (lido do relógio) tem prioridade,
-  // depois o destaque fresco do feed (com a equipa do lance por cima do texto),
-  // senão a fase corrente — que também mostra o escudo + nome de quem tem a
-  // posse, como se fosse um evento ("Melgar · Ataque").
-  const time = terminado || prejogo ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
   const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
   const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
-  const evento = terminado
+
+  // Cápsula ao centro do campo só para o momento grande — golo, penálti,
+  // vermelho ou tempo de compensação. O relato normal vive no cartão em baixo.
+  const capsula = terminado
     ? { texto: 'Fim do jogo', nota: '', time: null }
     : prejogo
-    ? { texto: 'Ainda não começou', nota: jogo.relogio, time: null }
-    : compensacao
-      ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
-      : destaque
-        ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
-        : { texto: fase || 'Bola em jogo', nota: '', time };
+      ? { texto: 'Ainda não começou', nota: jogo.relogio, time: null }
+      : compensacao
+        ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
+        : destaque
+          ? { texto: destaque.texto, nota: minuto, time: equipaDe(destaque.equipa) }
+          : null;
 
-  const legenda = [minuto, lance].filter(Boolean).join('  ·  ');
+  const cartao = equipaDe(lanceLado ?? posse);
+  const textoCartao = lanceTexto || [minuto, lance].filter(Boolean).join('  ·  ');
+  const etiqueta = !terminado && !prejogo ? lanceJogador : null;
+
+  const abrirComentarios = () => {
+    document.getElementById('historico-jogo')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
-    <div className="campo-live">
+    <div className="campo-live campo-live--estadio">
       <div className="campo-live__topo">
         <span className="campo-live__eq">{jogo.casa}</span>
         <span className="campo-live__min">
@@ -1063,42 +1089,72 @@ function CampoAoVivo(
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>
 
-      <div className="campo-live__relva">
-        <span className="campo-live__meio" aria-hidden="true" />
-        <span className="campo-live__circulo" aria-hidden="true" />
-        <span className="campo-live__area campo-live__area--esq" aria-hidden="true" />
-        <span className="campo-live__area campo-live__area--dir" aria-hidden="true" />
+      {/* Estádio em perspetiva, à maneira do LastPlays da ESPN: bancada ao fundo,
+          escudo da casa no meio, relva inclinada com a bola das últimas jogadas. */}
+      <div className="campo-live__estadio">
+        <div className="campo-live__bancada" aria-hidden="true">
+          {jogo.logoCasa && (
+            <img src={jogo.logoCasa} alt="" className="campo-live__bancada-escudo" />
+          )}
+        </div>
 
-        {/* Sombreia o lado para onde a equipa com posse carrega (casa → direita). */}
-        {time && (
-          <span
-            className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}
-            aria-hidden="true"
-          />
-        )}
+        <div className="campo-live__palco">
+          <div className="campo-live__relva">
+            <span className="campo-live__meio" aria-hidden="true" />
+            <span className="campo-live__circulo" aria-hidden="true" />
+            <span className="campo-live__area campo-live__area--esq" aria-hidden="true" />
+            <span className="campo-live__area campo-live__area--dir" aria-hidden="true" />
+            <span className="campo-live__baliza campo-live__baliza--esq" aria-hidden="true" />
+            <span className="campo-live__baliza campo-live__baliza--dir" aria-hidden="true" />
 
-        {/* Bola das últimas jogadas: desliza pelo trilho de coordenadas do
-            feed e deixa rasto, à maneira do LastPlays da ESPN. */}
-        {!terminado && !prejogo && (momento?.bolaTrilho?.length
-          ? <BolaAoVivo trilho={momento.bolaTrilho} />
-          : bolaX != null && bolaY != null && (
+            {!terminado && !prejogo && posse && (
               <span
-                className="campo-live__bola"
-                style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+                className={`campo-live__posse-lado campo-live__posse-lado--${posse}`}
                 aria-hidden="true"
               />
-            ))}
+            )}
 
-        <div className="campo-live__evento-wrap">
-          {evento.time && (
-            <span className="campo-live__evento-eq">
-              {evento.time.logo && <img src={evento.time.logo} alt="" />}
-              <span>{evento.time.nome}</span>
-            </span>
-          )}
-          <div className="campo-live__evento">
-            <strong>{evento.texto}</strong>
-            {evento.nota && <em>{evento.nota}</em>}
+            {!terminado && !prejogo && (momento?.bolaTrilho?.length
+              ? <BolaAoVivo trilho={momento.bolaTrilho} etiqueta={etiqueta} />
+              : bolaX != null && bolaY != null && (
+                  <>
+                    <span
+                      className="campo-live__bola"
+                      style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+                      aria-hidden="true"
+                    />
+                    {etiqueta && (
+                      <span
+                        className="campo-live__tag"
+                        style={{ left: `${bolaX}%`, top: `${bolaY}%` }}
+                      >
+                        <strong>{etiqueta.nome}</strong>
+                        {(etiqueta.numero || etiqueta.posicao) && (
+                          <em>
+                            {[etiqueta.numero && `#${etiqueta.numero}`, etiqueta.posicao]
+                              .filter(Boolean)
+                              .join('  ·  ')}
+                          </em>
+                        )}
+                      </span>
+                    )}
+                  </>
+                ))}
+
+            {capsula && (
+              <div className="campo-live__evento-wrap">
+                {capsula.time && (
+                  <span className="campo-live__evento-eq">
+                    {capsula.time.logo && <img src={capsula.time.logo} alt="" />}
+                    <span>{capsula.time.nome}</span>
+                  </span>
+                )}
+                <div className="campo-live__evento">
+                  <strong>{capsula.texto}</strong>
+                  {capsula.nota && <em>{capsula.nota}</em>}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1121,14 +1177,39 @@ function CampoAoVivo(
         <p className="campo-live__lance">Pontapé de saída às {jogo.relogio}</p>
       ) : (
         <>
+          {/* Cartão de última jogada, estilo ESPN: escudo + relato + minuto. */}
+          <div className="campo-live__ultima">
+            {cartao?.logo && (
+              <img src={cartao.logo} alt="" className="campo-live__ultima-escudo" />
+            )}
+            <div className="campo-live__ultima-corpo">
+              <span className="campo-live__ultima-topo">
+                <strong>{cartao?.nome ?? 'Última jogada'}</strong>
+                {minuto && <span className="campo-live__ultima-min">{minuto}</span>}
+                <span className="campo-live__ultima-badge">Última jogada</span>
+              </span>
+              <p>
+                {semFeed
+                  ? 'Sem cobertura ao vivo para este jogo — o campo fica sem lances.'
+                  : (textoCartao || 'Bola em jogo')}
+              </p>
+            </div>
+          </div>
+
           <div className="campo-live__momentum" role="img" aria-label={`Pressão: ${casa}% casa, ${fora}% fora`}>
             <span className="campo-live__pres campo-live__pres--casa" style={{ width: `${casa}%` }} />
             <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
           </div>
 
-          <p className="campo-live__lance">
-            {semFeed ? 'Sem cobertura ao vivo para este jogo — o campo fica sem lances.' : (legenda || 'Bola em jogo')}
-          </p>
+          {!semFeed && (
+            <button
+              type="button"
+              className="campo-live__comentarios"
+              onClick={abrirComentarios}
+            >
+              Comentários completos
+            </button>
+          )}
         </>
       )}
     </div>
@@ -1405,7 +1486,7 @@ function SalaJogo({
         </div>
 
         {/* ── Histórico do jogo ── */}
-        <div className="jogo-detalhes__bloco">
+        <div className="jogo-detalhes__bloco" id="historico-jogo">
           <h3>Histórico do jogo</h3>
           <CabecalhoEquipas jogo={jx} />
           {detalhes.comentario.length === 0 ? (
