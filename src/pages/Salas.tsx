@@ -906,22 +906,28 @@ const MOMENTO_VAZIO: MomentoJogo = {
   bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
 
-/** Fila de penáltis de uma equipa no desempate: ✓ marcado, ✗ falhado.
- *  `dir` inverte para o lado direito (equipa fora). Sem nome — a posição
- *  (esquerda = casa, direita = fora) já diz de quem é. */
-function SeriePen({ serie, dir = false }: { serie: boolean[] | null; dir?: boolean }) {
+/** Marcas de um lado do desempate: ✓ marcado, ✗ falhado. */
+function PenMarcas({ serie }: { serie: boolean[] | null }) {
   const marcas = serie ?? [];
-  const feitos = marcas.filter(Boolean).length;
   return (
-    <div className={`placar__pen-linha${dir ? ' placar__pen-linha--dir' : ''}`}>
-      <span className="placar__pen-conta">{feitos}/{marcas.length}</span>
-      <span className="placar__pen-marcas">
-        {marcas.map((ok, i) => (
-          <span key={i} className={`placar__pen-marca${ok ? ' is-golo' : ' is-falha'}`}>
-            {ok ? '✓' : '✗'}
-          </span>
-        ))}
-      </span>
+    <span className="placar__pen-marcas">
+      {marcas.map((ok, i) => (
+        <span key={i} className={`placar__pen-marca${ok ? ' is-golo' : ' is-falha'}`}>
+          {ok ? '✓' : '✗'}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Sequência dos dois lados numa só linha: casa | fora. A posição
+ *  (esquerda = casa, direita = fora) já diz de quem é cada metade. */
+function SeriePen({ casa, fora }: { casa: boolean[] | null; fora: boolean[] | null }) {
+  return (
+    <div className="placar__pen-linha">
+      <PenMarcas serie={casa} />
+      <span className="placar__pen-barra">|</span>
+      <PenMarcas serie={fora} />
     </div>
   );
 }
@@ -1384,8 +1390,7 @@ function SalaJogo({
               </p>
               {(detalhes.vivo.penSerieCasa || detalhes.vivo.penSerieFora) && (
                 <div className="placar__pen-series">
-                  <SeriePen serie={detalhes.vivo.penSerieCasa} />
-                  <SeriePen serie={detalhes.vivo.penSerieFora} dir />
+                  <SeriePen casa={detalhes.vivo.penSerieCasa} fora={detalhes.vivo.penSerieFora} />
                 </div>
               )}
             </div>
