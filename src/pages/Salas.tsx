@@ -1144,6 +1144,12 @@ function SalaJogo({
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [vistaMeio, setVistaMeio] = useState<'campo' | 'stats'>('campo');
 
+  // A lista e a ficha do jogo são a mesma página: ao abrir um jogo, o scroll
+  // ficava onde estava na lista. Volta ao topo sempre que se abre um jogo.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [jogo.id]);
+
   // O jogo tal como se mostra: o que veio da lista, com o placar, o relógio e
   // o estado do próprio summary por cima — a mesma fonte do mini-campo, para
   // não haver dois minutos a discordar.
