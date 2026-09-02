@@ -1191,3 +1191,97 @@
   line-height: 1.5;
   color: var(--text-gray);
 }
+
+/* ─── Lista de clãs / pedidos ──────────────────────────────── */
+
+.gm-link {
+  background: none;
+  border: none;
+  color: var(--gold-light);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.gm-tab .gm-badge {
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  background: var(--gold-primary);
+  border-color: transparent;
+  color: var(--bg-deep);
+}
+
+.cla-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cla-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 13px 16px;
+}
+
+.cla-item__nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.cla-item__tag { color: var(--text-muted); font-weight: 700; font-size: 0.82rem; }
+
+.cla-item__meta {
+  display: flex;
+  gap: 14px;
+  margin-top: 5px;
+  font-size: 0.78rem;
+  color: var(--text-gray);
+}
+
+.cla-item__meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+.cla-item__desc {
+  margin: 7px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cla-item__acao { display: flex; gap: 8px; flex-shrink: 0; }
+
+.cla-editar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cla-editar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cla-editar input[type='color'] {
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}

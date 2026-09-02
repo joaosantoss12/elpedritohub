@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 // Cada tema é uma bolinha bicolor: fundo (a metade escura) + acento (a
 // dourado/turquesa/etc). Os valores batem com os blocos data-tema do index.css.
 const TEMAS: { id: string; nome: string; fundo: string; acento: string }[] = [
+  { id: 'neve',      nome: 'Neve',      fundo: '#f4f6fb', acento: '#3b6fb0' },
   { id: 'castanho',  nome: 'Castanho',  fundo: '#111726', acento: '#a17c5b' },
   { id: 'oceano',    nome: 'Oceano',    fundo: '#0e1a28', acento: '#3fa9c9' },
   { id: 'esmeralda', nome: 'Esmeralda', fundo: '#0e1d17', acento: '#35b57e' },
@@ -92,7 +93,7 @@ export function SeletorTema() {
   const ehPersonalizado = tema === 'personalizado';
   const predefinido = TEMAS.find(t => t.id === tema) ?? TEMAS[0];
   const bolaFundo = ehPersonalizado
-    ? `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)`
+    ? `linear-gradient(135deg, ${TEMAS[1].fundo} 50%, ${cor} 50%)`
     : `linear-gradient(135deg, ${predefinido.fundo} 50%, ${predefinido.acento} 50%)`;
 
   return (
@@ -126,10 +127,19 @@ export function SeletorTema() {
             </button>
           ))}
 
-          <div className={`seletor-tema__opcao seletor-tema__opcao--cor${ehPersonalizado ? ' is-ativa' : ''}`}>
+          {/* A linha inteira volta a activar a cor guardada — carregar só no
+              seletor de cor obrigava a re-escolher para repetir a mesma. */}
+          <div
+            className={`seletor-tema__opcao seletor-tema__opcao--cor${ehPersonalizado ? ' is-ativa' : ''}`}
+            role="menuitemradio"
+            aria-checked={ehPersonalizado}
+            tabIndex={0}
+            onClick={() => setTema('personalizado')}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTema('personalizado'); } }}
+          >
             <span
               className="seletor-tema__amostra"
-              style={{ background: `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)` }}
+              style={{ background: `linear-gradient(135deg, ${TEMAS[1].fundo} 50%, ${cor} 50%)` }}
             />
             <span className="seletor-tema__cor-texto">Personalizada</span>
             <input
@@ -172,8 +182,7 @@ export function SeletorTema() {
           width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
           border: 1px solid var(--border-strong);
         }
-        .seletor-tema__opcao--cor { cursor: default; }
-        .seletor-tema__opcao--cor:hover { background: transparent; color: var(--text-gray); }
+        .seletor-tema__opcao--cor { cursor: pointer; }
         .seletor-tema__opcao--cor.is-ativa { color: var(--gold-primary); }
         .seletor-tema__cor-texto { flex: 1; }
         .seletor-tema__cor-input {

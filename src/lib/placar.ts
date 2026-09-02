@@ -138,7 +138,8 @@ function mapearEvento(bruto: unknown, ligaSlug: string, ligaNome: string): JogoA
   for (const d of lista(comp.details).map(obj)) {
     const texto = (txt(obj(d.type).text) ?? '').toLowerCase();
     const eVermelho = d.redCard === true
-      || (texto.includes('red') && !texto.includes('yellow'))
+      || /red[\s-]?card/.test(texto)
+      || /sent[\s-]?off/.test(texto)
       || texto.includes('second yellow');
     if (!eVermelho) continue;
     const idEquipa = txt(obj(d.team).id);
@@ -500,16 +501,17 @@ const LABELS_ESTATISTICA: Record<string, string> = {
 function classificarTipoEvento(texto: string): TipoEvento {
   const s = texto.toLowerCase();
   if (s.includes('goal') || s.includes('penalty') && s.includes('scored')) return 'golo';
+  if (/red[\s-]?card/.test(s) || /sent[\s-]?off/.test(s)) return 'cartao_vermelho';
   if (s.includes('yellow')) return 'cartao_amarelo';
-  if (s.includes('red')) return 'cartao_vermelho';
   if (s.includes('substitution')) return 'substituicao';
   return 'outro';
 }
 
 /** Do slug do `commentary` (ex. 'red-card', 'penalty---scored') para o tipo. */
 function tipoDoComentario(slug: string): TipoEvento {
-  if (slug === 'goal' || slug === 'own-goal' || slug === 'penalty---scored') return 'golo';
-  if (slug.includes('red') || slug.includes('second-yellow')) return 'cartao_vermelho';
+  if (slug === 'goal' || slug === 'own-goal' || slug.includes('scored')) return 'golo';
+  if (/red[\s-]*card/.test(slug) || slug.includes('second-yellow') || /sent[\s-]*off/.test(slug))
+    return 'cartao_vermelho';
   if (slug.includes('yellow')) return 'cartao_amarelo';
   if (slug === 'substitution') return 'substituicao';
   return 'outro';
@@ -760,19 +762,42 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   // isso o X da ESPN (0 = baliza da casa, 100 = baliza adversária) serve tal
   // e qual. Sem feed fresco não se finge posição.
   const comCoord = feedParado ? undefined : [...lances].reverse().find(l => l.x != null);
-  const bolaX = comCoord?.x ?? null;
-  const bolaY = comCoord?.y ?? null;
 
-  // Rasto das últimas jogadas com coordenada (antiga → recente). Com feed
-  // parado não se inventa movimento — fica só o ponto atual, se houver. Com
-  // feed vivo puxa-se tudo o que traga coordenada (não só os lances notáveis),
-  // para a bola ter pontos que cheguem para andar; pontos praticamente colados
-  // são fundidos, senão a bola fica a tremer parada.
+  // A maioria dos jogos não traz `fieldPositionX/Y` da ESPN. Com feed vivo
+  // aproxima-se a zona da bola pelo tipo de lance e por quem o fez: a casa
+  // ataca para a direita (x→100), por isso um remate/canto da casa cai no
+  // terço ofensivo direito, uma falta fica mais atrás, etc. Não é a posição
+  // exacta — é o suficiente para a bola saltar pelo campo a acompanhar o jogo.
+  const zonaAprox = (l: Lance): { x: number; y: number } | null => {
+    if (!l.equipa) return null;
+    const casaLado = l.equipa === 'casa';
+    const dir = (n: number) => (casaLado ? n : 100 - n);
+    let bx: number;
+    if (/goal|shot|penalty|corner|header|save/.test(l.slug)) bx = dir(82);
+    else if (/free-?kick|offside/.test(l.slug)) bx = dir(62);
+    else if (l.slug === 'foul') bx = dir(44);
+    else bx = dir(60);
+    return { x: bx, y: 28 + (Math.abs(Math.round(l.t / 20)) % 7) * 7.3 };
+  };
+
+  const ultimaZona = feedParado
+    ? null
+    : [...lances].reverse().map(zonaAprox).find((p): p is { x: number; y: number } => p != null) ?? null;
+  const bolaX = comCoord?.x ?? ultimaZona?.x ?? null;
+  const bolaY = comCoord?.y ?? ultimaZona?.y ?? null;
+
+  // Rasto das últimas jogadas (antiga → recente). Com feed parado não se
+  // inventa movimento — fica só o ponto atual, se houver. Com feed vivo usam-se
+  // as coordenadas reais quando existem; quando não, a zona aproximada de cada
+  // lance. Pontos praticamente colados são fundidos, senão a bola treme parada.
+  const trilhoReal = lances
+    .filter(l => l.x != null && l.y != null)
+    .map(l => ({ x: l.x as number, y: l.y as number }));
   const trilhoCru = feedParado
     ? (bolaX != null && bolaY != null ? [{ x: bolaX, y: bolaY }] : [])
-    : lances
-        .filter(l => l.x != null && l.y != null)
-        .map(l => ({ x: l.x as number, y: l.y as number }));
+    : trilhoReal.length > 0
+      ? trilhoReal
+      : lances.map(zonaAprox).filter((p): p is { x: number; y: number } => p != null);
   const bolaTrilho: { x: number; y: number }[] = [];
   for (const p of trilhoCru.slice(-16)) {
     const ult = bolaTrilho[bolaTrilho.length - 1];
@@ -977,6 +1002,16 @@ function eventoGolo(slug: string): boolean {
   return slug.includes('penalty') && slug.includes('scored');
 }
 
+/** Cartão vermelho — direto ou segundo amarelo. Casa "red card", "red-card",
+ *  "yellow red card" e "sent off", mas nunca "scored" (que acaba em "red"). */
+function eventoVermelho(slug: string): boolean {
+  return /red[\s-]?card/.test(slug) || /sent[\s-]?off/.test(slug) || slug.includes('sending-off');
+}
+/** Amarelo simples: o segundo amarelo conta como vermelho, não aqui. */
+function eventoAmarelo(slug: string): boolean {
+  return /yellow[\s-]?card/.test(slug) && !slug.includes('red');
+}
+
 /** Um nome de evento (displayName) refere-se a este atleta? Aguenta
  *  "J. Solis" vs "Jhon Solis" sem confundir jogadores que só partilham o
  *  apelido ("Jota Silva" vs "Thiago Silva"). */
@@ -1043,8 +1078,8 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         saiu: p.subbedOut === true,
         guardaRedes: lugar === 1 || pos === 'G' || pos === 'GK',
         golos: meusLances.filter(e => eventoGolo(e.slug)).length,
-        amarelo: meusLances.some(e => e.slug.includes('yellow') && !e.slug.includes('red')),
-        vermelho: meusLances.some(e => e.slug.includes('red')),
+        amarelo: meusLances.some(e => eventoAmarelo(e.slug)),
+        vermelho: meusLances.some(e => eventoVermelho(e.slug)),
       };
     });
 
@@ -1082,8 +1117,8 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
         minuto: troca?.minuto ?? null,
         saiuPor: saiuPorCru ? (saiuTit?.nome ?? saiuPorCru) : null,
         golos: meusLances.filter(e => eventoGolo(e.slug)).length,
-        amarelo: meusLances.some(e => e.slug.includes('yellow') && !e.slug.includes('red')),
-        vermelho: meusLances.some(e => e.slug.includes('red')),
+        amarelo: meusLances.some(e => eventoAmarelo(e.slug)),
+        vermelho: meusLances.some(e => eventoVermelho(e.slug)),
         saiuGolos: saiuTit?.golos ?? 0,
         saiuAmarelo: saiuTit?.amarelo ?? false,
         saiuVermelho: saiuTit?.vermelho ?? false,

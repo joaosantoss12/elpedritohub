@@ -22,6 +22,7 @@ export interface LinhaRankingClas {
   tag: string;
   membros: number;
   pontos: number;
+  cor: string | null;
 }
 
 export interface MembroCla {
@@ -36,9 +37,38 @@ export interface Cla {
   tag: string;
   descricao: string | null;
   aberto: boolean;
+  cor: string | null;
   max_membros: number;
   sou_dono: boolean;
   membros: MembroCla[];
+}
+
+/** Uma linha da lista de todos os clãs (separador "Clãs"). */
+export interface ClaListado {
+  cla_id: string;
+  nome: string;
+  tag: string;
+  descricao: string | null;
+  aberto: boolean;
+  membros: number;
+  max_membros: number;
+  lider: string;
+  cor: string | null;
+}
+
+/** Um pedido de entrada à espera de resposta do dono. */
+export interface PedidoCla {
+  user_id: string;
+  username: string;
+  epcoins: number;
+  pedido_em: string;
+}
+
+/** O pedido pendente do próprio utilizador, se houver. */
+export interface MeuPedidoCla {
+  cla_id: string;
+  nome: string;
+  tag: string;
 }
 
 export interface PerfilPublico {
@@ -51,6 +81,7 @@ export interface PerfilPublico {
   streak: number;
   cla_nome: string | null;
   cla_tag: string | null;
+  cla_cor: string | null;
 }
 
 // ─── CONVITES ─────────────────────────────────────────────────
@@ -156,7 +187,81 @@ export async function carregarRankingClas(limite = 30): Promise<LinhaRankingClas
     ...l,
     membros: Number(l.membros),
     pontos: Number(l.pontos),
+    cor: l.cor ?? null,
   }));
+}
+
+/** Lista de todos os clãs, para quem ainda não tem um escolher. */
+export async function listarClas(): Promise<ClaListado[]> {
+  const { data, error } = await supabase.rpc('cla_listar');
+  if (error) {
+    console.warn('Lista de clãs indisponível:', error.message);
+    return [];
+  }
+  return ((data ?? []) as Record<string, unknown>[]).map((l) => ({
+    cla_id: l.cla_id as string,
+    nome: l.nome as string,
+    tag: l.tag as string,
+    descricao: (l.descricao as string) ?? null,
+    aberto: Boolean(l.aberto),
+    membros: Number(l.membros ?? 0),
+    max_membros: Number(l.max_membros ?? 20),
+    lider: (l.lider as string) ?? 'membro',
+    cor: (l.cor as string) ?? null,
+  }));
+}
+
+/** Pedir para entrar num clã (o dono decide depois). */
+export async function pedirParaEntrar(claId: string): Promise<void> {
+  const { error } = await supabase.rpc('cla_pedir', { p_cla_id: claId });
+  if (error) throw new Error(traduzErro(error.message));
+}
+
+export async function cancelarPedidoCla(): Promise<void> {
+  const { error } = await supabase.rpc('cla_pedir_cancelar');
+  if (error) throw new Error(traduzErro(error.message));
+}
+
+export async function carregarMeuPedidoCla(): Promise<MeuPedidoCla | null> {
+  const { data, error } = await supabase.rpc('cla_meu_pedido');
+  if (error) return null;
+  const l = Array.isArray(data) ? data[0] : data;
+  if (!l?.cla_id) return null;
+  return { cla_id: l.cla_id as string, nome: l.nome as string, tag: l.tag as string };
+}
+
+/** Pedidos à espera de resposta — só devolve linhas ao dono do clã. */
+export async function carregarPedidosCla(): Promise<PedidoCla[]> {
+  const { data, error } = await supabase.rpc('cla_pedidos_recebidos');
+  if (error) return [];
+  return ((data ?? []) as Record<string, unknown>[]).map((l) => ({
+    user_id: l.user_id as string,
+    username: (l.username as string) ?? 'membro',
+    epcoins: Number(l.epcoins ?? 0),
+    pedido_em: (l.pedido_em as string) ?? '',
+  }));
+}
+
+export async function responderPedidoCla(userId: string, aceitar: boolean): Promise<void> {
+  const { error } = await supabase.rpc('cla_pedido_responder', {
+    p_user_id: userId,
+    p_aceitar: aceitar,
+  });
+  if (error) throw new Error(traduzErro(error.message));
+}
+
+/** O dono edita a descrição, se está aberto a pedidos, e a cor do nome. */
+export async function editarCla(campos: {
+  descricao?: string;
+  aberto?: boolean;
+  cor?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc('cla_editar', {
+    p_descricao: campos.descricao ?? null,
+    p_aberto: campos.aberto ?? null,
+    p_cor: campos.cor === undefined ? null : (campos.cor ?? ''),
+  });
+  if (error) throw new Error(traduzErro(error.message));
 }
 
 /**
@@ -178,6 +283,7 @@ export async function carregarCla(claId?: string): Promise<Cla | null> {
     tag: c.tag as string,
     descricao: (c.descricao as string) ?? null,
     aberto: Boolean(c.aberto),
+    cor: (c.cor as string) ?? null,
     max_membros: Number(c.max_membros),
     sou_dono: Boolean(c.sou_dono),
     membros: linhas.map((l) => ({
@@ -192,11 +298,13 @@ export async function criarCla(
   nome: string,
   tag: string,
   descricao?: string,
+  cor?: string | null,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('cla_criar', {
     p_nome: nome,
     p_tag: tag.toUpperCase(),
     p_descricao: descricao ?? null,
+    p_cor: cor ?? null,
   });
   if (error) throw new Error(traduzErro(error.message));
   return data as string;
@@ -237,5 +345,6 @@ export async function carregarPerfilPublico(username: string): Promise<PerfilPub
     streak: Number(l.streak ?? 0),
     cla_nome: (l.cla_nome as string) ?? null,
     cla_tag: (l.cla_tag as string) ?? null,
+    cla_cor: (l.cla_cor as string) ?? null,
   };
 }

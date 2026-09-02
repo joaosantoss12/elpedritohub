@@ -18,7 +18,7 @@ import {
  * lá dentro, e é a base de dados que o garante (migração 015), não este
  * componente: a lista já chega filtrada.
  */
-export function CanaisComunidade() {
+export function CanaisComunidade({ filtro = 'todos' }: { filtro?: 'geral' | 'cla' | 'todos' }) {
   const { user, membro } = useAuth();
 
   const [canais, setCanais] = useState<CanalComunidade[]>([]);
@@ -35,12 +35,15 @@ export function CanaisComunidade() {
 
   useEffect(() => {
     void (async () => {
-      const cs = await carregarCanaisComunidade();
+      const todos = await carregarCanaisComunidade();
+      const cs = filtro === 'geral' ? todos.filter((c) => !c.cla_id)
+        : filtro === 'cla' ? todos.filter((c) => c.cla_id)
+        : todos;
       setCanais(cs);
       setAtivo((a) => a ?? cs[0] ?? null);
       setCarregado(true);
     })();
-  }, []);
+  }, [filtro]);
 
   const abrir = useCallback(async (c: CanalComunidade) => {
     setMensagens(await carregarMensagensCanal(c.id));
@@ -97,7 +100,13 @@ export function CanaisComunidade() {
   }
 
   if (canais.length === 0) {
-    return <div className='gm-vazio'>Ainda não há canais abertos.</div>;
+    return (
+      <div className='gm-vazio'>
+        {filtro === 'cla'
+          ? 'O canal do clã aparece aqui assim que entrares num.'
+          : 'Ainda não há canais abertos.'}
+      </div>
+    );
   }
 
   const trancado = Boolean(ativo?.requer_vip && !eVip);
@@ -110,14 +119,14 @@ export function CanaisComunidade() {
 
   return (
     <div className='gm-card'>
-      <h2>Chat</h2>
+      <h2>{filtro === 'cla' ? 'Chat do clã' : 'Chat'}</h2>
       <p className='gm-sub'>
-        O geral é para toda a gente. O do teu clã só o vêem os membros dele. A
-        primeira mensagem do dia conta para a missão — e conta uma vez só,
-        escrevas aqui ou numa sala de jogo.
+        {filtro === 'cla'
+          ? 'Privado — só os membros do clã lêem isto. A primeira mensagem do dia conta para a missão.'
+          : 'O geral é para toda a gente. A primeira mensagem do dia conta para a missão — e conta uma vez só, escrevas aqui ou numa sala de jogo.'}
       </p>
 
-      <div className='cc-canais'>
+      <div className='cc-canais' hidden={canais.length < 2}>
         {gerais.map((c) => (
           <button key={c.id}
                   className={`cc-canal ${ativo?.id === c.id ? 'ativo' : ''}`}
@@ -138,7 +147,7 @@ export function CanaisComunidade() {
         ))}
       </div>
 
-      {deCla.length === 0 && (
+      {filtro === 'todos' && deCla.length === 0 && (
         <div className='cc-dica'>
           Ainda não estás num clã — entra ou cria um no separador ao lado e
           ganhas um canal privado só para os membros.
