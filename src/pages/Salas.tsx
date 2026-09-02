@@ -902,6 +902,7 @@ const ESTATISTICAS_ZERO = [
 
 const MOMENTO_VAZIO: MomentoJogo = {
   casa: 50, fora: 50, posse: null, fase: '', destaque: null, lance: '', minuto: '',
+  compensacao: null,
   bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
 
@@ -940,7 +941,17 @@ function CampoAoVivo(
   { jogo, momento, terminado = false, prejogo = false }:
   { jogo: JogoAoVivo; momento?: MomentoJogo | null; terminado?: boolean; prejogo?: boolean },
 ) {
-  const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY, bolaReal, ultimaJogada } = momento ?? MOMENTO_VAZIO;
+  const { casa, fora, lance, minuto, posse, fase, compensacao, bolaX, bolaY, bolaReal, ultimaJogada } = momento ?? MOMENTO_VAZIO;
+
+  // O anúncio dos acréscimos aparece ao centro só uns segundos (como na ESPN);
+  // depois disso fica só o "(+X)" ao lado do relógio.
+  const [compFresca, setCompFresca] = useState<number | null>(null);
+  useEffect(() => {
+    if (compensacao == null) { setCompFresca(null); return; }
+    setCompFresca(compensacao);
+    const t = window.setTimeout(() => setCompFresca(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [compensacao]);
 
   // Debug: ?debug na URL ou localStorage.ep-debug='1' mostra as coordenadas
   // da bola + o evento por cima do campo, e imprime na consola a cada momento.
@@ -978,13 +989,12 @@ function CampoAoVivo(
   const time = terminado || prejogo ? null : equipaDe(posse);
   // `destaque` pode vir como string de uma versão antiga da cache — normaliza.
   const destaque = typeof momento?.destaque === 'object' ? momento.destaque : null;
-  const compensacao = jogo.relogio?.match(/\+\s*\d+/)?.[0].replace(/\s/g, '');
   const evento = terminado
     ? { texto: 'Fim do jogo', nota: '', time: null }
     : prejogo
     ? { texto: 'Ainda não começou', nota: jogo.relogio, time: null }
-    : compensacao
-      ? { texto: 'Tempo de compensação', nota: compensacao, time: null }
+    : compFresca != null
+      ? { texto: 'Tempo de compensação', nota: `+${compFresca}`, time: null }
       : ultimaJogada
         ? {
             texto: ultimaJogada.rotulo || fase || 'Bola em jogo',
@@ -1003,6 +1013,9 @@ function CampoAoVivo(
         <span className="campo-live__eq">{jogo.casa}</span>
         <span className="campo-live__min">
           {!terminado && !prejogo && <span className="salas-dot" />} {jogo.relogio}
+          {!terminado && !prejogo && compensacao != null && /\+/.test(jogo.relogio ?? '') && (
+            <span className="campo-live__extra"> (+{compensacao})</span>
+          )}
         </span>
         <span className="campo-live__eq campo-live__eq--dir">{jogo.fora}</span>
       </div>

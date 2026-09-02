@@ -1047,6 +1047,7 @@
   color: var(--gold-primary);
 }
 .campo-live__min .salas-dot { flex-shrink: 0; }
+.campo-live__extra { color: var(--gold-light); font-weight: 700; }
 
 .campo-live__relva {
   position: relative;

@@ -280,6 +280,10 @@ export interface MomentoJogo {
   /** Texto curto do último lance, ex. "Canto · Coritiba". */
   lance: string;
   minuto: string;
+  /** Minutos de tempo de compensação anunciados pelo árbitro na parte em curso.
+   *  Vem do texto do relato ("serão jogados mais 5 minutos"), NÃO do relógio —
+   *  o relógio só diz quanto já passou. `null` enquanto não houver anúncio. */
+  compensacao: number | null;
   /** Onde foi a última jogada, em % do campo (a casa ataca para a direita, por
    *  isso x≈100 é a baliza adversária). `null` quando o feed não dá posição.
    *  Não é a bola em tempo real — a ESPN só dá coordenada por evento — mas
@@ -609,6 +613,26 @@ function paraPortugalPT(texto: string): string {
   return s;
 }
 
+/** Deteta o anúncio de tempo de compensação/acréscimos do árbitro. */
+const COMPENSACAO_RE =
+  /acr[ée]scim|minutos? adiciona|tempo(?:s)? adiciona|minutos? de descontos?|added time|stoppage time|ser[ãa]o jogados mais \d+ min|mais \d+ minutos? (?:ser|de|adiciona|no fim)|indica(?:r|do)? mais \d+ min/;
+
+const NUM_EXTENSO: Record<string, number> = {
+  um: 1, uma: 1, dois: 2, duas: 2, tres: 3, 'três': 3, quatro: 4, cinco: 5,
+  seis: 6, sete: 7, oito: 8, nove: 9, dez: 10,
+};
+
+/** Minutos de compensação a partir da frase ("mais 5 minutos", "cinco minutos
+ *  adicionais"). `null` se a linha não for um anúncio de acréscimos. */
+function minutosCompensacao(texto: string): number | null {
+  const s = texto.toLowerCase();
+  if (!COMPENSACAO_RE.test(s)) return null;
+  const m = s.match(/\b(\d+|um|uma|dois|duas|tr[êe]s|quatro|cinco|seis|sete|oito|nove|dez)\s+minuto/);
+  if (!m) return null;
+  const n = NUM_EXTENSO[m[1]] ?? Number(m[1]);
+  return Number.isFinite(n) && n > 0 && n <= 20 ? n : null;
+}
+
 /** Rótulo curto a partir da frase do relato (quando a linha não traz tipo). A
  *  ESPN escreve em PT do Brasil ("Tentativa de carrinho…", "Escanteio…"). */
 function rotularDoTexto(texto: string): string | null {
@@ -643,7 +667,8 @@ function rotularDoTexto(texto: string): string | null {
   if (/cart[ãa]o/.test(s)) return 'Cartão';
   if (/les[ãa]o|injury|atendimento|maca|departamento m[ée]dico|contus/.test(s)) return 'Lesão';
   if (/in[íi]cio|kick.?off|apito inicial|bola rolando|come[çc]a a (?:partida|etapa)|rolar a bola/.test(s)) return 'Início';
-  if (/fim d[oa]|intervalo|half.?time|full.?time|end of|acr[ée]scimos|tempo adicional/.test(s)) return 'Fim da parte';
+  if (COMPENSACAO_RE.test(s)) return 'Tempo de compensação';
+  if (/fim d[oa]|intervalo|half.?time|full.?time|end of/.test(s)) return 'Fim da parte';
   if (/recupera(?:ção| a bola)|roubada|roubou a bola/.test(s)) return 'Recuperação de bola';
   if (/perde a bola|perdeu a bola|desarmado/.test(s)) return 'Perda de bola';
   if (/passe|pass\b|troca de passes|toca para|lan[çc]a/.test(s)) return 'Passe';
@@ -653,7 +678,7 @@ function rotularDoTexto(texto: string): string | null {
 /** Rótulos que passam pelo `destaque` central (golo, cartão…) e não pela `fase`. */
 const ROTULOS_NOTAVEIS = new Set([
   'Golo', 'Autogolo', 'Golo anulado', 'Amarelo', 'Vermelho', 'Segundo amarelo', 'Substituição',
-  'Penálti marcado', 'Penálti falhado', 'Penálti defendido', 'Golo de penálti',
+  'Penálti marcado', 'Penálti falhado', 'Penálti defendido', 'Golo de penálti', 'Tempo de compensação',
 ]);
 
 /** Do slug para o tipo de evento (ícone). Cobre mais casos que `tipoDoComentario`. */
@@ -1082,8 +1107,17 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     }
   }
 
+  // Tempo de compensação: o último anúncio do árbitro no relato ("serão jogados
+  // mais 5 minutos"). O da 2.ª parte substitui o da 1.ª por ser mais recente.
+  let compensacao: number | null = null;
+  for (const l of linhas) {
+    const n = minutosCompensacao(`${l.texto} ${l.rotuloEspn}`);
+    if (n != null) compensacao = n;
+  }
+
   return {
-    casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaReal, bolaPassos, ultimaJogada,
+    casa, fora, posse, fase, destaque, lance, compensacao,
+    bolaX, bolaY, bolaReal, bolaPassos, ultimaJogada,
     minuto: ultimaLinha?.minuto || lances[lances.length - 1].minuto,
   };
 }
