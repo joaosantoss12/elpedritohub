@@ -16,8 +16,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Resolver 50+ faixas no YouTube demora — o default de 10s da Vercel não chega.
 export const config = { maxDuration: 60 };
 
-const MAX_FAIXAS = 50;
-const CONCORRENCIA = 10;
+const MAX_FAIXAS = 200;
+const CONCORRENCIA = 12;
 
 type Faixa = { titulo: string; artista: string; videoId: string };
 
@@ -44,6 +44,26 @@ async function obterToken(): Promise<string> {
   const j = (await r.json()) as { access_token?: string };
   if (!j.access_token) throw new Error('Resposta do Spotify sem token.');
   return j.access_token;
+}
+
+/* Token anónimo — o mesmo que o site open.spotify.com usa para visitantes sem
+   sessão. Não precisa de app registada nem de conta Premium e chega para ler
+   playlists/álbuns públicos com PAGINAÇÃO (o embed trunca listas grandes). */
+async function tokenAnonimo(): Promise<string | null> {
+  for (const url of [
+    'https://open.spotify.com/get_access_token?reason=transport&productType=embed',
+    'https://open.spotify.com/get_access_token?reason=transport&productType=web-player',
+  ]) {
+    try {
+      const r = await fetch(url, {
+        headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' },
+      });
+      if (!r.ok) continue;
+      const j = (await r.json()) as { accessToken?: string };
+      if (j.accessToken) return j.accessToken;
+    } catch { /* tenta o próximo */ }
+  }
+  return null;
 }
 
 type SpItem = { name?: string; artists?: { name?: string }[] };
@@ -206,7 +226,10 @@ async function resolverVideos(
   faixas: { titulo: string; artista: string }[],
 ): Promise<Faixa[]> {
   const saida: Faixa[] = [];
+  // Margem para responder antes de a Vercel cortar aos 60s.
+  const limite = Date.now() + 52_000;
   for (let i = 0; i < faixas.length; i += CONCORRENCIA) {
+    if (Date.now() > limite) break;
     const lote = faixas.slice(i, i + CONCORRENCIA);
     const ids = await Promise.all(
       lote.map(f => buscarNoYouTube(`${f.titulo} ${f.artista}`.trim())),
@@ -226,13 +249,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Via principal: página do player embutido, sem token nem Premium.
-    let lista = await lerViaEmbed(alvo).catch(() => null);
+    // Via principal: Web API com token anónimo (pagina a lista TODA, ao
+    // contrário do embed que trunca as playlists grandes).
+    let lista: { nome: string; faixas: { titulo: string; artista: string }[] } | null = null;
+    const tokenAnon = await tokenAnonimo();
+    if (tokenAnon) {
+      lista = await lerFaixasSpotify(alvo, tokenAnon).catch(() => null);
+    }
 
-    // Reserva: Web API com client-credentials (só se houver credenciais e a
+    // Reserva 1: página do player embutido (sem token) — pode vir truncada.
+    if (!lista || lista.faixas.length === 0) {
+      const viaEmbed = await lerViaEmbed(alvo).catch(() => null);
+      if (viaEmbed && viaEmbed.faixas.length > (lista?.faixas.length ?? 0)) lista = viaEmbed;
+    }
+
+    // Reserva 2: Web API com client-credentials (só se houver credenciais e a
     // conta dona da app tiver acesso — hoje isso implica Premium).
-    if (!lista && process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
-      lista = await lerFaixasSpotify(alvo, await obterToken());
+    if ((!lista || lista.faixas.length === 0)
+      && process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
+      lista = await lerFaixasSpotify(alvo, await obterToken()).catch(() => null);
     }
 
     if (!lista || lista.faixas.length === 0) {
