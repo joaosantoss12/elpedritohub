@@ -938,29 +938,30 @@ function curvaSuave(pts: Ponto[]): string {
 type EtiquetaBola = { nome: string; numero: string; posicao: string };
 
 function BolaAoVivo({ trilho, etiqueta }: { trilho: Ponto[]; etiqueta?: EtiquetaBola | null }) {
-  const chave = trilho.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
+  // Só os últimos lances: um rasto curto lê-se como "de onde vem a bola";
+  // ligar dez pontos espalhados pelo campo dava um garrancho por cima da relva.
+  const pts = trilho.length > 5 ? trilho.slice(-5) : trilho;
+  const chave = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(';');
   const caminhoRef = useRef<SVGPathElement | null>(null);
   const rafRef = useRef(0);
-  const [bola, setBola] = useState<Ponto>(() => trilho[trilho.length - 1] ?? { x: 50, y: 50 });
+  const [bola, setBola] = useState<Ponto>(() => pts[pts.length - 1] ?? { x: 50, y: 50 });
 
-  const d = useMemo(() => curvaSuave(trilho), [chave]); // eslint-disable-line react-hooks/exhaustive-deps
+  const d = useMemo(() => curvaSuave(pts), [chave]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     cancelAnimationFrame(rafRef.current);
-    const fim = trilho[trilho.length - 1];
+    const fim = pts[pts.length - 1];
     if (!fim) return;
     const path = caminhoRef.current;
     const reduz = typeof matchMedia === 'function'
       && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (trilho.length < 2 || !path || reduz) { setBola(fim); return; }
+    if (pts.length < 2 || !path || reduz) { setBola(fim); return; }
 
     const totalLen = path.getTotalLength();
     if (!totalLen) { setBola(fim); return; }
 
-    const N = trilho.length - 1;
-    // Arranca nos últimos ~5 lances — mais do que isso e a bola "teleporta"
-    // para o princípio do campo a cada atualização do feed.
-    let seg = Math.max(0, N - 5);
+    const N = pts.length - 1;
+    let seg = 0;
     let t0 = 0;
     const SEG_MS = 600;   // tempo a viajar entre dois lances
     const PAUSA_MS = 150; // travagem/controlo à chegada
@@ -984,7 +985,7 @@ function BolaAoVivo({ trilho, etiqueta }: { trilho: Ponto[]; etiqueta?: Etiqueta
     return () => cancelAnimationFrame(rafRef.current);
   }, [chave]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (trilho.length === 0) return null;
+  if (pts.length === 0) return null;
 
   return (
     <>
@@ -999,14 +1000,14 @@ function BolaAoVivo({ trilho, etiqueta }: { trilho: Ponto[]; etiqueta?: Etiqueta
           d={d}
           fill="none"
           stroke="currentColor"
-          strokeWidth="0.9"
+          strokeWidth="0.7"
           strokeLinecap="round"
           strokeLinejoin="round"
           pathLength={1}
           className="campo-live__rasto-traco"
         />
-        {trilho.slice(-6).map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={0.7} fill="currentColor" opacity={0.25 + i * 0.1} />
+        {pts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={0.6} fill="currentColor" opacity={0.15 + i * 0.12} />
         ))}
       </svg>
       <span

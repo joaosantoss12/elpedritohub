@@ -1155,7 +1155,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.28);
   overflow: visible;
 }
 /* Traço contínuo por baixo dos pontos: tracejado a "correr" na direção da bola,
@@ -1286,20 +1286,20 @@
 .campo-live__estadio {
   position: relative;
   border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .campo-live__bancada {
   position: relative;
-  height: 82px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px 12px 0 0;
-  border-bottom: 2px solid rgba(220, 227, 238, 0.12);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.22);
   background:
-    radial-gradient(circle at 50% 130%, rgba(220, 227, 238, 0.12), transparent 60%),
-    repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 8px),
-    linear-gradient(180deg, #212b3f 0%, #161d2c 100%);
+    repeating-linear-gradient(122deg, rgba(255, 255, 255, 0.32) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #b7bdc8 0%, #868e9c 100%);
   overflow: hidden;
 }
 .campo-live__bancada::before,
@@ -1308,48 +1308,50 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 32%;
-  background: repeating-linear-gradient(90deg, rgba(220, 227, 238, 0.13) 0 3px, transparent 3px 11px);
-  opacity: 0.55;
+  width: 30%;
+  background: repeating-linear-gradient(90deg, rgba(60, 68, 84, 0.28) 0 3px, transparent 3px 10px);
 }
 .campo-live__bancada::before { left: 0; }
 .campo-live__bancada::after { right: 0; }
 .campo-live__bancada-escudo {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
 }
 
 .campo-live__palco {
-  perspective: 720px;
-  perspective-origin: 50% 0%;
-  padding: 6px 10px 16px;
-  border-radius: 0 0 12px 12px;
-  background: linear-gradient(180deg, #0c1526 0%, #0a1220 100%);
+  perspective: 880px;
+  perspective-origin: 50% 26%;
+  padding: 12px 7% 14px;
+  overflow: hidden;
+  background: #0a1220;
 }
 
 .campo-live--estadio .campo-live__relva {
-  aspect-ratio: 16 / 8.5;
+  width: 100%;
+  height: clamp(140px, 34vw, 210px);
+  aspect-ratio: auto;
+  margin: 0 auto;
   overflow: visible;
-  transform: rotateX(34deg);
-  transform-origin: 50% 0%;
-  border-radius: 3px 3px 12px 12px;
-  background: repeating-linear-gradient(90deg, #2b7d3e 0 12.5%, #26723a 12.5% 25%);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.28), 0 30px 44px -12px rgba(0, 0, 0, 0.6);
+  transform: rotateX(22deg);
+  transform-origin: 50% 40%;
+  border-radius: 4px;
+  background: repeating-linear-gradient(90deg, #3a9b4f 0 12.5%, #35924a 12.5% 25%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4), 0 24px 34px -14px rgba(0, 0, 0, 0.55);
 }
-.campo-live--estadio .campo-live__meio { background: rgba(255, 255, 255, 0.4); }
+.campo-live--estadio .campo-live__meio { background: rgba(255, 255, 255, 0.5); }
 .campo-live--estadio .campo-live__circulo,
-.campo-live--estadio .campo-live__area { border-color: rgba(255, 255, 255, 0.42); }
+.campo-live--estadio .campo-live__area { border-color: rgba(255, 255, 255, 0.5); }
 
 .campo-live__baliza {
   position: absolute;
   top: 50%;
-  width: 3%;
-  height: 24%;
+  width: 2.5%;
+  height: 22%;
   transform: translateY(-50%);
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.65);
 }
 .campo-live__baliza--esq { left: -2px; border-right: none; }
 .campo-live__baliza--dir { right: -2px; border-left: none; }
@@ -1358,7 +1360,7 @@
 .campo-live__tag {
   position: absolute;
   margin-top: -12px;
-  transform: translate(-50%, -100%) rotateX(-34deg);
+  transform: translate(-50%, -100%) rotateX(-22deg);
   transform-origin: bottom center;
   display: flex;
   flex-direction: column;
@@ -1393,7 +1395,7 @@
 }
 
 .campo-live--estadio .campo-live__evento-wrap {
-  transform: translate(-50%, -50%) rotateX(-34deg);
+  transform: translate(-50%, -50%) rotateX(-22deg);
 }
 
 /* Cartão de última jogada */
