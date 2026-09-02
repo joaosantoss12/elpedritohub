@@ -16,8 +16,26 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Resolver 50+ faixas no YouTube demora — o default de 10s da Vercel não chega.
 export const config = { maxDuration: 60 };
 
+// O `playerVars.playlist` do IFrame do YouTube trava perto das 200 entradas —
+// não vale a pena resolver mais do que isso.
 const MAX_FAIXAS = 200;
-const CONCORRENCIA = 12;
+const CONCORRENCIA = 24;
+
+/* Um pedido ao YouTube que fica pendurado trava o lote inteiro (o `Promise.all`
+   espera pelo mais lento) e come o orçamento de tempo da função. Corta-se cada
+   pesquisa a poucos segundos — é melhor falhar um match do que perder faixas
+   por causa do limite de 60s da Vercel. */
+async function fetchCurto(url: string, init: RequestInit, ms = 4500): Promise<Response | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 type Faixa = { titulo: string; artista: string; videoId: string };
 
@@ -180,43 +198,35 @@ const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
    vir sem `videoId` nenhum quando é a Vercel a pedir. Fica o raspar como
    plano B. */
 async function pesquisaInnerTube(termo: string): Promise<string | null> {
-  try {
-    const r = await fetch(
-      `https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}&prettyPrint=false`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
-        body: JSON.stringify({
-          context: {
-            client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en', gl: 'US' },
-          },
-          query: termo,
-          params: 'EgIQAQ%3D%3D', // só vídeos
-        }),
-      },
-    );
-    if (!r.ok) return null;
-    const txt = await r.text();
-    const m = txt.match(/"videoId":"([\w-]{11})"/);
-    return m ? m[1] : null;
-  } catch {
-    return null;
-  }
+  const r = await fetchCurto(
+    `https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}&prettyPrint=false`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
+      body: JSON.stringify({
+        context: {
+          client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en', gl: 'US' },
+        },
+        query: termo,
+        params: 'EgIQAQ%3D%3D', // só vídeos
+      }),
+    },
+  );
+  if (!r || !r.ok) return null;
+  const txt = await r.text().catch(() => '');
+  const m = txt.match(/"videoId":"([\w-]{11})"/);
+  return m ? m[1] : null;
 }
 
 async function raspaResultados(termo: string): Promise<string | null> {
-  try {
-    const r = await fetch(
-      `https://www.youtube.com/results?search_query=${encodeURIComponent(termo)}` +
-        `&sp=EgIQAQ%253D%253D&hl=en&gl=US`,
-      { headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9', Cookie: 'CONSENT=YES+1' } },
-    );
-    if (!r.ok) return null;
-    const m = (await r.text()).match(/"videoId":"([\w-]{11})"/);
-    return m ? m[1] : null;
-  } catch {
-    return null;
-  }
+  const r = await fetchCurto(
+    `https://www.youtube.com/results?search_query=${encodeURIComponent(termo)}` +
+      `&sp=EgIQAQ%253D%253D&hl=en&gl=US`,
+    { headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9', Cookie: 'CONSENT=YES+1' } },
+  );
+  if (!r || !r.ok) return null;
+  const m = (await r.text().catch(() => '')).match(/"videoId":"([\w-]{11})"/);
+  return m ? m[1] : null;
 }
 
 async function buscarNoYouTube(termo: string): Promise<string | null> {
@@ -228,7 +238,7 @@ async function resolverVideos(
 ): Promise<Faixa[]> {
   const saida: Faixa[] = [];
   // Margem para responder antes de a Vercel cortar aos 60s.
-  const limite = Date.now() + 52_000;
+  const limite = Date.now() + 56_000;
   for (let i = 0; i < faixas.length; i += CONCORRENCIA) {
     if (Date.now() > limite) break;
     const lote = faixas.slice(i, i + CONCORRENCIA);
