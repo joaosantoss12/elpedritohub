@@ -1332,7 +1332,7 @@ function espalharLinhas(pts: { x: number; y: number }[], formacao: string): void
   capacidades.forEach((qtd, r) => {
     const idxs = ordem.slice(cursor, cursor + qtd);
     cursor += qtd;
-    const x = L > 1 ? 6 + (r / (L - 1)) * 40 : 26;
+    const x = L > 1 ? 6 + (r / (L - 1)) * 36 : 26;
     idxs.forEach(i => { pts[i].x = x; });
     const n = idxs.length;
     if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; return; }
@@ -1345,10 +1345,10 @@ function espalharLinhas(pts: { x: number; y: number }[], formacao: string): void
     // (alas) sobem — mais ofensivos — e os do meio ficam recuados, formando
     // um arco côncavo em vez de uma fila reta.
     if (n >= 4) {
-      const amp = n >= 5 ? 7 : 4;
+      const amp = n >= 5 ? 5 : 3;
       idxs.forEach(idx => {
         const dist = Math.abs(pts[idx].y - 50) / 50; // 0 no centro … 1 na ponta
-        pts[idx].x = Math.min(x + amp * dist, 47);
+        pts[idx].x = Math.min(x + amp * dist, 44);
       });
     }
   });
