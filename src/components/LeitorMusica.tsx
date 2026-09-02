@@ -264,24 +264,34 @@ export function LeitorMusica() {
       };
 
       if (playerRef.current?.cueVideoById) {
-        // Já é a mesma faixa/playlist — não mexer, senão reinicia.
+        // Já é a mesma config montada — não mexer, senão a faixa volta ao início.
         if (configMontadaRef.current === chaveConfig) { setPronto(true); return; }
-        configMontadaRef.current = chaveConfig;
-        if (config.tipo === 'playlist') {
-          if (auto) playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
-          else playerRef.current.cuePlaylist({ list: config.id, listType: 'playlist' });
-        } else if (config.tipo === 'lista') {
-          if (auto) playerRef.current.loadPlaylist(idsLista, 0, 0);
-          else playerRef.current.cuePlaylist(idsLista, 0, 0);
-        } else if (auto) {
-          playerRef.current.loadVideoById(config.id);
+
+        // 'lista' = IDs soltos do YouTube (link do Spotify). O `loadPlaylist`/
+        // `cuePlaylist` com um array de IDs não recarrega um player que já
+        // existe (bug antigo do IFrame API — só a via `playerVars.playlist` na
+        // criação é fiável). Por isso destrói-se e recria-se do zero.
+        if (config.tipo === 'lista') {
+          try { playerRef.current.destroy?.(); } catch { /* já morto */ }
+          playerRef.current = null;
+          const cofre = document.querySelector('.ep-yt-cofre');
+          if (cofre) cofre.innerHTML = '<div id="ep-yt-alvo"></div>';
+          // cai para o ramo de criação abaixo
         } else {
-          playerRef.current.cueVideoById(config.id);
+          configMontadaRef.current = chaveConfig;
+          if (config.tipo === 'playlist') {
+            if (auto) playerRef.current.loadPlaylist({ list: config.id, listType: 'playlist' });
+            else playerRef.current.cuePlaylist({ list: config.id, listType: 'playlist' });
+          } else if (auto) {
+            playerRef.current.loadVideoById(config.id);
+          } else {
+            playerRef.current.cueVideoById(config.id);
+          }
+          playerRef.current.setVolume(mudo ? 0 : volume);
+          if (config.tipo !== 'video') playerRef.current.setShuffle?.(aleatorio);
+          setPronto(true);
+          return;
         }
-        playerRef.current.setVolume(mudo ? 0 : volume);
-        if (config.tipo !== 'video') playerRef.current.setShuffle?.(aleatorio);
-        setPronto(true);
-        return;
       }
 
       configMontadaRef.current = chaveConfig;
