@@ -1237,15 +1237,29 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
       else if (teamNome && nomeCasa && (teamNome.includes(nomeCasa) || nomeCasa.includes(teamNome))) lado = 'casa';
       else if (teamNome && nomeFora && (teamNome.includes(nomeFora) || nomeFora.includes(teamNome))) lado = 'fora';
       else {
-        const m = t.match(/\bd[eo]\s+([a-z]{2,4})\b/);
-        if (m && m[1] === abrevCasa) lado = 'casa';
-        else if (m && m[1] === abrevFora) lado = 'fora';
+        // "O chute 1/5 de SAS é gol!" — a sigla vem logo a seguir ao "N/M de".
+        // (não vale o 1.º "de XXX" da frase: em penáltis falhados aparece
+        //  primeiro a equipa do guarda-redes.)
+        const m = t.match(/(?:chute|remate|cobran[çc]a|penal\w*)\s*\d\s*\/\s*\d\s+d[eo]\s+([a-zà-ú]{2,})/);
+        const sigla = m?.[1];
+        if (sigla && (sigla === abrevCasa || nomeCasa.startsWith(sigla) || nomeCasa.includes(sigla))) lado = 'casa';
+        else if (sigla && (sigla === abrevFora || nomeFora.startsWith(sigla) || nomeFora.includes(sigla))) lado = 'fora';
       }
       if (!lado) continue;
       (lado === 'casa' ? sc : sf).push(marcado);
     }
     penSerieCasa = sc.length ? sc : null;
     penSerieFora = sf.length ? sf : null;
+
+    // Rede de segurança: se as séries batem certo mas TROCADAS com o total do
+    // header (fonte fiável), troca-as. Corrige lados mal atribuídos no relato.
+    if (penCasa != null && penFora != null && penSerieCasa && penSerieFora) {
+      const mc = penSerieCasa.filter(Boolean).length;
+      const mf = penSerieFora.filter(Boolean).length;
+      if (mc !== penCasa && mf !== penFora && mc === penFora && mf === penCasa) {
+        [penSerieCasa, penSerieFora] = [penSerieFora, penSerieCasa];
+      }
+    }
   }
 
   return {

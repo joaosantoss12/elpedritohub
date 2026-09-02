@@ -906,20 +906,22 @@ const MOMENTO_VAZIO: MomentoJogo = {
   bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
 
-/** Fila de penáltis de uma equipa no desempate: ✓ marcado, ✗ falhado. */
-function SeriePen({ nome, serie, dir = false }: { nome: string; serie: boolean[] | null; dir?: boolean }) {
-  const feitos = (serie ?? []).filter(Boolean).length;
+/** Fila de penáltis de uma equipa no desempate: ✓ marcado, ✗ falhado.
+ *  `dir` inverte para o lado direito (equipa fora). Sem nome — a posição
+ *  (esquerda = casa, direita = fora) já diz de quem é. */
+function SeriePen({ serie, dir = false }: { serie: boolean[] | null; dir?: boolean }) {
+  const marcas = serie ?? [];
+  const feitos = marcas.filter(Boolean).length;
   return (
     <div className={`placar__pen-linha${dir ? ' placar__pen-linha--dir' : ''}`}>
-      <span className="placar__pen-eq">{nome}</span>
+      <span className="placar__pen-conta">{feitos}/{marcas.length}</span>
       <span className="placar__pen-marcas">
-        {(serie ?? []).map((ok, i) => (
+        {marcas.map((ok, i) => (
           <span key={i} className={`placar__pen-marca${ok ? ' is-golo' : ' is-falha'}`}>
             {ok ? '✓' : '✗'}
           </span>
         ))}
       </span>
-      <span className="placar__pen-conta">{feitos}/{(serie ?? []).length}</span>
     </div>
   );
 }
@@ -1382,8 +1384,8 @@ function SalaJogo({
               </p>
               {(detalhes.vivo.penSerieCasa || detalhes.vivo.penSerieFora) && (
                 <div className="placar__pen-series">
-                  <SeriePen nome={jx.casa} serie={detalhes.vivo.penSerieCasa} />
-                  <SeriePen nome={jx.fora} serie={detalhes.vivo.penSerieFora} dir />
+                  <SeriePen serie={detalhes.vivo.penSerieCasa} />
+                  <SeriePen serie={detalhes.vivo.penSerieFora} dir />
                 </div>
               )}
             </div>

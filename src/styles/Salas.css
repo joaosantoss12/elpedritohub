@@ -550,9 +550,9 @@
 .placar__pen-series {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-width: 340px;
-  margin: 6px auto 0;
+  gap: 5px;
+  width: fit-content;
+  margin: 7px auto 0;
 }
 .placar__pen-linha {
   display: flex;
@@ -561,15 +561,6 @@
   font-size: 0.72rem;
 }
 .placar__pen-linha--dir { flex-direction: row-reverse; }
-.placar__pen-eq {
-  flex: 1;
-  font-weight: 700;
-  color: var(--text-white);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.placar__pen-linha--dir .placar__pen-eq { text-align: right; }
 .placar__pen-marcas { display: inline-flex; gap: 3px; }
 .placar__pen-marca {
   width: 15px;
