@@ -165,7 +165,7 @@
 .salas-liga {
   min-width: 0;
   break-inside: avoid;
-  margin-bottom: 1.4rem;
+  margin-bottom: 2.8rem;
 }
 
 @media (max-width: 1180px) {

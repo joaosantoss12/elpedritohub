@@ -18,6 +18,21 @@ import { eLinkSpotify, resolverSpotify } from '../lib/musicaSpotify';
 
 const CHAVE_CFG = 'ep-musica-cfg';
 const CHAVE_ABERTO = 'ep-musica-aberto';
+// Onde ficou a reprodução ao sair da página, para retomar na mesma faixa.
+const CHAVE_ESTADO = 'ep-musica-estado';
+
+interface EstadoGuardado { cfg: string; indice: number; pos: number }
+
+function lerEstado(): EstadoGuardado | null {
+  try {
+    const cru = localStorage.getItem(CHAVE_ESTADO);
+    if (!cru) return null;
+    const e = JSON.parse(cru) as EstadoGuardado;
+    return typeof e?.cfg === 'string' ? e : null;
+  } catch {
+    return null;
+  }
+}
 
 interface Config {
   // 'lista' = conjunto solto de IDs do YouTube (ex.: vindo de um link Spotify),
@@ -203,12 +218,35 @@ export function LeitorMusica() {
         setIndiceLista(p.getPlaylistIndex?.() ?? -1);
       };
 
+      const auto = autoTocarRef.current;
+      const chaveConfig = `${config.tipo}:${config.id}`;
+      // 'lista': IDs soltos do YouTube (ex.: vindos de um link Spotify).
+      const idsLista = config.tipo === 'lista' ? config.id.split(',').filter(Boolean) : [];
+      // Só se retoma se a lista/faixa for exactamente a mesma de antes.
+      const guardado = lerEstado();
+      const retomar = guardado && guardado.cfg === chaveConfig
+        ? { indice: Math.max(0, guardado.indice), pos: Math.max(0, guardado.pos - 1) }
+        : null;
+
       const comum = {
         events: {
           onReady: (e: any) => {
             setPronto(true);
             e.target.setVolume(mudo ? 0 : volume);
             if (config.tipo !== 'video') e.target.setShuffle?.(aleatorio);
+            // Recoloca a reprodução onde ficou (em fila, sem tocar sozinho).
+            if (retomar) {
+              if (config.tipo === 'playlist') {
+                e.target.cuePlaylist({
+                  list: config.id, listType: 'playlist',
+                  index: retomar.indice, startSeconds: retomar.pos,
+                });
+              } else if (config.tipo === 'lista') {
+                e.target.cuePlaylist(idsLista, retomar.indice, retomar.pos);
+              } else {
+                e.target.cueVideoById({ videoId: config.id, startSeconds: retomar.pos });
+              }
+            }
             const d = e.target.getVideoData?.();
             if (d) { setTitulo(d.title ?? ''); setAutor(d.author ?? ''); }
             sincronizarLista(e.target);
@@ -224,11 +262,6 @@ export function LeitorMusica() {
           },
         },
       };
-
-      const auto = autoTocarRef.current;
-      const chaveConfig = `${config.tipo}:${config.id}`;
-      // 'lista': IDs soltos do YouTube (ex.: vindos de um link Spotify).
-      const idsLista = config.tipo === 'lista' ? config.id.split(',').filter(Boolean) : [];
 
       if (playerRef.current?.cueVideoById) {
         // Já é a mesma faixa/playlist — não mexer, senão reinicia.
@@ -306,6 +339,30 @@ export function LeitorMusica() {
     }, 500);
     return () => clearInterval(t);
   }, [pronto, total]);
+
+  // Guarda de tempos a tempos onde vai a reprodução, para retomar depois de
+  // recarregar ou voltar à página.
+  useEffect(() => {
+    if (!pronto) return;
+    const gravar = () => {
+      const p = playerRef.current;
+      if (!p?.getCurrentTime) return;
+      const pos = p.getCurrentTime() ?? 0;
+      const idx = p.getPlaylistIndex?.() ?? -1;
+      const vid = p.getVideoData?.()?.video_id ?? '';
+      if (!vid && pos <= 0) return;
+      try {
+        localStorage.setItem(CHAVE_ESTADO, JSON.stringify({
+          cfg: `${config.tipo}:${config.id}`,
+          indice: idx,
+          pos,
+        }));
+      } catch { /* privado */ }
+    };
+    const t = setInterval(gravar, 3000);
+    window.addEventListener('pagehide', gravar);
+    return () => { clearInterval(t); window.removeEventListener('pagehide', gravar); gravar(); };
+  }, [pronto, config]);
 
   useEffect(() => {
     try { localStorage.setItem('ep-musica-vol', String(volume)); } catch { /* privado */ }
