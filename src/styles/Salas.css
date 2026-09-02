@@ -155,24 +155,29 @@
   50% { opacity: 0.25; }
 }
 
-/* Grelha de competições: 5 por linha, cada bloco no topo da sua célula. */
+/* Competições em colunas estilo "masonry": cada bloco encosta ao fim do
+   anterior na mesma coluna, sem esperar pela liga mais alta da linha. */
 .salas-ligas {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: start;
-  gap: 1.4rem 0.9rem;
+  column-count: 5;
+  column-gap: 0.9rem;
 }
 
 .salas-liga {
   min-width: 0;
+  break-inside: avoid;
+  margin-bottom: 1.4rem;
 }
 
 @media (max-width: 1180px) {
-  .salas-ligas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .salas-ligas { column-count: 3; }
 }
 
 @media (max-width: 720px) {
-  .salas-ligas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .salas-ligas { column-count: 2; }
+}
+
+@media (max-width: 480px) {
+  .salas-ligas { column-count: 1; }
 }
 
 .salas-liga__cab {
