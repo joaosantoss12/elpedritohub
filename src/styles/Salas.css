@@ -1421,12 +1421,14 @@
   width: 58%;
   height: 15%;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  z-index: 0;
 }
 .escalacoes__campo::before { bottom: -2px; border-bottom: none; }
 .escalacoes__campo::after { top: -2px; border-top: none; }
 
 .escala-jog {
   position: absolute;
+  z-index: 2;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
