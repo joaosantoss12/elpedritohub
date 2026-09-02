@@ -906,6 +906,24 @@ const MOMENTO_VAZIO: MomentoJogo = {
   bolaX: null, bolaY: null, bolaReal: false, bolaPassos: [], ultimaJogada: null,
 };
 
+/** Fila de penáltis de uma equipa no desempate: ✓ marcado, ✗ falhado. */
+function SeriePen({ nome, serie, dir = false }: { nome: string; serie: boolean[] | null; dir?: boolean }) {
+  const feitos = (serie ?? []).filter(Boolean).length;
+  return (
+    <div className={`placar__pen-linha${dir ? ' placar__pen-linha--dir' : ''}`}>
+      <span className="placar__pen-eq">{nome}</span>
+      <span className="placar__pen-marcas">
+        {(serie ?? []).map((ok, i) => (
+          <span key={i} className={`placar__pen-marca${ok ? ' is-golo' : ' is-falha'}`}>
+            {ok ? '✓' : '✗'}
+          </span>
+        ))}
+      </span>
+      <span className="placar__pen-conta">{feitos}/{(serie ?? []).length}</span>
+    </div>
+  );
+}
+
 /** A bola percorre as coordenadas reais que a ESPN publicou nos últimos lances
  *  (o ataque a formar-se), com a transição CSS a suavizar cada passo. Quando só
  *  há um ponto — ou nenhum — fica parada nele. Não há feed posicional contínuo
@@ -1358,9 +1376,17 @@ function SalaJogo({
           )}
 
           {detalhes.vivo?.penCasa != null && detalhes.vivo?.penFora != null && (
-            <p className="placar__ht placar__ht--pen">
-              Grandes penalidades <span>{detalhes.vivo.penCasa} : {detalhes.vivo.penFora}</span>
-            </p>
+            <div className="placar__pen">
+              <p className="placar__ht placar__ht--pen">
+                Grandes penalidades <span>{detalhes.vivo.penCasa} : {detalhes.vivo.penFora}</span>
+              </p>
+              {(detalhes.vivo.penSerieCasa || detalhes.vivo.penSerieFora) && (
+                <div className="placar__pen-series">
+                  <SeriePen nome={jx.casa} serie={detalhes.vivo.penSerieCasa} />
+                  <SeriePen nome={jx.fora} serie={detalhes.vivo.penSerieFora} dir />
+                </div>
+              )}
+            </div>
           )}
         </div>
 

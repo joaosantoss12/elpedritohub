@@ -327,6 +327,10 @@ export interface PatchVivo {
    *  `null` enquanto o jogo não for a penáltis. */
   penCasa: number | null;
   penFora: number | null;
+  /** Sequência de cada penálti do desempate, por ordem de marcação: `true`
+   *  marcado, `false` falhado/defendido. `null` fora do desempate. */
+  penSerieCasa: boolean[] | null;
+  penSerieFora: boolean[] | null;
 }
 
 /** Uma linha do relato minuto-a-minuto (feed `commentary` da ESPN). */
@@ -1202,10 +1206,53 @@ function patchVivoDoSummary(json: Bruto): PatchVivo | null {
   const htCasa = passouIntervalo ? primeiroLinescore(casa) : null;
   const htFora = passouIntervalo ? primeiroLinescore(fora) : null;
 
+  // Sequência penálti a penálti (marcado/falhado), pela ordem do relato.
+  let penSerieCasa: boolean[] | null = null;
+  let penSerieFora: boolean[] | null = null;
+  if (emPenaltis) {
+    const idCasa = txt(obj(casa.team).id);
+    const idFora = txt(obj(fora.team).id);
+    const nomeCasa = (txt(obj(casa.team).displayName) ?? txt(obj(casa.team).name) ?? '').toLowerCase();
+    const nomeFora = (txt(obj(fora.team).displayName) ?? txt(obj(fora.team).name) ?? '').toLowerCase();
+    const abrevCasa = (txt(obj(casa.team).abbreviation) ?? '').toLowerCase();
+    const abrevFora = (txt(obj(fora.team).abbreviation) ?? '').toLowerCase();
+    const sc: boolean[] = [];
+    const sf: boolean[] = [];
+    for (const c of lista(json.commentary).map(obj)) {
+      const p = obj(c.play);
+      const periodoP = Number(txt(obj(p.period).number));
+      if (p.shootout !== true && !(periodoP >= 5)) continue;
+      const slug = (txt(obj(p.type).type) ?? txt(obj(p.type).text) ?? '').toLowerCase();
+      const t = (txt(c.text) ?? '').toLowerCase();
+      if (!/penal|shootout|(?:chute|remate|cobran[çc]a)\s*\d\s*\/\s*\d/.test(`${slug} ${t}`)) continue;
+      const falhado = /missed|saved/.test(slug)
+        || /defendid|defesa d|defendeu|para fora|por cima|na trave|no poste|na barra|perdeu|isolou|pela linha|desperdi[çc]|n[ãa]o é gol/.test(t);
+      const marcado = !falhado && (p.scoringPlay === true || /scored|goal/.test(slug)
+        || /(?:é|foi) gol|é golo|converteu|no fundo das redes|balan[çc]ou as redes|sem hip[óo]tese|no cantinho|nas redes/.test(t));
+      const teamId = txt(obj(p.team).id);
+      const teamNome = (txt(obj(p.team).displayName) ?? txt(obj(p.team).name) ?? '').toLowerCase();
+      let lado: 'casa' | 'fora' | null = null;
+      if (teamId && teamId === idCasa) lado = 'casa';
+      else if (teamId && teamId === idFora) lado = 'fora';
+      else if (teamNome && nomeCasa && (teamNome.includes(nomeCasa) || nomeCasa.includes(teamNome))) lado = 'casa';
+      else if (teamNome && nomeFora && (teamNome.includes(nomeFora) || nomeFora.includes(teamNome))) lado = 'fora';
+      else {
+        const m = t.match(/\bd[eo]\s+([a-z]{2,4})\b/);
+        if (m && m[1] === abrevCasa) lado = 'casa';
+        else if (m && m[1] === abrevFora) lado = 'fora';
+      }
+      if (!lado) continue;
+      (lado === 'casa' ? sc : sf).push(marcado);
+    }
+    penSerieCasa = sc.length ? sc : null;
+    penSerieFora = sf.length ? sf : null;
+  }
+
   return {
     golosCasa: golo(casa), golosFora: golo(fora), estado, relogio, htCasa, htFora,
     penCasa: emPenaltis ? (penCasa ?? 0) : null,
     penFora: emPenaltis ? (penFora ?? 0) : null,
+    penSerieCasa, penSerieFora,
   };
 }
 
