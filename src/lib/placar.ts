@@ -290,13 +290,6 @@ export interface MomentoJogo {
    *  para animar a bola a deslizar de lance em lance, no espírito do "LastPlays"
    *  da ESPN, em vez de aparecer só o último ponto. */
   bolaTrilho: { x: number; y: number }[];
-  /** Jogador nomeado pela ESPN no último lance — para a etiqueta na bola,
-   *  estilo LastPlays. `null` quando o feed não dá nome. */
-  lanceJogador: { nome: string; numero: string; posicao: string } | null;
-  /** Texto completo do último lance, tal como a ESPN o escreve. */
-  lanceTexto: string;
-  /** Lado do último lance, para o escudo no cartão de última jogada. */
-  lanceLado: 'casa' | 'fora' | null;
 }
 
 /** Placar/relógio lidos do mesmo summary, para a sala não mostrar dois
@@ -657,8 +650,6 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
   interface Lance {
     t: number; slug: string; equipa: 'casa' | 'fora' | null; minuto: string;
     x: number | null; y: number | null; wall: number;
-    texto: string;
-    jogador: { nome: string; numero: string; posicao: string } | null;
   }
 
   const lances: Lance[] = [];
@@ -669,8 +660,6 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     const x = Number(txt(play.fieldPositionX));
     const y = Number(txt(play.fieldPositionY));
     const wall = Date.parse(txt(play.wallclock) ?? '');
-    const at = obj(lista(play.athletesInvolved).map(obj)[0] ?? {});
-    const nomeJog = txt(at.shortName) ?? txt(at.displayName);
     lances.push({
       t,
       slug: txt(obj(play.type).type) ?? '',
@@ -679,14 +668,6 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
       x: Number.isFinite(x) ? x : null,
       y: Number.isFinite(y) ? y : null,
       wall: Number.isFinite(wall) ? wall : 0,
-      texto: (txt(c.text) ?? '').trim(),
-      jogador: nomeJog
-        ? {
-            nome: nomeJog,
-            numero: txt(at.jersey) ?? '',
-            posicao: txt(obj(at.position).abbreviation) ?? '',
-          }
-        : null,
     });
   }
   if (lances.length === 0) return null;
@@ -823,15 +804,9 @@ function mapearMomento(json: Bruto, casaNome: string, foraNome: string): Momento
     if (!ult || Math.hypot(ult.x - p.x, ult.y - p.y) > 1.2) bolaTrilho.push(p);
   }
 
-  // Último lance com relato escrito — dá o texto e o jogador da etiqueta na bola.
-  const ultimoRelato = feedParado ? undefined : [...lances].reverse().find(l => l.texto);
-
   return {
     casa, fora, posse, fase, destaque, lance, bolaX, bolaY, bolaTrilho,
     minuto: ultimo?.minuto || lances[lances.length - 1].minuto,
-    lanceJogador: ultimoRelato?.jogador ?? null,
-    lanceTexto: ultimoRelato?.texto ?? '',
-    lanceLado: ultimoRelato?.equipa ?? ultimo?.equipa ?? null,
   };
 }
 
