@@ -1310,23 +1310,29 @@ function pontoPorPosicao(nome: string, abbr: string): { x: number; y: number } {
   return { x, y };
 }
 
-/** Nivela a profundidade de cada linha e distribui os jogadores pela largura
- *  de forma uniforme, mantendo a ordem esquerda→direita dada pela posição.
- *  Linhas maiores abrem mais (alas); linhas de 2-3 ficam mais ao centro. */
-function espalharLinhas(pts: { x: number; y: number }[]): void {
-  const linhas = new Map<number, number[]>();
-  pts.forEach((p, i) => {
-    const k = Math.round(p.x / 5);
-    const arr = linhas.get(k) ?? [];
-    arr.push(i);
-    linhas.set(k, arr);
-  });
-  // Distribui as linhas uniformemente em profundidade (GR atrás → avançados
-  // à frente), para que nenhuma formação fique com bandas apertadas ou vazias.
-  const chaves = [...linhas.keys()].sort((a, b) => a - b);
-  chaves.forEach((chave, r) => {
-    const idxs = linhas.get(chave)!;
-    const x = chaves.length > 1 ? 6 + (r / (chaves.length - 1)) * 40 : 26;
+/** Distribui os titulares pelas linhas DA FORMAÇÃO ("3-5-2" → GR, 3, 5, 2) —
+ *  não por clusters de profundidade, que partiam uma linha de 5 em 1+4 quando
+ *  a ESPN dava um médio um pouco mais recuado. As dicas de `pts` só servem
+ *  para ordenar cada linha da esquerda para a direita. */
+function espalharLinhas(pts: { x: number; y: number }[], formacao: string): void {
+  const contagens = (formacao || '')
+    .split('-').map(n => parseInt(n, 10)).filter(n => Number.isFinite(n) && n > 0);
+  // Sem formação válida (ou soma != 10 de campo) volta-se ao agrupamento por
+  // profundidade a partir das dicas de posição.
+  const soma = contagens.reduce((a, b) => a + b, 0);
+  const capacidades = soma === pts.length - 1 && contagens.length
+    ? [1, ...contagens]
+    : linhasPorProfundidade(pts);
+
+  // Ordena os índices por profundidade crescente (GR → avançados) e fatia-os
+  // pelas capacidades das linhas.
+  const ordem = pts.map((_, i) => i).sort((a, b) => pts[a].x - pts[b].x);
+  let cursor = 0;
+  const L = capacidades.length;
+  capacidades.forEach((qtd, r) => {
+    const idxs = ordem.slice(cursor, cursor + qtd);
+    cursor += qtd;
+    const x = L > 1 ? 6 + (r / (L - 1)) * 40 : 26;
     idxs.forEach(i => { pts[i].x = x; });
     const n = idxs.length;
     if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; return; }
@@ -1346,6 +1352,16 @@ function espalharLinhas(pts: { x: number; y: number }[]): void {
       });
     }
   });
+}
+
+/** Fallback: capacidades das linhas a partir de clusters de profundidade. */
+function linhasPorProfundidade(pts: { x: number; y: number }[]): number[] {
+  const linhas = new Map<number, number>();
+  pts.forEach(p => {
+    const k = Math.round(p.x / 5);
+    linhas.set(k, (linhas.get(k) ?? 0) + 1);
+  });
+  return [...linhas.keys()].sort((a, b) => a - b).map(k => linhas.get(k)!);
 }
 
 function coordsFormacao(formacao: string): { x: number; y: number }[] {
@@ -1495,7 +1511,7 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): La
     const lugar = Number(txt(p.formationPlace));
     return fallback[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
   });
-  espalharLinhas(pts);
+  espalharLinhas(pts, formacao);
 
   const titulares: JogadorCampo[] = titularesRaw
     .map((p, i) => {
