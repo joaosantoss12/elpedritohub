@@ -11,8 +11,48 @@ const TEMAS: { id: string; nome: string; fundo: string; acento: string }[] = [
 ];
 
 const CHAVE = 'ep-tema';
+const CHAVE_COR = 'ep-tema-cor';
+const COR_PADRAO = '#c07f4a';
 
-function aplicar(id: string) {
+// ── Derivação da cor personalizada ───────────────────────────────────────
+// A partir de um só acento escolhido pelo utilizador calculamos as variantes
+// (hover mais escura, light mais clara, tint translúcida). Assim a cor entra
+// em todos os sítios onde a app usa --gold-*, sem precisar de bloco no CSS.
+function hexParaRgb(hex: string): [number, number, number] {
+  const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex.trim());
+  if (!m) return [192, 127, 74];
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
+
+function misturar([r, g, b]: [number, number, number], alvo: number, peso: number): string {
+  const f = (c: number) => Math.round(c + (alvo - c) * peso);
+  return `#${[f(r), f(g), f(b)].map(c => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function aplicarCorPersonalizada(hex: string) {
+  const raiz = document.documentElement;
+  const rgb = hexParaRgb(hex);
+  raiz.style.setProperty('--gold-primary', hex);
+  raiz.style.setProperty('--gold-hover', misturar(rgb, 0, 0.22));   // ~22% mais escura
+  raiz.style.setProperty('--gold-light', misturar(rgb, 255, 0.4));  // ~40% mais clara
+  raiz.style.setProperty('--gold-tint', `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.14)`);
+}
+
+function limparCorPersonalizada() {
+  const raiz = document.documentElement;
+  raiz.style.removeProperty('--gold-primary');
+  raiz.style.removeProperty('--gold-hover');
+  raiz.style.removeProperty('--gold-light');
+  raiz.style.removeProperty('--gold-tint');
+}
+
+function aplicar(id: string, cor: string) {
+  if (id === 'personalizado') {
+    document.documentElement.removeAttribute('data-tema');
+    aplicarCorPersonalizada(cor);
+    return;
+  }
+  limparCorPersonalizada();
   if (id === 'castanho') document.documentElement.removeAttribute('data-tema');
   else document.documentElement.setAttribute('data-tema', id);
 }
@@ -21,13 +61,19 @@ export function SeletorTema() {
   const [tema, setTema] = useState<string>(() => {
     try { return localStorage.getItem(CHAVE) || 'castanho'; } catch { return 'castanho'; }
   });
+  const [cor, setCor] = useState<string>(() => {
+    try { return localStorage.getItem(CHAVE_COR) || COR_PADRAO; } catch { return COR_PADRAO; }
+  });
   const [aberto, setAberto] = useState(false);
   const caixaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    aplicar(tema);
-    try { localStorage.setItem(CHAVE, tema); } catch { /* modo privado */ }
-  }, [tema]);
+    aplicar(tema, cor);
+    try {
+      localStorage.setItem(CHAVE, tema);
+      localStorage.setItem(CHAVE_COR, cor);
+    } catch { /* modo privado */ }
+  }, [tema, cor]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -43,7 +89,11 @@ export function SeletorTema() {
     };
   }, [aberto]);
 
-  const atual = TEMAS.find(t => t.id === tema) ?? TEMAS[0];
+  const ehPersonalizado = tema === 'personalizado';
+  const predefinido = TEMAS.find(t => t.id === tema) ?? TEMAS[0];
+  const bolaFundo = ehPersonalizado
+    ? `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)`
+    : `linear-gradient(135deg, ${predefinido.fundo} 50%, ${predefinido.acento} 50%)`;
 
   return (
     <div ref={caixaRef} className="seletor-tema">
@@ -53,8 +103,9 @@ export function SeletorTema() {
         title="Mudar tema"
         aria-label="Mudar tema"
         aria-expanded={aberto}
+        aria-haspopup="menu"
         onClick={() => setAberto(a => !a)}
-        style={{ background: `linear-gradient(135deg, ${atual.fundo} 50%, ${atual.acento} 50%)` }}
+        style={{ background: bolaFundo }}
       />
       {aberto && (
         <div className="seletor-tema__painel" role="menu">
@@ -74,6 +125,21 @@ export function SeletorTema() {
               {t.nome}
             </button>
           ))}
+
+          <div className={`seletor-tema__opcao seletor-tema__opcao--cor${ehPersonalizado ? ' is-ativa' : ''}`}>
+            <span
+              className="seletor-tema__amostra"
+              style={{ background: `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)` }}
+            />
+            <span className="seletor-tema__cor-texto">Personalizada</span>
+            <input
+              type="color"
+              className="seletor-tema__cor-input"
+              value={cor}
+              aria-label="Escolher cor de destaque personalizada"
+              onChange={e => { setCor(e.target.value); setTema('personalizado'); }}
+            />
+          </div>
         </div>
       )}
 
@@ -92,7 +158,7 @@ export function SeletorTema() {
           position: absolute; top: calc(100% + 10px); right: 0; z-index: 200;
           display: flex; flex-direction: column; gap: 2px; padding: 6px;
           background: var(--bg-card); border: 1px solid var(--border-strong);
-          border-radius: 10px; box-shadow: var(--shadow-card); min-width: 160px;
+          border-radius: 10px; box-shadow: var(--shadow-card); min-width: 180px;
         }
         .seletor-tema__opcao {
           display: flex; align-items: center; gap: 10px; width: 100%;
@@ -106,6 +172,18 @@ export function SeletorTema() {
           width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
           border: 1px solid var(--border-strong);
         }
+        .seletor-tema__opcao--cor { cursor: default; }
+        .seletor-tema__opcao--cor:hover { background: transparent; color: var(--text-gray); }
+        .seletor-tema__opcao--cor.is-ativa { color: var(--gold-primary); }
+        .seletor-tema__cor-texto { flex: 1; }
+        .seletor-tema__cor-input {
+          width: 28px; height: 28px; min-width: 28px; padding: 0;
+          border: 1px solid var(--border-strong); border-radius: 6px;
+          background: transparent; cursor: pointer;
+        }
+        .seletor-tema__cor-input::-webkit-color-swatch-wrapper { padding: 2px; }
+        .seletor-tema__cor-input::-webkit-color-swatch { border: none; border-radius: 4px; }
+        .seletor-tema__cor-input::-moz-color-swatch { border: none; border-radius: 4px; }
         @media (prefers-reduced-motion: reduce) {
           .seletor-tema__bola { transition: none; }
         }

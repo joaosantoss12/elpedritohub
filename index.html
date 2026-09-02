@@ -16,7 +16,20 @@
       // Aplica o tema guardado antes do primeiro paint, senão pisca.
       try {
         var t = localStorage.getItem('ep-tema');
-        if (t && t !== 'castanho') document.documentElement.setAttribute('data-tema', t);
+        if (t === 'personalizado') {
+          var c = localStorage.getItem('ep-tema-cor') || '#c07f4a';
+          var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(c);
+          var r = m ? parseInt(m[1], 16) : 192, g = m ? parseInt(m[2], 16) : 127, b = m ? parseInt(m[3], 16) : 74;
+          var mix = function (from, to, p) { return Math.round(from + (to - from) * p); };
+          var hx = function (n) { return ('0' + n.toString(16)).slice(-2); };
+          var s = document.documentElement.style;
+          s.setProperty('--gold-primary', c);
+          s.setProperty('--gold-hover', '#' + hx(mix(r, 0, 0.22)) + hx(mix(g, 0, 0.22)) + hx(mix(b, 0, 0.22)));
+          s.setProperty('--gold-light', '#' + hx(mix(r, 255, 0.4)) + hx(mix(g, 255, 0.4)) + hx(mix(b, 255, 0.4)));
+          s.setProperty('--gold-tint', 'rgba(' + r + ',' + g + ',' + b + ',0.14)');
+        } else if (t && t !== 'castanho') {
+          document.documentElement.setAttribute('data-tema', t);
+        }
       } catch (e) {}
     </script>
   </head>
