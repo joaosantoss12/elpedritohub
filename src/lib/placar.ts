@@ -1564,7 +1564,12 @@ function mapearClassificacao(
  *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
   try {
-    const res = await fetch(`${BASE}/${ligaSlug}/summary?event=${eventoId}&lang=pt&region=pt`);
+    // `_` corta a cache do CDN da ESPN — sem isto o relato podia chegar
+    // atrasado alguns pedidos (parecia "delay" nos eventos).
+    const res = await fetch(
+      `${BASE}/${ligaSlug}/summary?event=${eventoId}&lang=pt&region=pt&_=${Date.now()}`,
+      { cache: 'no-store' },
+    );
     if (!res.ok) return DETALHES_VAZIO;
     const json = obj(await res.json());
     const { casa, fora } = nomesDoSummary(json);

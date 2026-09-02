@@ -1192,7 +1192,18 @@ function SalaJogo({
     };
     puxar();
     const t = window.setInterval(puxar, INTERVALO_LIVE);
-    return () => { vivo = false; window.clearInterval(t); };
+    // Os browsers estrangulam (ou param) o setInterval em tabs escondidas —
+    // ao voltar à tab os eventos apareciam todos de rajada, com "delay". Puxa
+    // já assim que a tab fica visível outra vez.
+    const aoVoltar = () => { if (document.visibilityState === 'visible') puxar(); };
+    document.addEventListener('visibilitychange', aoVoltar);
+    window.addEventListener('focus', aoVoltar);
+    return () => {
+      vivo = false;
+      window.clearInterval(t);
+      document.removeEventListener('visibilitychange', aoVoltar);
+      window.removeEventListener('focus', aoVoltar);
+    };
   }, [jogo.id, jogo.ligaSlug]);
 
   useEffect(() => {
