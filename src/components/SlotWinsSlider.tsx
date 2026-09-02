@@ -25,7 +25,26 @@ const SLOT_NAMES = [
 
 const SLOTS = SLOT_NAMES.map((name, i) => ({ name, image: IMAGES[i % IMAGES.length] }));
 
-const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+/* Nomes de utilizador possíveis — só a 1ª letra fica visível, o resto é
+   mascarado com o nº de asteriscos correspondente ao tamanho real do nome,
+   por isso a coluna deixa de ter todos os nomes com o mesmo comprimento. */
+const USERNAMES = [
+  'joao', 'pedro', 'ruca', 'tozze', 'miguelm', 'andre88', 'bruno', 'rafa',
+  'diogoo', 'goncalo', 'tiago', 'nuno', 'vasco', 'fabio', 'ricardo', 'hugo',
+  'sergio', 'carlos', 'marco', 'luis', 'zecas', 'kdu', 'tomas', 'ivo',
+  'nelsinho', 'joel', 'dani', 'edu', 'filipe', 'rodrigo', 'artur', 'mario',
+  'xico', 'quim', 'guga', 'lipe', 'betoo', 'kelvin', 'wilson', 'romario',
+  'catarina', 'ines', 'mariana', 'sofia', 'bea', 'raquel', 'joana', 'rita',
+  'leonor', 'matilde', 'carol', 'vera', 'sara', 'patricia', 'claudia', 'ana',
+  'fmartins', 'jgomes', 'pcosta', 'apereira', 'rsilva', 'mfonseca', 'tlopes',
+  'apsimoes', 'jpc', 'mrx', 'thekid', 'aposta_certa', 'greenzao', 'lucky7',
+  'ovicente', 'obruno', 'ozeca', 'manype', 'saldanha', 'moreira', 'teixeira',
+];
+
+function maskName(name: string) {
+  const stars = Math.min(Math.max(name.length - 1, 2), 9);
+  return { initial: name[0].toUpperCase(), mask: '*'.repeat(stars) };
+}
 
 /* Quantos ganhos ficam em circulação. Muitos cartões => o carrossel nunca
    parece repetir-se depressa. */
@@ -45,6 +64,7 @@ function formatAmount(value: number) {
 type Win = {
   id: number;
   initial: string;
+  mask: string;
   amount: number;
   minutesAgo: number;
   slot: (typeof SLOTS)[number];
@@ -55,7 +75,7 @@ let nextId = 0;
 function makeWin(slotIndex = Math.floor(Math.random() * SLOTS.length)): Win {
   return {
     id: nextId++,
-    initial: LETTERS[Math.floor(Math.random() * LETTERS.length)],
+    ...maskName(USERNAMES[Math.floor(Math.random() * USERNAMES.length)]),
     amount: generateAmount(),
     minutesAgo: 1 + Math.floor(Math.random() * 55),
     slot: SLOTS[slotIndex % SLOTS.length],
@@ -173,7 +193,7 @@ export default function SlotWinsSlider() {
               <div className="slot-win-card__body">
                 <div className="slot-win-card__row">
                   <p className="slot-win-card__user">
-                    {win.initial}<span>*****</span>
+                    {win.initial}<span>{win.mask}</span>
                   </p>
                   <p className="slot-win-card__game">{win.slot.name}</p>
                 </div>
@@ -187,6 +207,7 @@ export default function SlotWinsSlider() {
               </div>
 
               <div className="slot-win-card__cta">
+                <p className="slot-win-card__cta-game">{win.slot.name}</p>
                 <span>Jogar</span>
               </div>
             </a>
