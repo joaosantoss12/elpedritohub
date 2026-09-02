@@ -839,8 +839,7 @@ function coordsFormacao(formacao: string): { x: number; y: number }[] {
   linhas.forEach((qtd, li) => {
     const x = linhas.length > 1 ? 5 + (li / (linhas.length - 1)) * 42 : 25;
     for (let k = 0; k < qtd; k++) {
-      // Distribui a linha por quase toda a largura (margens pequenas).
-      pts.push({ x, y: qtd > 1 ? 6 + (k / (qtd - 1)) * 88 : 50 });
+      pts.push({ x, y: ((k + 1) / (qtd + 1)) * 100 });
     }
   });
   return pts;
