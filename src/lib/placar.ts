@@ -394,6 +394,26 @@ export interface HeadToHead {
   jogos: ConfrontoH2H[];
 }
 
+/** Uma linha da tabela classificativa da competição. */
+export interface LinhaClassificacao {
+  posicao: number;
+  equipa: string;
+  logo: string | null;
+  jogos: string;
+  vitorias: string;
+  empates: string;
+  derrotas: string;
+  diferenca: string;
+  pontos: string;
+  /** É uma das duas equipas deste jogo — destaca-se a linha. */
+  destaque: boolean;
+}
+
+export interface Classificacao {
+  titulo: string;
+  linhas: LinhaClassificacao[];
+}
+
 export interface DetalhesJogo {
   estatisticas: EstatisticaJogo[];
   eventos: EventoJogo[];
@@ -405,11 +425,13 @@ export interface DetalhesJogo {
   formaCasa: ResultadoForma[];
   formaFora: ResultadoForma[];
   h2h: HeadToHead | null;
+  classificacao: Classificacao | null;
 }
 
 const DETALHES_VAZIO: DetalhesJogo = {
   estatisticas: [], eventos: [], comentario: [], momento: null, vivo: null,
   escalacoes: null, lideres: [], formaCasa: [], formaFora: [], h2h: null,
+  classificacao: null,
 };
 
 /** Quanto vale cada tipo de lance para o cálculo da pressão. */
@@ -1038,6 +1060,55 @@ function mapearH2H(json: Bruto): HeadToHead | null {
   return jogos.length ? { resumo, jogos } : null;
 }
 
+/** Valor de uma métrica na lista `stats` de uma entrada da classificação. */
+function valorStat(stats: unknown[], nome: string): string {
+  const s = stats.map(obj).find(x => txt(x.name) === nome);
+  if (!s) return '';
+  return txt(s.displayValue) ?? String(txt(s.value) ?? '');
+}
+
+/** Tabela classificativa da competição, quando a ESPN a inclui no summary.
+ *  Tolera as várias formas em que o bloco `standings` aparece. */
+function mapearClassificacao(
+  json: Bruto, idCasa: string | null, idFora: string | null,
+): Classificacao | null {
+  const raiz = obj(json.standings);
+  let entradas = lista(raiz.entries).map(obj);
+  let titulo = txt(raiz.displayName) ?? txt(raiz.name) ?? '';
+  if (entradas.length === 0) {
+    for (const g of lista(raiz.groups).map(obj)) {
+      const es = lista(obj(g.standings).entries).map(obj);
+      if (es.length) {
+        entradas = es;
+        titulo = txt(g.header) ?? txt(g.name) ?? titulo;
+        break;
+      }
+    }
+  }
+  if (entradas.length === 0) return null;
+
+  const linhas: LinhaClassificacao[] = entradas.map((e, i) => {
+    const stats = lista(e.stats);
+    const time = obj(e.team);
+    const id = txt(time.id);
+    const rank = Number(valorStat(stats, 'rank'));
+    return {
+      posicao: Number.isFinite(rank) && rank > 0 ? rank : i + 1,
+      equipa: txt(time.shortDisplayName) ?? txt(time.displayName) ?? txt(time.abbreviation) ?? '',
+      logo: logoEquipa(time),
+      jogos: valorStat(stats, 'gamesPlayed'),
+      vitorias: valorStat(stats, 'wins'),
+      empates: valorStat(stats, 'ties'),
+      derrotas: valorStat(stats, 'losses'),
+      diferenca: valorStat(stats, 'pointDifferential'),
+      pontos: valorStat(stats, 'points'),
+      destaque: !!id && (id === idCasa || id === idFora),
+    };
+  }).sort((a, b) => a.posicao - b.posicao);
+
+  return { titulo: titulo || 'Classificação', linhas };
+}
+
 /** Estatísticas + eventos + momentum de um jogo. Falha em silêncio (devolve
  *  vazio) — a ESPN nem sempre publica isto, sobretudo antes de começar. */
 export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): Promise<DetalhesJogo> {
@@ -1058,6 +1129,7 @@ export async function carregarDetalhesJogo(ligaSlug: string, eventoId: string): 
       formaCasa: mapearForma(json, idCasa),
       formaFora: mapearForma(json, idFora),
       h2h: mapearH2H(json),
+      classificacao: mapearClassificacao(json, idCasa, idFora),
     };
   } catch {
     return DETALHES_VAZIO;

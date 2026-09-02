@@ -1435,9 +1435,16 @@
   gap: 2px;
   width: 46px;
 }
-.escala-jog--saiu { opacity: 0.45; }
 .escala-jog--gr .escala-jog__nome { background: rgba(244, 196, 48, 0.22); }
 .escala-jog__camisa { position: relative; width: 34px; height: 34px; }
+.escala-jog__marcas {
+  display: flex;
+  gap: 1px;
+  font-size: 0.62rem;
+  line-height: 1;
+  margin-top: -4px;
+}
+.escala-jog__marcas:empty { display: none; }
 .camisola { display: block; width: 100%; height: 100%; }
 .escala-jog__nome {
   max-width: 54px;
@@ -1462,19 +1469,6 @@
   font-size: 0.5rem;
   vertical-align: middle;
 }
-.escala-jog__ic { position: absolute; font-size: 0.58rem; line-height: 1; }
-.escala-jog__ic--saiu { top: -6px; right: -7px; font-size: 0.85rem; color: #e23b3b; }
-.escala-jog__ic--golo { bottom: -7px; left: -9px; font-size: 0.62rem; }
-.escala-jog__ic--amarelo,
-.escala-jog__ic--vermelho {
-  top: -3px;
-  left: -5px;
-  width: 7px;
-  height: 10px;
-  border-radius: 1px;
-}
-.escala-jog__ic--amarelo { background: #f2c200; }
-.escala-jog__ic--vermelho { background: #e23b3b; }
 
 /* ── Substituições ── */
 .escalacoes__subs-bloco { margin-top: 0.9rem; }
@@ -1775,6 +1769,48 @@
   color: var(--text-white);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Classificação da competição ── */
+.clsf { overflow-x: auto; }
+.clsf__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  color: var(--text-gray);
+  font-variant-numeric: tabular-nums;
+}
+.clsf__tabela th,
+.clsf__tabela td {
+  padding: 0.3rem 0.25rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.clsf__tabela th {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+.clsf__tabela td { border-bottom: 1px solid var(--border-color); }
+.clsf__tabela tr:last-child td { border-bottom: 0; }
+.clsf__pos { width: 1.4rem; color: var(--text-muted); }
+.clsf__eq {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: left;
+  min-width: 8.5rem;
+}
+.clsf__eq img { flex: none; width: 16px; height: 16px; object-fit: contain; }
+.clsf__eq span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.clsf__pts { font-weight: 800; color: var(--text-white); }
+.clsf__linha--on td { background: var(--surface-sunken); color: var(--text-white); }
+.clsf__linha--on .clsf__eq span { font-weight: 700; }
 
 .jogo-relato--ficha { max-height: 420px; }
 
