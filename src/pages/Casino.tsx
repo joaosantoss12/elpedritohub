@@ -15,7 +15,9 @@ export default function Casino() {
       <div className="casino-wrapper">
         <section className="casino-hero">
           <div className="casino-hero__eyebrow"><Dice5 size={14} /> O casino oficial do EL PEDRITO</div>
-          <h1 className="casino-hero__nome">CaptainsBet</h1>
+          <h1 className="casino-hero__nome">
+            <img src="/captainslogo.png" alt="CaptainsBet" />
+          </h1>
           <p className="casino-hero__tagline">
             As mesmas slots que vês a pagar aqui em baixo. Regista-te pelo link
             oficial e apoia o projeto sem pagar mais por isso.

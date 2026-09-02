@@ -38,15 +38,11 @@
 
 .casino-hero__nome {
   margin: 1.4rem 0 0;
-  font-family: 'Fredoka', 'Inter', system-ui, sans-serif;
-  font-size: clamp(4rem, 16vw, 9.5rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 0.9;
-  background: linear-gradient(135deg, #141b29, #6d4c34 40%, var(--gold-primary) 70%, #6d4c34);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  line-height: 0;
+}
+.casino-hero__nome img {
+  width: min(420px, 74vw);
+  height: auto;
   filter: drop-shadow(0 6px 60px rgba(161, 124, 91, 0.55));
 }
 
