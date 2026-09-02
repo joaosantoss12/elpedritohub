@@ -159,7 +159,7 @@
    anterior na mesma coluna, sem esperar pela liga mais alta da linha. */
 .salas-ligas {
   column-count: 5;
-  column-gap: 0.9rem;
+  column-gap: 1.8rem;
 }
 
 .salas-liga {
