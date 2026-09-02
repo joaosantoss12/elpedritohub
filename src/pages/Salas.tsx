@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   carregarDetalhesJogo, estaAoVivo, labelJogo, continenteDaLiga, diaLocal,
   bandeiraDaLiga, ORDEM_CONTINENTES, type JogoAoVivo, type DetalhesJogo, type MomentoJogo,
-  type Escalacoes, type LadoEscalacao, type LiderJogo, type ResultadoForma, type HeadToHead,
+  type Escalacoes, type LadoEscalacao, type ResultadoForma, type HeadToHead,
   type EventoJogo,
 } from '../lib/placar';
 import { carregarPlacar } from '../lib/placarCache';
@@ -523,22 +523,58 @@ function ResumoGolos({ eventos }: { eventos: EventoJogo[] }) {
   );
 }
 
+/** A cor da equipa (hex sem "#") é clara ao ponto de precisar de número
+ *  escuro na camisola? */
+function corClara(hex: string | null): boolean {
+  if (!hex || !/^[0-9a-fA-F]{6}$/.test(hex)) return false;
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150;
+}
+
+/** Camisola no estilo da ESPN: silhueta simples com o número ao centro. */
+function Camisola({ cor, numero, escuro }: { cor: string; numero: string; escuro: boolean }) {
+  return (
+    <svg className="camisola" viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        d="M17 5 L21 3 Q24 5.5 27 3 L31 5 L45 12 L41 22 L35 19 L35 44 Q24 46 13 44 L13 19 L7 22 L3 12 Z"
+        fill={cor}
+        stroke="rgba(0,0,0,0.35)"
+        strokeWidth="1"
+      />
+      <text
+        x="24" y="30" textAnchor="middle"
+        fontSize="15" fontWeight="800"
+        fill={escuro ? '#1a1410' : '#fff'}
+      >
+        {numero}
+      </text>
+    </svg>
+  );
+}
+
 /**
- * Formações e escalações no estilo da ESPN: um separador por equipa (escudo +
- * formação), o campo mostra só a equipa escolhida a ocupar toda a relva, e os
- * suplentes ficam numa lista logo por baixo — com marca de quem entrou.
+ * Formações e escalações no estilo da ESPN: separador por equipa (escudo +
+ * formação), campo na vertical com o guarda-redes em baixo e as camisolas
+ * com os ícones de golo / cartão / saída, e as substituições por baixo.
  */
 function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
   const [lado, setLado] = useState<'casa' | 'fora'>('casa');
   const dados: LadoEscalacao = esc[lado];
-  const nomeEq = lado === 'casa' ? jogo.casa : jogo.fora;
+  const corCru = lado === 'casa' ? esc.corCasa : esc.corFora;
+  const cor = corCru && /^[0-9a-fA-F]{6}$/.test(corCru)
+    ? `#${corCru}`
+    : (lado === 'casa' ? '#a15f3b' : '#5f7183');
+  const escuro = corClara(corCru);
 
-  // As coordenadas guardadas põem as duas equipas no mesmo campo (casa à
-  // esquerda, fora à direita e espelhada). Aqui só entra uma equipa de cada
-  // vez, por isso re-escala-se o eixo de ataque para ela ocupar a relva toda:
-  // guarda-redes junto à baliza esquerda, avançados à direita.
-  const px = (x: number) =>
-    lado === 'casa' ? ((x - 5) / 42) * 84 + 8 : ((95 - x) / 42) * 84 + 8;
+  // O campo é vertical: guarda-redes em baixo, avançados em cima. O eixo de
+  // ataque (x) vira posição vertical; o eixo transversal (y) vira horizontal.
+  const av = (x: number) => lado === 'casa' ? (x - 5) / 42 : (95 - x) / 42;
+  const top = (x: number) => 90 - av(x) * 80;
+  const left = (y: number) => 10 + (y / 100) * 80;
+
+  const entradas = dados.suplentes.filter(s => s.entrou);
 
   return (
     <div className="jogo-detalhes__bloco escalacoes">
@@ -565,50 +601,57 @@ function EscalacoesESPN({ esc, jogo }: { esc: Escalacoes; jogo: JogoAoVivo }) {
         })}
       </div>
 
-      <div className="escala-campo escalacoes__campo">
+      <div className="escalacoes__campo">
         {dados.titulares.map((j, i) => (
           <span
             key={i}
-            className={`escala-pin escala-pin--${lado}${j.saiu ? ' escala-pin--saiu' : ''}`}
-            style={{ left: `${px(j.x)}%`, top: `${j.y}%` }}
+            className={`escala-jog${j.saiu ? ' escala-jog--saiu' : ''}`}
+            style={{ left: `${left(j.y)}%`, top: `${top(j.x)}%` }}
           >
-            <span className="escala-pin__n">{j.numero}</span>
-            <span className="escala-pin__nome">{j.nome}</span>
+            <span className="escala-jog__camisa">
+              <Camisola cor={cor} numero={j.numero} escuro={escuro} />
+              {j.saiu && <span className="escala-jog__ic escala-jog__ic--saiu">▾</span>}
+              {j.vermelho
+                ? <span className="escala-jog__ic escala-jog__ic--vermelho" />
+                : j.amarelo && <span className="escala-jog__ic escala-jog__ic--amarelo" />}
+              {j.golos > 0 && (
+                <span className="escala-jog__ic escala-jog__ic--golo">
+                  ⚽{j.golos > 1 ? j.golos : ''}
+                </span>
+              )}
+            </span>
+            <span className="escala-jog__nome">{j.nome}</span>
           </span>
         ))}
       </div>
 
-      {dados.suplentes.length > 0 && (
-        <div className="escala-banco escalacoes__banco">
-          <strong>Suplentes · {nomeEq}</strong>
-          <ul>
-            {dados.suplentes.map((s, i) => (
-              <li key={i} className={s.entrou ? 'escala-banco__entrou' : undefined}>
-                <span>{s.numero}</span> {s.nome}
-                {s.entrou && <em className="escalacoes__entrou">entrou</em>}
+      <div className="escalacoes__subs-bloco">
+        <strong>Substituições</strong>
+        {entradas.length === 0 ? (
+          <p className="jogo-detalhes__nota">Ainda sem substituições.</p>
+        ) : (
+          <ul className="escalacoes__subs">
+            {entradas.map((s, i) => (
+              <li key={i}>
+                <div className="escalacoes__sub-in">
+                  <span className="escalacoes__sub-num">#{s.numero}</span>
+                  <span className="escalacoes__sub-nome">{s.nome}</span>
+                  <span className="escalacoes__sub-dir">
+                    {s.minuto && <span className="escalacoes__sub-min">{s.minuto}</span>}
+                    <span className="escalacoes__sub-seta escalacoes__sub-seta--in">▲</span>
+                  </span>
+                </div>
+                {s.saiuPor && (
+                  <div className="escalacoes__sub-out">
+                    <span className="escalacoes__sub-seta escalacoes__sub-seta--out">▼</span>
+                    {s.saiuPor}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LideresJogo({ lideres }: { lideres: LiderJogo[] }) {
-  return (
-    <div className="lideres">
-      {lideres.map(l => (
-        <div key={l.rotulo} className="lideres__linha">
-          <span className="lideres__lado">
-            {l.casa ? <><strong>{l.casa.valor}</strong> {l.casa.nome}</> : '—'}
-          </span>
-          <span className="lideres__rotulo">{l.rotulo}</span>
-          <span className="lideres__lado lideres__lado--dir">
-            {l.fora ? <>{l.fora.nome} <strong>{l.fora.valor}</strong></> : '—'}
-          </span>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
 }
@@ -1209,9 +1252,8 @@ function SalaJogo({
         {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
         {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
 
-        {/* ── Estatísticas + Líderes ── */}
-        <div className="ficha-2col">
-          <div className="jogo-detalhes__bloco">
+        {/* ── Estatísticas ── */}
+        <div className="jogo-detalhes__bloco">
             <h3>Estatísticas</h3>
             <CabecalhoEquipas jogo={jx} />
             {semDadosReais && (
@@ -1238,15 +1280,6 @@ function SalaJogo({
                 </div>
               );
             })}
-          </div>
-
-          {detalhes.lideres.length > 0 && (
-            <div className="jogo-detalhes__bloco">
-              <h3>Líderes do jogo</h3>
-              <CabecalhoEquipas jogo={jx} />
-              <LideresJogo lideres={detalhes.lideres} />
-            </div>
-          )}
         </div>
 
         {/* ── Histórico do jogo ── */}

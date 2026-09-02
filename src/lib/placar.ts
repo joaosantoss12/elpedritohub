@@ -323,19 +323,36 @@ export interface JogadorCampo {
   nome: string;
   x: number;
   y: number;
-  /** Foi substituído — mostra-se esbatido. */
+  /** Foi substituído — mostra-se a seta de saída. */
   saiu: boolean;
+  /** Golos marcados no jogo (para o ícone de bola na camisola). */
+  golos: number;
+  amarelo: boolean;
+  vermelho: boolean;
+}
+
+export interface Suplente {
+  numero: string;
+  nome: string;
+  entrou: boolean;
+  /** Minuto em que entrou e nome de quem saiu — quando dá para cruzar
+   *  com os eventos do jogo. */
+  minuto: string | null;
+  saiuPor: string | null;
 }
 
 export interface LadoEscalacao {
   formacao: string;
   titulares: JogadorCampo[];
-  suplentes: { numero: string; nome: string; entrou: boolean }[];
+  suplentes: Suplente[];
 }
 
 export interface Escalacoes {
   casa: LadoEscalacao;
   fora: LadoEscalacao;
+  /** Cor principal de cada equipa (hex sem "#"), da ESPN. */
+  corCasa: string | null;
+  corFora: string | null;
 }
 
 /** Uma linha do "Líderes do jogo": o melhor de cada lado numa métrica. */
@@ -797,10 +814,51 @@ function coordsFormacao(formacao: string): { x: number; y: number }[] {
   return pts;
 }
 
-function mapearLadoEscalacao(roster: Bruto, casa: boolean): LadoEscalacao {
+/** Evento em bruto para cruzar com a escalação (golos, cartões, trocas). */
+interface EventoCru {
+  slug: string;
+  equipa: 'casa' | 'fora' | null;
+  minuto: string;
+  nomes: string[];
+}
+
+function eventosCrus(json: Bruto): EventoCru[] {
+  const comp = obj(lista(obj(json.header).competitions)[0]);
+  const equipas = lista(comp.competitors).map(obj);
+  const idCasa = txt(obj(equipas.find(c => c.homeAway === 'home')?.team ?? {}).id);
+  return lista(comp.details).map(obj).map((d): EventoCru => {
+    const idEquipa = txt(obj(d.team).id);
+    const equipa: 'casa' | 'fora' | null = idEquipa
+      ? (idEquipa === idCasa ? 'casa' : 'fora')
+      : null;
+    return {
+      slug: (txt(obj(d.type).id) ?? txt(obj(d.type).text) ?? '').toLowerCase(),
+      equipa,
+      minuto: txt(obj(d.clock).displayValue) ?? '',
+      nomes: lista(d.athletesInvolved).map(obj)
+        .map(a => txt(a.displayName) ?? txt(a.shortName) ?? '')
+        .filter(Boolean),
+    };
+  });
+}
+
+/** Um nome de evento (displayName) refere-se a este atleta? Compara pelo
+ *  apelido para aguentar "J. Solis" vs "Jhon Solis". */
+function mesmoJogador(nomeEvento: string, at: Bruto): boolean {
+  const alvo = (txt(at.displayName) ?? '').toLowerCase();
+  const e = nomeEvento.toLowerCase();
+  if (!e) return false;
+  if (alvo && (alvo === e || alvo.includes(e) || e.includes(alvo))) return true;
+  const apelido = alvo.split(' ').pop() ?? '';
+  return apelido.length > 2 && e.includes(apelido);
+}
+
+function mapearLadoEscalacao(roster: Bruto, casa: boolean, evs: EventoCru[]): LadoEscalacao {
   const formacao = txt(roster.formation) ?? '';
   const coords = coordsFormacao(formacao || '4-4-2');
   const jogadores = lista(roster.roster).map(obj);
+  const lado: 'casa' | 'fora' = casa ? 'casa' : 'fora';
+  const meus = evs.filter(e => e.equipa === lado);
 
   const titulares: JogadorCampo[] = jogadores
     .filter(p => p.starter === true)
@@ -808,23 +866,44 @@ function mapearLadoEscalacao(roster: Bruto, casa: boolean): LadoEscalacao {
       const at = obj(p.athlete);
       const lugar = Number(txt(p.formationPlace));
       const c = coords[(Number.isFinite(lugar) && lugar > 0 ? lugar : i + 1) - 1] ?? { x: 25, y: 50 };
+      const seus = meus.filter(e => e.nomes.some(n => mesmoJogador(n, at)));
       return {
         numero: txt(p.jersey) ?? '',
         nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
         x: casa ? c.x : 100 - c.x,
         y: c.y,
         saiu: p.subbedOut === true,
+        golos: seus.filter(e => e.slug.includes('goal') && !e.slug.includes('own')).length,
+        amarelo: seus.some(e => e.slug.includes('yellow')),
+        vermelho: seus.some(e => e.slug.includes('red')),
       };
     });
 
-  const suplentes = jogadores
+  const nomeCurto = (nome: string): string => {
+    // "Jefferson Castillo" → tenta casar com um titular e usar o apelido curto.
+    const t = titulares.find(tt => {
+      const ap = nome.toLowerCase().split(' ').pop() ?? '';
+      return ap.length > 2 && tt.nome.toLowerCase().includes(ap);
+    });
+    return t?.nome ?? nome;
+  };
+
+  const suplentes: Suplente[] = jogadores
     .filter(p => p.starter !== true)
     .map(p => {
       const at = obj(p.athlete);
+      const entrou = p.subbedIn === true;
+      const troca = entrou
+        ? meus.find(e => e.slug.includes('substitution')
+            && e.nomes.some(n => mesmoJogador(n, at)))
+        : undefined;
+      const saiuPor = troca?.nomes.find(n => !mesmoJogador(n, at)) ?? null;
       return {
         numero: txt(p.jersey) ?? '',
         nome: txt(at.shortName) ?? txt(at.displayName) ?? '',
-        entrou: p.subbedIn === true,
+        entrou,
+        minuto: troca?.minuto ?? null,
+        saiuPor: saiuPor ? nomeCurto(saiuPor) : null,
       };
     });
 
@@ -836,9 +915,12 @@ function mapearEscalacoes(json: Bruto): Escalacoes | null {
   if (rosters.length < 2) return null;
   const casa = rosters.find(r => r.homeAway === 'home') ?? rosters[0];
   const fora = rosters.find(r => r.homeAway === 'away') ?? rosters[1];
+  const evs = eventosCrus(json);
   const e: Escalacoes = {
-    casa: mapearLadoEscalacao(casa, true),
-    fora: mapearLadoEscalacao(fora, false),
+    casa: mapearLadoEscalacao(casa, true, evs),
+    fora: mapearLadoEscalacao(fora, false, evs),
+    corCasa: txt(obj(casa.team).color) ?? null,
+    corFora: txt(obj(fora.team).color) ?? null,
   };
   // Sem titulares dos dois lados não vale a pena desenhar o campo.
   return e.casa.titulares.length && e.fora.titulares.length ? e : null;

@@ -1387,14 +1387,116 @@
   color: var(--text-white);
   background: var(--bg-card);
 }
-.escalacoes__entrou {
-  margin-left: 0.4rem;
-  font-size: 0.6rem;
-  font-style: normal;
-  color: var(--green-success);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+/* ── Campo vertical com camisolas (estilo ESPN) ── */
+.escalacoes__campo {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.14)),
+    repeating-linear-gradient(0deg, #3c743c 0 12.5%, #367036 12.5% 25%),
+    #3c743c;
 }
+.escalacoes__campo::before,
+.escalacoes__campo::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58%;
+  height: 15%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+.escalacoes__campo::before { bottom: -2px; border-bottom: none; }
+.escalacoes__campo::after { top: -2px; border-top: none; }
+
+.escala-jog {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 58px;
+}
+.escala-jog--saiu { opacity: 0.45; }
+.escala-jog__camisa { position: relative; width: 34px; height: 34px; }
+.camisola { display: block; width: 100%; height: 100%; }
+.escala-jog__nome {
+  max-width: 62px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.escala-jog__ic { position: absolute; font-size: 0.58rem; line-height: 1; }
+.escala-jog__ic--saiu { top: -6px; right: -7px; font-size: 0.85rem; color: #e23b3b; }
+.escala-jog__ic--golo { bottom: -7px; left: -9px; font-size: 0.62rem; }
+.escala-jog__ic--amarelo,
+.escala-jog__ic--vermelho {
+  top: -3px;
+  left: -5px;
+  width: 7px;
+  height: 10px;
+  border-radius: 1px;
+}
+.escala-jog__ic--amarelo { background: #f2c200; }
+.escala-jog__ic--vermelho { background: #e23b3b; }
+
+/* ── Substituições ── */
+.escalacoes__subs-bloco { margin-top: 0.9rem; }
+.escalacoes__subs-bloco > strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-gray);
+}
+.escalacoes__subs { list-style: none; margin: 0; padding: 0; }
+.escalacoes__subs > li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.escalacoes__subs > li:last-child { border-bottom: none; }
+.escalacoes__sub-in {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-white);
+}
+.escalacoes__sub-num { color: var(--text-gray); font-variant-numeric: tabular-nums; }
+.escalacoes__sub-nome { flex: 1; min-width: 0; }
+.escalacoes__sub-dir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-gray);
+  font-variant-numeric: tabular-nums;
+}
+.escalacoes__sub-out {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+.escalacoes__sub-seta--in { color: var(--green-success); }
+.escalacoes__sub-seta--out { color: #e23b3b; }
 .placar__forma {
   display: block;
   margin-top: 0.15rem;
@@ -1510,9 +1612,6 @@
 
 /* Campo com uma equipa só (coluna estreita): guarda-redes junto à baliza
    esquerda, avançados à direita. Alvos mais compactos. */
-.escalacoes__campo { aspect-ratio: 16 / 11; }
-.escalacoes__campo .escala-pin { width: 52px; }
-.escalacoes__campo .escala-pin__nome { max-width: 52px; }
 
 .escala-bancos {
   display: grid;
