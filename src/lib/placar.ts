@@ -1333,10 +1333,11 @@ function espalharLinhas(pts: { x: number; y: number }[], formacao: string): void
     const idxs = ordem.slice(cursor, cursor + qtd);
     cursor += qtd;
     // A última linha (avançados) encosta à área adversária; as restantes
-    // distribuem-se entre o GR e ela.
+    // (GR incluído) distribuem-se entre o fundo e uma linha logo atrás dela,
+    // para não ficarem espremidas no meio-campo quando há muitas linhas.
     const x = L <= 1 ? 26
       : r === L - 1 ? 47
-      : 6 + (r / (L - 1)) * 34;
+      : 6 + (r / (L - 2)) * 32;
     idxs.forEach(i => { pts[i].x = x; });
     const n = idxs.length;
     if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; return; }
