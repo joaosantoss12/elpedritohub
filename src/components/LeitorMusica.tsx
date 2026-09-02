@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic,
+  Settings, ChevronDown, ChevronUp, Music, Shuffle, ListMusic, Heart,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -18,6 +18,26 @@ interface Config {
   tipo: 'video' | 'playlist';
   id: string;
   origem: string;
+}
+
+// Faixa marcada como favorita — guardada com título/autor para se poder
+// listar sem voltar a pedir nada ao YouTube.
+interface Faixa {
+  id: string;
+  titulo: string;
+  autor: string;
+}
+
+const CHAVE_FAVS = 'ep-musica-favs';
+
+function lerFavoritas(): Faixa[] {
+  try {
+    const cru = localStorage.getItem(CHAVE_FAVS);
+    const arr = cru ? JSON.parse(cru) : [];
+    return Array.isArray(arr) ? arr.filter((f: Faixa) => f && f.id) : [];
+  } catch {
+    return [];
+  }
 }
 
 // Aceita: watch?v=ID, youtu.be/ID, list=ID, /playlist?list=ID, ou o ID cru.
@@ -114,6 +134,8 @@ export function LeitorMusica() {
   const [aleatorio, setAleatorio] = useState<boolean>(() => {
     try { return localStorage.getItem('ep-musica-shuffle') === 'sim'; } catch { return false; }
   });
+  const [favoritas, setFavoritas] = useState<Faixa[]>(lerFavoritas);
+  const [abaLista, setAbaLista] = useState<'playlist' | 'favoritas'>('playlist');
 
   const playerRef = useRef<any>(null);
   const arrastarRef = useRef(false);
@@ -270,6 +292,25 @@ export function LeitorMusica() {
     });
   };
 
+  const alternarFavorita = (f: Faixa) => {
+    if (!f.id) return;
+    setFavoritas(prev => {
+      const existe = prev.some(x => x.id === f.id);
+      const prox = existe
+        ? prev.filter(x => x.id !== f.id)
+        : [{ id: f.id, titulo: f.titulo, autor: f.autor }, ...prev];
+      try { localStorage.setItem(CHAVE_FAVS, JSON.stringify(prox)); } catch { /* privado */ }
+      return prox;
+    });
+  };
+
+  // Toca uma faixa solta (favorita). loadVideoById sai da playlist, o que é o
+  // comportamento esperado — o utilizador pediu aquela música.
+  const tocarFaixaSolta = (id: string) => {
+    autoTocarRef.current = true;
+    playerRef.current?.loadVideoById?.(id);
+  };
+
   const guardarConfig = () => {
     const c = interpretarLink(rascunho);
     if (!c) { setErroLink('Não reconheci esse link do YouTube.'); return; }
@@ -288,6 +329,9 @@ export function LeitorMusica() {
 
   const temPlaylist = config?.tipo === 'playlist';
   const pct = total > 0 ? (atual / total) * 100 : 0;
+  const favSet = new Set(favoritas.map(f => f.id));
+  const abaAtiva: 'playlist' | 'favoritas' =
+    !temPlaylist && abaLista === 'playlist' ? 'favoritas' : abaLista;
 
   return (
     <>
@@ -321,6 +365,15 @@ export function LeitorMusica() {
                 <strong>{titulo || (config ? 'A carregar…' : 'Sem música configurada')}</strong>
                 <em>{autor || (config ? '' : 'Carrega em Configurar para escolher')}</em>
               </span>
+              {videoId && (
+                <button
+                  className={`leitor-musica__fav${favSet.has(videoId) ? ' leitor-musica__fav--on' : ''}`}
+                  onClick={() => alternarFavorita({ id: videoId, titulo, autor })}
+                  title={favSet.has(videoId) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                >
+                  <Heart size={16} fill={favSet.has(videoId) ? 'currentColor' : 'none'} />
+                </button>
+              )}
             </div>
 
             <div className="leitor-musica__centro">
@@ -357,15 +410,13 @@ export function LeitorMusica() {
                 >
                   <SkipForward size={18} />
                 </button>
-                {temPlaylist && (
-                  <button
-                    className={verLista ? 'leitor-musica__on' : ''}
-                    onClick={() => setVerLista(v => !v)}
-                    title="Lista de faixas"
-                  >
-                    <ListMusic size={16} />
-                  </button>
-                )}
+                <button
+                  className={verLista ? 'leitor-musica__on' : ''}
+                  onClick={() => setVerLista(v => !v)}
+                  title="Faixas e favoritos"
+                >
+                  <ListMusic size={16} />
+                </button>
               </div>
 
               <div className="leitor-musica__progresso">
@@ -419,26 +470,75 @@ export function LeitorMusica() {
           </div>
         )}
 
-        {verLista && aberto && temPlaylist && (
+        {verLista && aberto && (
           <div className="leitor-musica__lista">
             <div className="leitor-musica__lista-topo">
-              <span>Faixas da playlist ({lista.length})</span>
+              <div className="leitor-musica__abas">
+                {temPlaylist && (
+                  <button
+                    className={abaAtiva === 'playlist' ? 'leitor-musica__aba-on' : ''}
+                    onClick={() => setAbaLista('playlist')}
+                  >
+                    Playlist ({lista.length})
+                  </button>
+                )}
+                <button
+                  className={abaAtiva === 'favoritas' ? 'leitor-musica__aba-on' : ''}
+                  onClick={() => setAbaLista('favoritas')}
+                >
+                  Favoritas ({favoritas.length})
+                </button>
+              </div>
               <button onClick={() => setVerLista(false)} title="Fechar">
                 <ChevronDown size={16} />
               </button>
             </div>
-            <ul>
-              {lista.map((id, i) => (
-                <li
-                  key={`${id}-${i}`}
-                  className={i === indiceLista ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
-                  onClick={() => playerRef.current?.playVideoAt?.(i)}
-                >
-                  <img src={`https://i.ytimg.com/vi/${id}/default.jpg`} alt="" />
-                  <span>{titulos[id] ?? '…'}</span>
-                </li>
-              ))}
-            </ul>
+
+            {abaAtiva === 'playlist' ? (
+              <ul>
+                {lista.map((id, i) => (
+                  <li
+                    key={`${id}-${i}`}
+                    className={i === indiceLista ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
+                    onClick={() => playerRef.current?.playVideoAt?.(i)}
+                  >
+                    <img src={`https://i.ytimg.com/vi/${id}/default.jpg`} alt="" />
+                    <span>{titulos[id] ?? '…'}</span>
+                    <button
+                      className={`leitor-musica__fav${favSet.has(id) ? ' leitor-musica__fav--on' : ''}`}
+                      onClick={e => { e.stopPropagation(); alternarFavorita({ id, titulo: titulos[id] ?? '', autor: '' }); }}
+                      title={favSet.has(id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                    >
+                      <Heart size={14} fill={favSet.has(id) ? 'currentColor' : 'none'} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : favoritas.length === 0 ? (
+              <p className="leitor-musica__lista-vazia">
+                Ainda não marcaste favoritos. Carrega no <Heart size={12} /> junto à música.
+              </p>
+            ) : (
+              <ul>
+                {favoritas.map(f => (
+                  <li
+                    key={f.id}
+                    className={f.id === videoId ? 'leitor-musica__faixa-item leitor-musica__faixa-item--atual' : 'leitor-musica__faixa-item'}
+                    onClick={() => tocarFaixaSolta(f.id)}
+                  >
+                    <img src={`https://i.ytimg.com/vi/${f.id}/default.jpg`} alt="" />
+                    <span>{f.titulo || f.id}</span>
+                    <button
+                      className="leitor-musica__fav leitor-musica__fav--on"
+                      onClick={e => { e.stopPropagation(); alternarFavorita(f); }}
+                      title="Remover dos favoritos"
+                    >
+                      <Heart size={14} fill="currentColor" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -620,7 +720,31 @@ export function LeitorMusica() {
           width: 40px; height: 30px; border-radius: 4px; object-fit: cover; flex-shrink: 0;
         }
         .leitor-musica__faixa-item span {
+          flex: 1; min-width: 0;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .leitor-musica__fav {
+          display: flex; align-items: center; justify-content: center;
+          width: 28px; height: 28px; padding: 0; flex-shrink: 0;
+          border: none; border-radius: 50%; background: transparent;
+          color: var(--text-muted); cursor: pointer; transition: color 0.15s ease;
+        }
+        .leitor-musica__fav:hover { color: var(--gold-light); }
+        .leitor-musica__fav--on { color: var(--gold-primary); }
+
+        .leitor-musica__abas { display: flex; gap: 0.3rem; }
+        .leitor-musica__abas button {
+          background: none; border: none; cursor: pointer; padding: 0.15rem 0.1rem;
+          font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+          letter-spacing: 0.4px; color: var(--text-muted);
+          border-bottom: 2px solid transparent;
+        }
+        .leitor-musica__aba-on { color: var(--gold-primary) !important; border-bottom-color: var(--gold-primary) !important; }
+        .leitor-musica__lista-vazia {
+          margin: 0; padding: 1.1rem 0.9rem; font-size: 0.8rem;
+          color: var(--text-muted); display: flex; align-items: center;
+          gap: 0.3rem; flex-wrap: wrap;
         }
 
         body.tem-leitor-musica .gm-drop { bottom: 92px; }
