@@ -99,12 +99,11 @@ const PASSOS: Passo[] = [
   },
   {
     icone: <LogIn size={22} />,
-    titulo: 'Sessão e ajuda',
+    titulo: 'Precisas de ajuda?',
     corpo: (
       <>
-        Sem sessão iniciada vês a banca em modo leitura. Inicia sessão para
-        adicionar e editar apostas. Se te baralhares na gestão de banca, fala
-        com o suporte pelo link no fundo da página.
+        Se te baralhares na gestão de banca ou tiveres dúvidas sobre os
+        números, fala com o suporte pelo link no fundo da página.
       </>
     ),
   },
