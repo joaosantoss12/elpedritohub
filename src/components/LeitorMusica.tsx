@@ -748,6 +748,8 @@ export function LeitorMusica() {
         }
 
         body.tem-leitor-musica .gm-drop { bottom: 92px; }
+        /* O botão "ir para o topo" da Home não pode ficar por baixo da barra. */
+        body.tem-leitor-musica .home-ir-topo { bottom: 96px !important; }
 
         @media (max-width: 820px) {
           .leitor-musica__corpo {

@@ -381,6 +381,7 @@ function Home() {
       {showScrollToTop && (
         <button
           onClick={scrollToTop}
+          className="home-ir-topo"
           style={{
             position: 'fixed',
             bottom: '2rem',
