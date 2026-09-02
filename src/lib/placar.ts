@@ -1332,12 +1332,14 @@ function espalharLinhas(pts: { x: number; y: number }[], formacao: string): void
   capacidades.forEach((qtd, r) => {
     const idxs = ordem.slice(cursor, cursor + qtd);
     cursor += qtd;
-    // A última linha (avançados) encosta à área adversária; as restantes
-    // (GR incluído) distribuem-se entre o fundo e uma linha logo atrás dela,
-    // para não ficarem espremidas no meio-campo quando há muitas linhas.
+    // A última linha (avançados) encosta à área adversária. As de trás (GR
+    // incluído) ocupam [6, topTras]; `topTras` sobe com o nº de linhas para
+    // que um 3-4-1-2 não fique espremido em baixo nem um 3-5-2 cole os
+    // médios aos avançados.
+    const topTras = L <= 4 ? 30 : L === 5 ? 38 : 42;
     const x = L <= 1 ? 26
       : r === L - 1 ? 47
-      : 6 + (r / (L - 2)) * 32;
+      : 6 + (r / (L - 2)) * (topTras - 6);
     idxs.forEach(i => { pts[i].x = x; });
     const n = idxs.length;
     if (n < 2) { if (n === 1) pts[idxs[0]].y = 50; return; }
