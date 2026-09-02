@@ -36,33 +36,15 @@
    bloco abaixo só recalcula os tokens que mudam de cor; tudo o resto da
    app herda. `data-tema` é posto em <html> pelo seletor de tema (e por um
    script inline no index.html, para não piscar). */
-/* Neve — o único tema claro. Ao contrário dos outros, tem de reescrever também
-   os tokens de texto, sombras e superfícies (que assumem fundo escuro). */
+/* Neve — mesmo fundo escuro dos outros, mas com o acento em branco. */
 :root[data-tema="neve"] {
-  --bg-deep: #e7ebf3;
-  --bg-main: #f4f6fb;
-  --bg-card: #ffffff;
-  --bg-card-hover: #eef2f8;
-  --bg-elevated: #e6ebf4;
-  --gold-primary: #3b6fb0;
-  --gold-hover: #2d588f;
-  --gold-light: #5b8bc8;
-  --accent-violet: #6366f1;
-  --accent-indigo: #4f46e5;
-  --text-white: #1a2233;
-  --text-gray: #4a5568;
-  --text-muted: #737d8f;
-  --green-success: #059669;
-  --border-color: #dbe1ec;
-  --border-strong: #c3ccdb;
-  --card-gradient: linear-gradient(145deg, #ffffff 0%, #f1f4fa 100%);
-  --surface-sunken: rgba(15, 23, 42, 0.04);
-  --surface-sunken-hover: rgba(15, 23, 42, 0.07);
-  --gold-tint: rgba(59, 111, 176, 0.12);
-  --overlay: rgba(20, 28, 44, 0.4);
-  --shadow-card: 0 12px 32px rgba(30, 41, 59, 0.12);
-  --shadow-lg: 0 24px 60px rgba(30, 41, 59, 0.18);
-  color-scheme: light;
+  --gold-primary: #e9edf4;
+  --gold-hover: #c6cedd;
+  --gold-light: #f7f9fc;
+  --border-color: #2c3a54;
+  --border-strong: #3d4e70;
+  --gold-tint: rgba(233, 237, 244, 0.12);
+  --card-gradient: linear-gradient(145deg, #1e2739 0%, #161d2c 100%);
 }
 :root[data-tema="oceano"] {
   --bg-deep: #0a1420;

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 // Cada tema é uma bolinha bicolor: fundo (a metade escura) + acento (a
 // dourado/turquesa/etc). Os valores batem com os blocos data-tema do index.css.
 const TEMAS: { id: string; nome: string; fundo: string; acento: string }[] = [
-  { id: 'neve',      nome: 'Neve',      fundo: '#f4f6fb', acento: '#3b6fb0' },
+  { id: 'neve',      nome: 'Neve',      fundo: '#111726', acento: '#eef2f8' },
   { id: 'castanho',  nome: 'Castanho',  fundo: '#111726', acento: '#a17c5b' },
   { id: 'oceano',    nome: 'Oceano',    fundo: '#0e1a28', acento: '#3fa9c9' },
   { id: 'esmeralda', nome: 'Esmeralda', fundo: '#0e1d17', acento: '#35b57e' },
@@ -93,7 +93,7 @@ export function SeletorTema() {
   const ehPersonalizado = tema === 'personalizado';
   const predefinido = TEMAS.find(t => t.id === tema) ?? TEMAS[0];
   const bolaFundo = ehPersonalizado
-    ? `linear-gradient(135deg, ${TEMAS[1].fundo} 50%, ${cor} 50%)`
+    ? `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)`
     : `linear-gradient(135deg, ${predefinido.fundo} 50%, ${predefinido.acento} 50%)`;
 
   return (
@@ -139,7 +139,7 @@ export function SeletorTema() {
           >
             <span
               className="seletor-tema__amostra"
-              style={{ background: `linear-gradient(135deg, ${TEMAS[1].fundo} 50%, ${cor} 50%)` }}
+              style={{ background: `linear-gradient(135deg, ${TEMAS[0].fundo} 50%, ${cor} 50%)` }}
             />
             <span className="seletor-tema__cor-texto">Personalizada</span>
             <input
