@@ -277,6 +277,7 @@ export default function DemoSlots() {
   const [emEcraCheio, setEmEcraCheio] = useState(false);
   const grelhaRef = useRef<HTMLUListElement>(null);
   const modalBoxRef = useRef<HTMLDivElement>(null);
+  const seccaoRef = useRef<HTMLElement>(null);
 
   const filtradas = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -318,7 +319,7 @@ export default function DemoSlots() {
 
   const irPara = (p: number) => {
     setPage(Math.min(Math.max(1, p), totalPages));
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    seccaoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   useEffect(() => {
@@ -359,7 +360,7 @@ export default function DemoSlots() {
   };
 
   return (
-    <section className="demo-slots" aria-label="Slots em modo demo">
+    <section className="demo-slots" aria-label="Slots em modo demo" ref={seccaoRef}>
       <div className="demo-slots__head">
         <div>
           <h2 className="demo-slots__title">Joga grátis em modo demo</h2>
