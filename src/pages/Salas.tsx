@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Radio, MessageSquare, Loader2, ArrowLeft,
-  RefreshCw, Target, Square, ArrowLeftRight,
+  RefreshCw, Square,
   Globe, Trophy, Clock, Calendar, Search, X,
 } from 'lucide-react';
 import { ChatFlutuante } from '../components/ChatFlutuante';
@@ -423,6 +423,11 @@ function agruparPorLiga(jogos: JogoAoVivo[]) {
   return ordem.map(slug => ({ slug, nome: mapa.get(slug)![0].liga, jogos: mapa.get(slug)! }));
 }
 
+/** Emoji para os lances marcantes — pedido do cliente: emojis, não ícones. */
+const EMOJI_EVENTO: Record<string, string> = {
+  golo: '⚽', cartao_amarelo: '🟨', cartao_vermelho: '🟥', substituicao: '🔁',
+};
+
 function JogoCard({ jogo: j, contagens, onAbrir }: {
   jogo: JogoAoVivo;
   contagens: Record<string, number>;
@@ -442,8 +447,7 @@ function JogoCard({ jogo: j, contagens, onAbrir }: {
         <span>{j.casa}</span>
         {(j.vermelhosCasa ?? 0) > 0 && (
           <span className="jogo-card__vermelho" title="Expulsão">
-            <Square size={9} className="cartao-vermelho" fill="currentColor" />
-            {(j.vermelhosCasa ?? 0) > 1 && j.vermelhosCasa}
+            🟥{(j.vermelhosCasa ?? 0) > 1 ? `×${j.vermelhosCasa}` : ''}
           </span>
         )}
         <strong>{j.golosCasa ?? '–'}</strong>
@@ -453,8 +457,7 @@ function JogoCard({ jogo: j, contagens, onAbrir }: {
         <span>{j.fora}</span>
         {(j.vermelhosFora ?? 0) > 0 && (
           <span className="jogo-card__vermelho" title="Expulsão">
-            <Square size={9} className="cartao-vermelho" fill="currentColor" />
-            {(j.vermelhosFora ?? 0) > 1 && j.vermelhosFora}
+            🟥{(j.vermelhosFora ?? 0) > 1 ? `×${j.vermelhosFora}` : ''}
           </span>
         )}
         <strong>{j.golosFora ?? '–'}</strong>
@@ -823,12 +826,7 @@ function SalaJogo({
                     {detalhes.eventos.map((e, i) => (
                       <li key={i} className={`jogo-evento jogo-evento--${e.equipa ?? 'neutro'}`}>
                         <span className="jogo-evento__minuto">{e.minuto}</span>
-                        <span className="jogo-evento__icone">
-                          {e.tipo === 'golo' && <Target size={13} />}
-                          {e.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
-                          {e.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
-                          {e.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
-                        </span>
+                        <span className="jogo-evento__icone">{EMOJI_EVENTO[e.tipo] ?? '•'}</span>
                         <span className="jogo-evento__desc">{e.descricao}</span>
                       </li>
                     ))}
@@ -855,13 +853,14 @@ function SalaJogo({
             <div className="placar__corpo">
               <div className="placar__equipa">
                 {jx.logoCasa && <img src={jx.logoCasa} alt="" />}
-                <strong>{jx.casa}</strong>
-                {vermelhosCasa > 0 && (
-                  <span className="placar__vermelho" title="Expulsão">
-                    <Square size={10} className="cartao-vermelho" fill="currentColor" />
-                    {vermelhosCasa > 1 && vermelhosCasa}
-                  </span>
-                )}
+                <strong>
+                  {jx.casa}
+                  {vermelhosCasa > 0 && (
+                    <span className="placar__vermelho" title="Expulsão">
+                      {' '}🟥{vermelhosCasa > 1 ? `×${vermelhosCasa}` : ''}
+                    </span>
+                  )}
+                </strong>
               </div>
               <div className="placar__resultado">
                 <span>{jx.golosCasa ?? '–'}</span>
@@ -870,13 +869,14 @@ function SalaJogo({
               </div>
               <div className="placar__equipa">
                 {jx.logoFora && <img src={jx.logoFora} alt="" />}
-                <strong>{jx.fora}</strong>
-                {vermelhosFora > 0 && (
-                  <span className="placar__vermelho" title="Expulsão">
-                    <Square size={10} className="cartao-vermelho" fill="currentColor" />
-                    {vermelhosFora > 1 && vermelhosFora}
-                  </span>
-                )}
+                <strong>
+                  {jx.fora}
+                  {vermelhosFora > 0 && (
+                    <span className="placar__vermelho" title="Expulsão">
+                      {' '}🟥{vermelhosFora > 1 ? `×${vermelhosFora}` : ''}
+                    </span>
+                  )}
+                </strong>
               </div>
             </div>
 
@@ -927,12 +927,7 @@ function SalaJogo({
                     >
                       <span className="jogo-relato__minuto">{c.minuto || '·'}</span>
                       {c.tipo !== 'outro' && (
-                        <span className="jogo-relato__icone">
-                          {c.tipo === 'golo' && <Target size={13} />}
-                          {c.tipo === 'cartao_amarelo' && <Square size={11} className="cartao-amarelo" fill="currentColor" />}
-                          {c.tipo === 'cartao_vermelho' && <Square size={11} className="cartao-vermelho" fill="currentColor" />}
-                          {c.tipo === 'substituicao' && <ArrowLeftRight size={13} />}
-                        </span>
+                        <span className="jogo-relato__icone">{EMOJI_EVENTO[c.tipo]}</span>
                       )}
                       <span className="jogo-relato__texto">{c.texto}</span>
                     </li>
