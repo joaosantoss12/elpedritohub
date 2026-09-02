@@ -5,12 +5,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * YouTube — o mesmo truque dos bots de música do Discord: o Spotify serve só os
  * metadados (título + artista), o áudio vem sempre do YouTube.
  *
- * Passo 1: token com client-credentials (não é preciso o utilizador ter conta
- *          Spotify — as credenciais são da app, guardadas na Vercel).
- * Passo 2: para cada faixa, primeira ocorrência de "videoId" na página de
- *          resultados do YouTube filtrada por vídeos.
- *
- * Precisa das variáveis de ambiente SPOTIFY_CLIENT_ID e SPOTIFY_CLIENT_SECRET.
+ * Passo 1: ler a lista. Fonte principal = página `open.spotify.com/embed/…`,
+ *          que traz o alinhamento em JSON e NÃO precisa de token nem de conta
+ *          Premium (a Web API oficial passou a dar 403 a apps cujo dono não
+ *          tem Premium). A Web API fica como reserva, se houver credenciais.
+ * Passo 2: para cada faixa, procurar no YouTube (API interna, com o raspar
+ *          da página como plano B).
  */
 
 // Resolver 50+ faixas no YouTube demora — o default de 10s da Vercel não chega.
@@ -107,6 +107,50 @@ async function lerFaixasSpotify(
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 
+/* A página do player embutido (`open.spotify.com/embed/...`) devolve o
+   alinhamento todo num `<script id="__NEXT_DATA__">` e não pede token nem conta
+   Premium. É a via principal; a Web API oficial fica como reserva. */
+async function lerViaEmbed(
+  alvo: { tipo: 'playlist' | 'album' | 'track'; id: string },
+): Promise<{ nome: string; faixas: { titulo: string; artista: string }[] } | null> {
+  const r = await fetch(`https://open.spotify.com/embed/${alvo.tipo}/${alvo.id}`, {
+    headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' },
+  });
+  if (!r.ok) return null;
+  const html = await r.text();
+  const m = html.match(
+    /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/,
+  );
+  if (!m) return null;
+
+  let entidade: {
+    name?: string;
+    title?: string;
+    subtitle?: string;
+    trackList?: { title?: string; subtitle?: string }[];
+  } | undefined;
+  try {
+    const dados = JSON.parse(m[1]) as {
+      props?: { pageProps?: { state?: { data?: { entity?: typeof entidade } } } };
+    };
+    entidade = dados.props?.pageProps?.state?.data?.entity;
+  } catch {
+    return null;
+  }
+  if (!entidade) return null;
+
+  const nome = entidade.name || entidade.title || 'Spotify';
+  const cru =
+    alvo.tipo === 'track'
+      ? [{ title: entidade.title, subtitle: entidade.subtitle }]
+      : entidade.trackList ?? [];
+  const faixas = cru
+    .map(t => ({ titulo: String(t?.title ?? ''), artista: String(t?.subtitle ?? '') }))
+    .filter(f => f.titulo);
+
+  return faixas.length ? { nome, faixas: faixas.slice(0, MAX_FAIXAS) } : null;
+}
+
 // Chave "web" pública do InnerTube — a mesma que o próprio site do YouTube usa.
 const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 
@@ -182,11 +226,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const token = await obterToken();
-    const { nome, faixas } = await lerFaixasSpotify(alvo, token);
-    if (faixas.length === 0) {
-      return res.status(404).json({ error: 'Não encontrei faixas nessa lista.' });
+    // Via principal: página do player embutido, sem token nem Premium.
+    let lista = await lerViaEmbed(alvo).catch(() => null);
+
+    // Reserva: Web API com client-credentials (só se houver credenciais e a
+    // conta dona da app tiver acesso — hoje isso implica Premium).
+    if (!lista && process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
+      lista = await lerFaixasSpotify(alvo, await obterToken());
     }
+
+    if (!lista || lista.faixas.length === 0) {
+      return res.status(404).json({
+        error: 'Não consegui ler faixas dessa lista. Confirma que o link está certo e a playlist é pública.',
+      });
+    }
+    const { nome, faixas } = lista;
     const resolvidas = await resolverVideos(faixas);
     if (resolvidas.length === 0) {
       return res.status(502).json({

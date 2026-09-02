@@ -264,13 +264,16 @@
 }
 
 .jogo-card__equipa span {
-  flex: 1;
+  flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* O golo fica encostado à direita; o cartão vermelho não — vem logo a seguir
+   ao nome da equipa. */
 .jogo-card__equipa strong {
+  margin-left: auto;
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
 }
@@ -385,13 +388,14 @@
   display: flex;
   flex-direction: column;
 }
-/* `flex: 1` estica a lista até ao fundo da coluna (= altura das estatísticas);
-   o `max-height` impede-a de ser ela a esticar a linha da grelha quando há
-   muitos eventos. Nos dois casos rola por dentro. */
+/* `flex: 1` + `min-height: 0` faz a lista encher a coluna toda até ao fundo
+   (a altura vem das estatísticas ao lado, via `align-items: stretch`), e o
+   `overflow-y` trata do excesso. Sem `max-height`: como é um contentor que
+   rola, não contribui com o seu conteúdo para a altura da linha da grelha,
+   por isso já não é ele a esticá-la quando há muitos eventos. */
 .sala-jogo__lado--social .jogo-relato {
   flex: 1;
   min-height: 0;
-  max-height: clamp(320px, 46vh, 520px);
   overflow-y: auto;
 }
 
