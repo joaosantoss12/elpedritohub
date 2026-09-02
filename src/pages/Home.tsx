@@ -521,7 +521,7 @@ function Home() {
             As melhores análises, as odds mais valiosas e uma comunidade que não para de ganhar.
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '3.5rem' }}>
+          <div className="hero-cta-row" style={{ display: 'flex', gap: '1rem', marginBottom: '3.5rem' }}>
             <button className="btn-gold" style={{ fontSize: '1rem', padding: '1.2rem 2rem' }} onClick={() => window.open('https://t.me/+ScE3U93x9IVkNDY0', '_blank')}>
               <Navigation size={20} fill="currentColor" style={{ transform: 'rotate(45deg)' }} /> ENTRAR <span style={{ display: 'none' }} className="desktop-only"> NO GRUPO</span>
             </button>

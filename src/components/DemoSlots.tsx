@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Play, X, ExternalLink, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Play, X, ExternalLink, Search, ChevronLeft, ChevronRight, ArrowDownWideNarrow } from 'lucide-react';
 import '../styles/DemoSlots.css';
 
 /**
@@ -10,7 +10,38 @@ import '../styles/DemoSlots.css';
  * atualizar a entrada em SLOTS — o botão "abrir em nova aba" serve de recurso.
  */
 const DEMO_BASE = 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do';
-const PAGE_SIZE = 24;
+
+/* Fallback enquanto a grelha ainda não foi medida (ver useEffect de colunas). */
+const PAGE_SIZE_INICIAL = 24;
+
+/**
+ * Ordenação da lista.
+ * Todos os jogos são da Pragmatic Play, por isso em vez de "provider" (que seria
+ * sempre igual) agrupamos por categoria — dá uma ordenação útil de facto.
+ */
+type Ordem = 'az' | 'popular' | 'categoria';
+
+/* Jogos mais conhecidos primeiro. O que não estiver aqui cai para o fim,
+   ordenado por nome. Lista curada — não há métrica de jogadas real. */
+const POPULARES: string[] = [
+  'vs20olympgate', 'vs20fruitsw', 'vs10bbbonanza', 'vs20sugarrush', 'vs20doghouse',
+  'vs25wolfgold', 'vs20starlight', 'vs20fruitparty', 'vs12bbb', 'vswaysbbb',
+  'vs10bbextreme', 'vs20sugarrushx', 'vs20olympx', 'vs20starlightx', 'vs20fruitswx',
+  'vswaysdogs', 'vs5joker', 'vs20midas', 'vs40wildwest', 'vs5aztecgems',
+  'vs243lions', 'vs20chickdrop', 'vs25chilli', 'vs25hotfiesta', 'vs20sbxmas',
+  'vs1600drago', 'vs20bonzgold', 'vs7776aztec', 'vs10firestrike', 'vs20gorilla',
+  'vs20swordofares', 'vs20phoenixf', 'vs117649starz', 'vs20wildboost', 'vs25gladiator',
+];
+const POP_INDICE = new Map(POPULARES.map((s, i) => [s, i]));
+
+/* Categorias derivadas do símbolo do jogo. */
+const SIMBOLOS_MESA = new Set(['bjmb', 'bjma', 'bca', 'rla', 'kna', 'vpa', 'vs1024dtiger']);
+function categoriaDe(symbol: string): string {
+  if (SIMBOLOS_MESA.has(symbol)) return 'Mesa & cartas';
+  if (symbol.startsWith('sc')) return 'Raspadinhas';
+  if (symbol.startsWith('cs')) return 'Clássicas';
+  return 'Slots';
+}
 
 /* Thumbnails oficiais da Pragmatic Play (CDN público de imagens de jogo). */
 function thumbUrl(symbol: string) {
@@ -239,17 +270,49 @@ const SLOTS: Slot[] = [
 
 export default function DemoSlots() {
   const [query, setQuery] = useState('');
+  const [ordem, setOrdem] = useState<Ordem>('az');
   const [page, setPage] = useState(1);
   const [ativo, setAtivo] = useState<Slot | null>(null);
+  const [porPagina, setPorPagina] = useState(PAGE_SIZE_INICIAL);
+  const grelhaRef = useRef<HTMLUListElement>(null);
 
   const filtradas = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? SLOTS.filter(s => s.name.toLowerCase().includes(q)) : SLOTS;
-  }, [query]);
+    const base = q ? SLOTS.filter(s => s.name.toLowerCase().includes(q)) : SLOTS.slice();
+    if (ordem === 'popular') {
+      return base.sort((a, b) => {
+        const ia = POP_INDICE.get(a.symbol) ?? 999;
+        const ib = POP_INDICE.get(b.symbol) ?? 999;
+        return ia - ib || a.name.localeCompare(b.name);
+      });
+    }
+    if (ordem === 'categoria') {
+      return base.sort((a, b) => {
+        const c = categoriaDe(a.symbol).localeCompare(categoriaDe(b.symbol));
+        return c || a.name.localeCompare(b.name);
+      });
+    }
+    return base.sort((a, b) => a.name.localeCompare(b.name));
+  }, [query, ordem]);
 
-  const totalPages = Math.max(1, Math.ceil(filtradas.length / PAGE_SIZE));
+  // Mede quantas colunas a grelha auto-fill rende e ajusta os itens por página
+  // para nº-de-colunas × linhas — assim a última página enche sempre a grelha.
+  useEffect(() => {
+    const el = grelhaRef.current;
+    if (!el) return;
+    const medir = () => {
+      const cols = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length;
+      if (cols > 0) setPorPagina(cols * (cols <= 2 ? 8 : 5));
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [filtradas.length === 0]);
+
+  const totalPages = Math.max(1, Math.ceil(filtradas.length / porPagina));
   const paginaAtual = Math.min(page, totalPages);
-  const visiveis = filtradas.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE);
+  const visiveis = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
 
   const irPara = (p: number) => {
     setPage(Math.min(Math.max(1, p), totalPages));
@@ -277,23 +340,37 @@ export default function DemoSlots() {
             sem depósito — só para testares o jogo antes de ires a sério.
           </p>
         </div>
-        <label className="demo-slots__search">
-          <Search size={15} />
-          <input
-            type="search"
-            value={query}
-            onChange={e => { setQuery(e.target.value); setPage(1); }}
-            placeholder="Procurar slot…"
-            aria-label="Procurar slot"
-          />
-        </label>
+        <div className="demo-slots__ferramentas">
+          <label className="demo-slots__search">
+            <Search size={15} />
+            <input
+              type="search"
+              value={query}
+              onChange={e => { setQuery(e.target.value); setPage(1); }}
+              placeholder="Procurar slot…"
+              aria-label="Procurar slot"
+            />
+          </label>
+          <label className="demo-slots__ordenar">
+            <ArrowDownWideNarrow size={15} />
+            <select
+              value={ordem}
+              onChange={e => { setOrdem(e.target.value as Ordem); setPage(1); }}
+              aria-label="Ordenar slots"
+            >
+              <option value="az">Ordem alfabética</option>
+              <option value="popular">Popularidade</option>
+              <option value="categoria">Categoria</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       {filtradas.length === 0 ? (
         <p className="demo-slots__vazio">Nenhuma slot com esse nome.</p>
       ) : (
         <>
-          <ul className="demo-slots__grid">
+          <ul className="demo-slots__grid" ref={grelhaRef}>
             {visiveis.map(slot => (
               <li key={slot.symbol}>
                 <button

@@ -514,6 +514,10 @@ function CampoAoVivo(
 ) {
   const { casa, fora, lance, minuto, posse, fase, bolaX, bolaY } = momento ?? MOMENTO_VAZIO;
 
+  // Nem todos os jogos têm feed ao vivo da ESPN (ligas fora da cobertura, ou
+  // dados que ainda não abriram). Mostramos o campo na mesma, só que "vazio".
+  const semFeed = !terminado && (!momento || (!momento.lance && !momento.fase && !momento.posse));
+
   const equipaDe = (lado: 'casa' | 'fora' | null) =>
     lado === 'casa'
       ? { nome: jogo.casa, logo: jogo.logoCasa }
@@ -608,7 +612,9 @@ function CampoAoVivo(
             <span className="campo-live__pres campo-live__pres--fora" style={{ width: `${fora}%` }} />
           </div>
 
-          <p className="campo-live__lance">{legenda || 'Bola em jogo'}</p>
+          <p className="campo-live__lance">
+            {semFeed ? 'Sem cobertura ao vivo para este jogo — o campo fica sem lances.' : (legenda || 'Bola em jogo')}
+          </p>
         </>
       )}
     </div>
@@ -834,7 +840,7 @@ function SalaJogo({
             )}
           </div>
 
-          {estaAoVivo(jx) && jx.momento && (
+          {estaAoVivo(jx) && (
             <CampoAoVivo jogo={jx} momento={jx.momento} />
           )}
           {jx.estado === 'terminado' && (

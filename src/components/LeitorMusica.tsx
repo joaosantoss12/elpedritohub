@@ -104,6 +104,34 @@ function carregarYT(): Promise<void> {
   return promessaYT;
 }
 
+/* Nome que não cabe passa a correr tipo rodapé, com pausa nas duas pontas para
+   dar tempo de ler. Só anima quando o texto realmente transborda. */
+function TextoRolante({ texto }: { texto: string }) {
+  const externoRef = useRef<HTMLSpanElement>(null);
+  const internoRef = useRef<HTMLSpanElement>(null);
+  const [rola, setRola] = useState(false);
+
+  useEffect(() => {
+    const ext = externoRef.current;
+    const int = internoRef.current;
+    if (!ext || !int) return;
+    const medir = () => setRola(int.scrollWidth > ext.clientWidth + 4);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(ext);
+    return () => ro.disconnect();
+  }, [texto]);
+
+  return (
+    <span ref={externoRef} className={`texto-rolante${rola ? ' texto-rolante--ativo' : ''}`}>
+      <span ref={internoRef} className="texto-rolante__faixa">
+        <span className="texto-rolante__parte">{texto}</span>
+        {rola && <span className="texto-rolante__parte texto-rolante__parte--eco" aria-hidden="true">{texto}</span>}
+      </span>
+    </span>
+  );
+}
+
 export function LeitorMusica() {
   const { user } = useAuth();
 
@@ -405,7 +433,7 @@ export function LeitorMusica() {
                 </span>
               )}
               <span className="leitor-musica__meta">
-                <strong>{titulo || (config ? 'A carregar…' : 'Sem música configurada')}</strong>
+                <strong><TextoRolante texto={titulo || (config ? 'A carregar…' : 'Sem música configurada')} /></strong>
                 <em>{autor || (config ? '' : 'Carrega em Configurar para escolher')}</em>
               </span>
               {videoIdAtual && (
@@ -645,8 +673,24 @@ export function LeitorMusica() {
         }
         .leitor-musica__meta { display: flex; flex-direction: column; min-width: 0; }
         .leitor-musica__meta strong {
-          font-size: 0.82rem; color: var(--text-white);
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          font-size: 0.82rem; color: var(--text-white); display: block; min-width: 0;
+        }
+        .texto-rolante {
+          display: block; overflow: hidden; white-space: nowrap; max-width: 100%;
+        }
+        .texto-rolante__faixa { display: inline-flex; }
+        .texto-rolante--ativo .texto-rolante__faixa {
+          animation: texto-rolante-anda 14s linear infinite;
+        }
+        .texto-rolante__parte--eco { padding-left: 2.6rem; }
+        @keyframes texto-rolante-anda {
+          0%, 10% { transform: translateX(0); }
+          90%, 100% { transform: translateX(calc(-50% - 1.3rem)); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .texto-rolante--ativo .texto-rolante__faixa { animation: none; }
+          .texto-rolante--ativo .texto-rolante__parte--eco { display: none; }
+          .texto-rolante--ativo { text-overflow: ellipsis; }
         }
         .leitor-musica__meta em {
           font-style: normal; font-size: 0.72rem; color: var(--text-muted);
