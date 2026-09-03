@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { User, SquareArrowRight } from 'lucide-react';
+import { User, SquareArrowRight, Menu, X, LogOut } from 'lucide-react';
 import { SinoNotificacoes } from './SinoNotificacoes';
 import { SeletorTema } from './SeletorTema';
 
@@ -23,11 +24,24 @@ export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, membro, signOut } = useAuth();
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  // Fecha o menu mobile sempre que se muda de página.
+  useEffect(() => { setMenuAberto(false); }, [location.pathname]);
+
+  // Trava o scroll do body enquanto o menu mobile está aberto.
+  useEffect(() => {
+    if (!menuAberto) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuAberto]);
 
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
+
+  const irPara = (path: string) => { setMenuAberto(false); navigate(path); };
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : (location.pathname === path || location.pathname.startsWith(path + '/'));
@@ -174,35 +188,6 @@ export function Navbar() {
           <>
           <SeletorTema />
           <SinoNotificacoes />
-          {membro?.badges?.includes('Administrador') && (
-            <button
-              style={{
-                fontSize: '0.85rem',
-                padding: '0.6rem 1.2rem',
-                background: '#901010',
-                border: 'none',
-                color: '#dce3ee',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease'
-              }}
-              onClick={() => navigate('/admin')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              ADMIN
-             </button>
-             )}
             <button
               className="nav-passaporte-btn"
               title="Passaporte — gere a tua conta, subscrição e progresso"
@@ -233,6 +218,35 @@ export function Navbar() {
             >
               <User size={16} />
             </button>
+          {membro?.badges?.includes('Administrador') && (
+            <button
+              style={{
+                fontSize: '0.85rem',
+                padding: '0.6rem 1.2rem',
+                background: '#901010',
+                border: 'none',
+                color: '#dce3ee',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={() => navigate('/admin')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(161, 124, 91,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              ADMIN
+             </button>
+             )}
             <button
               style={{
                 fontSize: '0.85rem',
@@ -263,6 +277,69 @@ export function Navbar() {
           </>
         )}
       </div>
+
+      {/* BOTÃO HAMBÚRGUER (só mobile) */}
+      <button
+        className="epc-nav__burger"
+        aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
+        aria-expanded={menuAberto}
+        onClick={() => setMenuAberto(v => !v)}
+      >
+        {menuAberto ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
+      {/* PAINEL DE NAVEGAÇÃO MOBILE */}
+      {menuAberto && (
+        <>
+          <div className="epc-nav__backdrop" onClick={() => setMenuAberto(false)} />
+          <div className="epc-nav__mobile">
+            <ul>
+              {NAV_LINKS.filter(link => !link.authOnly || user).map(link => (
+                <li
+                  key={link.path}
+                  className={isActive(link.path) ? 'on' : undefined}
+                  onClick={() => irPara(link.path)}
+                >
+                  {link.label}
+                </li>
+              ))}
+            </ul>
+            <div className="epc-nav__mobile-acoes">
+              {!user ? (
+                <>
+                  <button className="epc-nav__mobile-btn" onClick={() => irPara('/login')}>
+                    ENTRAR <SquareArrowRight size={16} />
+                  </button>
+                  <button className="epc-nav__mobile-btn epc-nav__mobile-btn--cheio" onClick={() => irPara('/register')}>
+                    REGISTAR
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="epc-nav__mobile-btn" onClick={() => irPara('/profile')}>
+                    <User size={16} /> Perfil
+                  </button>
+                  {membro?.badges?.includes('Administrador') && (
+                    <button
+                      className="epc-nav__mobile-btn"
+                      style={{ background: '#901010', color: '#dce3ee', borderColor: '#901010' }}
+                      onClick={() => irPara('/admin')}
+                    >
+                      ADMIN
+                    </button>
+                  )}
+                  <button
+                    className="epc-nav__mobile-btn epc-nav__mobile-btn--cheio"
+                    onClick={() => { setMenuAberto(false); handleLogout(); }}
+                  >
+                    <LogOut size={16} /> Sair
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <style>{`
         .nav-item {
@@ -366,43 +443,119 @@ export function Navbar() {
           }
         }
 
+        .epc-nav__burger {
+          display: none;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          flex-shrink: 0;
+          background: transparent;
+          border: 1px solid var(--border-color);
+          border-radius: 10px;
+          color: var(--gold-primary);
+          cursor: pointer;
+        }
+
         @media (max-width: 768px) {
-          nav {
-            flex-direction: column !important;
-            gap: 1rem !important;
-            padding: 1rem 5% !important;
+          .epc-nav {
+            padding: 0.8rem 5% !important;
           }
 
-          nav > div:first-child {
-            order: 0;
-            flex: 0 0 auto;
+          .epc-nav-links {
+            display: none !important;
           }
 
-          nav ul {
-            flex-direction: row !important;
-            gap: 0.8rem !important;
-            font-size: 0.65rem !important;
-            order: 1;
-            flex: 1 1 100%;
-            justify-content: center !important;
-            width: 100% !important;
-            flex-wrap: wrap;
-            overflow-x: visible !important;
+          /* Mantém só a bola de temas + o sino no topo; os botões (perfil,
+             admin, sair, entrar, registar) passam para o painel mobile. */
+          .epc-nav-auth > button {
+            display: none !important;
           }
 
-          nav > div:last-child {
-            flex-direction: row !important;
-            width: 100% !important;
-            order: 2;
-            gap: 0.5rem !important;
-            justify-content: center !important;
-            flex-wrap: wrap;
+          .epc-nav__burger {
+            display: flex;
           }
 
-          nav > div:last-child button {
-            width: auto !important;
-            font-size: 0.7rem !important;
-            padding: 0.5rem 0.8rem !important;
+          .epc-nav__backdrop {
+            position: fixed;
+            inset: 0;
+            top: 0;
+            background: rgba(5, 8, 16, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 98;
+          }
+
+          .epc-nav__mobile {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(300px, 84vw);
+            background: var(--bg-elevated, #0d1220);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            padding: 5rem 1.3rem 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            animation: epc-nav-slide 0.22s ease-out;
+          }
+
+          @keyframes epc-nav-slide {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+          }
+
+          .epc-nav__mobile ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .epc-nav__mobile li {
+            padding: 0.9rem 0.4rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+          }
+
+          .epc-nav__mobile li.on {
+            color: var(--gold-primary);
+          }
+
+          .epc-nav__mobile-acoes {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            margin-top: auto;
+          }
+
+          .epc-nav__mobile-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            background: transparent;
+            border: 1.5px solid var(--gold-primary);
+            color: var(--gold-primary);
+          }
+
+          .epc-nav__mobile-btn--cheio {
+            background: linear-gradient(135deg, var(--gold-primary), #8a6144);
+            border: none;
+            color: #0d1220;
           }
         }
       `}</style>

@@ -193,6 +193,20 @@ export function SeletorTema() {
         .seletor-tema__cor-input::-webkit-color-swatch-wrapper { padding: 2px; }
         .seletor-tema__cor-input::-webkit-color-swatch { border: none; border-radius: 4px; }
         .seletor-tema__cor-input::-moz-color-swatch { border: none; border-radius: 4px; }
+        /* Em ecrãs pequenos a bola fica centrada na barra, por isso ancorar o
+           painel a "right: 0" mandava-o para fora do ecrã à esquerda. Fixa-o
+           centrado com largura limitada ao viewport. */
+        @media (max-width: 768px) {
+          .seletor-tema__painel {
+            position: fixed;
+            top: 64px;
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            width: min(280px, calc(100vw - 24px));
+            min-width: 0;
+          }
+        }
         @media (prefers-reduced-motion: reduce) {
           .seletor-tema__bola { transition: none; }
         }

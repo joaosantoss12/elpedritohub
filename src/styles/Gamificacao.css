@@ -1286,6 +1286,43 @@
   cursor: pointer;
 }
 
+.cla-editar__guardar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cla-editar__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.cla-editar__switch input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold-primary);
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .cla-editar__guardar {
+    padding: 8px 10px;
+  }
+
+  .cla-editar__txt,
+  .cla-conv__txt {
+    display: none;
+  }
+
+  .cla-conv__btn {
+    padding: 8px 12px;
+  }
+}
+
 /* ── Procura de membros ao convidar ─────────────────────────── */
 .cla-procura {
   position: relative;

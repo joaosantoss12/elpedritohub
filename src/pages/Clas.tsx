@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Check, Crown, Loader2, LogOut, MessagesSquare, Shield, Trophy, UserPlus, Users, X,
+  Check, Crown, Loader2, LogOut, MessagesSquare, Save, Shield, Trophy, UserPlus, Users, X,
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { CanaisComunidade } from '../components/CanaisComunidade';
@@ -384,12 +384,16 @@ function MeuCla({
               Cor do nome
               <input type='color' value={cor} onChange={(e) => setCor(e.target.value)} />
             </label>
-            <button className='gm-btn gm-btn-fantasma' disabled={ocupado}
-              onClick={() => onEditar({ cor })}>Guardar cor</button>
-            <button className='gm-btn gm-btn-fantasma' disabled={ocupado}
-              onClick={() => onEditar({ aberto: !cla.aberto })}>
-              {cla.aberto ? 'Fechar a pedidos' : 'Abrir a pedidos'}
+            <button className='gm-btn gm-btn-fantasma cla-editar__guardar' disabled={ocupado}
+              aria-label='Guardar cor' title='Guardar cor'
+              onClick={() => onEditar({ cor })}>
+              <Save size={15} /> <span className='cla-editar__txt'>Guardar cor</span>
             </button>
+            <label className='cla-editar__switch' title='Aceitar pedidos de entrada'>
+              <input type='checkbox' checked={cla.aberto} disabled={ocupado}
+                onChange={() => onEditar({ aberto: !cla.aberto })} />
+              <span>Aberto a pedidos</span>
+            </label>
           </div>
         )}
       </div>
@@ -429,8 +433,9 @@ function MeuCla({
                 </ul>
               )}
             </div>
-            <button className='gm-btn' type='submit' disabled={ocupado || cheio || !escolhido}>
-              <UserPlus size={15} /> {cheio ? 'Clã cheio' : 'Convidar'}
+            <button className='gm-btn cla-conv__btn' type='submit' disabled={ocupado || cheio || !escolhido}
+              aria-label={cheio ? 'Clã cheio' : 'Convidar'} title={cheio ? 'Clã cheio' : 'Convidar'}>
+              <UserPlus size={15} /> <span className='cla-conv__txt'>{cheio ? 'Clã cheio' : 'Convidar'}</span>
             </button>
           </form>
 
