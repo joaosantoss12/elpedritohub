@@ -13,6 +13,7 @@ const NAV_LINKS: { label: string; path: string; authOnly?: boolean }[] = [
   { label: 'RECOMPENSAS',    path: '/recompensas', authOnly: true },
   { label: 'SOCIAL',         path: '/clas', authOnly: true },
   { label: 'BANCA',          path: '/banca', authOnly: true },
+  { label: 'EL PEDRITO',     path: '/el-pedrito' },
   { label: 'CASINO',         path: '/casino' },
   { label: 'PLANOS',         path: '/plans' },
   { label: 'SUPORTE',        path: '/suporte', authOnly: true },

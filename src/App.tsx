@@ -14,6 +14,7 @@ import Arena from './pages/Arena';
 import Recompensas from './pages/Recompensas';
 import Clas from './pages/Clas';
 import PerfilPublico from './pages/PerfilPublico';
+import ElPedrito from './pages/ElPedrito';
 import { DropWidget } from './components/DropWidget';
 import { LeitorMusica } from './components/LeitorMusica';
 import { AuthProvider } from './contexts/AuthContext';
@@ -30,6 +31,7 @@ function App() {
         <Route path='/profile' element={<Profile />} />
         <Route path='/plans' element={<Plans />} />
         <Route path='/casino' element={<Casino />} />
+        <Route path='/el-pedrito' element={<ElPedrito />} />
         <Route path='/banca' element={<BancaManagement />} />
         <Route path='/admin' element={<Admin />} />
         <Route path='/suporte' element={<Support />} />

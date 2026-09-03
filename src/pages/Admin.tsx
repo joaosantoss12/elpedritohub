@@ -9,8 +9,11 @@ import {
   Plus, Pencil, Trash2, Save, X, Search, ShieldAlert, ShieldOff, Trophy,
   CheckCircle, AlertCircle, ChevronRight, Loader2, ToggleLeft, ToggleRight,
   MessageSquare, Send, Paperclip, ChevronLeft, Activity, ShieldCheck,
-  CalendarClock, PlayCircle,
+  CalendarClock, PlayCircle, Film,
 } from 'lucide-react';
+import {
+  carregarReelsAdmin, guardarReel, apagarReel, type Reel,
+} from '../lib/reels';
 import {
   VERTICAL_LABELS, RESULTADO_LABELS, calcularStats, fmtUnidades, fmtPercent, fmtRoi,
   type RaioxTip, type Vertical, type Resultado, type Canal,
@@ -37,7 +40,7 @@ import '../styles/Admin.css';
 
 // ─── TYPES ──────────────────────────────────────────────────────
 
-type Section = 'membros' | 'raiox' | 'canais' | 'ranking' | 'funil-vip' | 'salas' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'gamificacao' | 'suporte';
+type Section = 'membros' | 'raiox' | 'canais' | 'ranking' | 'funil-vip' | 'salas' | 'planos' | 'palpites' | 'bilhete' | 'lucro' | 'lucro-semana' | 'top-aposta' | 'gamificacao' | 'reels' | 'suporte';
 
 interface SupportTicket {
   id: string;
@@ -133,6 +136,7 @@ const NAV_ITEMS: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: 'lucro-semana',  label: 'Lucro da Semana', icon: <TrendingUp size={15} /> },
   { key: 'top-aposta',    label: 'Top Aposta',     icon: <Star size={15} /> },
   { key: 'gamificacao',   label: 'Gamificação',    icon: <Gift size={15} /> },
+  { key: 'reels',         label: 'El Pedrito',     icon: <Film size={15} /> },
   { key: 'suporte',        label: 'Suporte',         icon: <MessageSquare size={15} /> },
 ];
 
@@ -695,6 +699,144 @@ function SectionPalpites({ showToast }: { showToast: (msg: string, type?: 'succe
           </Field>
           <Field label="Ordem">
             <NumericInput className="admin-input" value={editing.ordem ?? 0} onChange={n => setEditing(p => ({ ...p!, ordem: n }))} />
+          </Field>
+          <div className="admin-modal__actions">
+            <button className="admin-btn-secondary" onClick={closeModal}>Cancelar</button>
+            <button className="admin-btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="spin" /> : <Save size={14} />}
+              Guardar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ─── SECTION: EL PEDRITO (reels) ─────────────────────────────────
+
+const EMPTY_REEL: Partial<Reel> = {
+  titulo: '', descricao: '', video_url: '', poster_url: '', link_url: '', link_texto: '', ordem: 0, ativo: true,
+};
+
+function SectionReels({ showToast }: { showToast: (msg: string, type?: 'success' | 'error') => void }) {
+  const [reels, setReels] = useState<Reel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<Reel> | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setReels(await carregarReelsAdmin()); }
+    catch { showToast('Erro ao carregar vídeos', 'error'); }
+    setLoading(false);
+  }, [showToast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const openNew = () => { setEditing({ ...EMPTY_REEL, ordem: reels.length }); setIsNew(true); };
+  const openEdit = (r: Reel) => { setEditing({ ...r }); setIsNew(false); };
+  const closeModal = () => { setEditing(null); setIsNew(false); };
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.titulo?.trim() || !editing.video_url?.trim()) {
+      showToast('Título e URL do vídeo são obrigatórios', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await guardarReel(editing);
+      showToast(isNew ? 'Vídeo criado' : 'Vídeo atualizado');
+      closeModal();
+      load();
+    } catch (e) {
+      showToast('Erro: ' + (e instanceof Error ? e.message : 'desconhecido'), 'error');
+    }
+    setSaving(false);
+  };
+
+  const del = async (id: string) => {
+    if (!confirm('Eliminar este vídeo?')) return;
+    try { await apagarReel(id); showToast('Vídeo eliminado'); load(); }
+    catch { showToast('Erro ao eliminar', 'error'); }
+  };
+
+  const toggleAtivo = async (r: Reel) => {
+    try { await guardarReel({ ...r, ativo: !r.ativo }); load(); }
+    catch { showToast('Erro ao atualizar', 'error'); }
+  };
+
+  return (
+    <div className="admin-section-content">
+      <div className="admin-toolbar">
+        <p className="admin-section-hint">
+          Feed de vídeos da página <strong>El Pedrito</strong>. Ficheiros .mp4/.webm tocam sozinhos como reels; links do YouTube/Vimeo entram como embed.
+        </p>
+        <button className="admin-btn-primary" onClick={openNew}><Plus size={14} /> Novo Vídeo</button>
+      </div>
+      {loading ? (
+        <div className="admin-loading"><Loader2 size={22} className="spin" /> A carregar…</div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Ordem</th><th>Título</th><th>Vídeo</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              {reels.map(r => (
+                <tr key={r.id}>
+                  <td>{r.ordem}</td>
+                  <td>{r.titulo}</td>
+                  <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.video_url}</td>
+                  <td>
+                    <button className={`admin-toggle ${r.ativo ? 'on' : 'off'}`} onClick={() => toggleAtivo(r)}>
+                      {r.ativo ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                      {r.ativo ? 'Ativo' : 'Oculto'}
+                    </button>
+                  </td>
+                  <td className="admin-actions-cell">
+                    <button className="admin-btn-icon" onClick={() => openEdit(r)}><Pencil size={14} /></button>
+                    <button className="admin-btn-icon danger" onClick={() => del(r.id)}><Trash2 size={14} /></button>
+                  </td>
+                </tr>
+              ))}
+              {reels.length === 0 && (
+                <tr><td colSpan={5} className="admin-empty-row">Ainda não há vídeos</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {editing && (
+        <Modal title={isNew ? 'Novo Vídeo' : 'Editar Vídeo'} onClose={closeModal}>
+          <Field label="Título">
+            <input className="admin-input" value={editing.titulo ?? ''} onChange={e => setEditing(p => ({ ...p!, titulo: e.target.value }))} />
+          </Field>
+          <Field label="Descrição">
+            <textarea className="admin-input" rows={3} value={editing.descricao ?? ''} onChange={e => setEditing(p => ({ ...p!, descricao: e.target.value }))} />
+          </Field>
+          <Field label="URL do vídeo (.mp4/.webm ou link YouTube/Vimeo)">
+            <input className="admin-input" value={editing.video_url ?? ''} onChange={e => setEditing(p => ({ ...p!, video_url: e.target.value }))} />
+          </Field>
+          <Field label="URL da capa (opcional)">
+            <input className="admin-input" value={editing.poster_url ?? ''} onChange={e => setEditing(p => ({ ...p!, poster_url: e.target.value }))} />
+          </Field>
+          <Field label="Link do botão (opcional)">
+            <input className="admin-input" value={editing.link_url ?? ''} onChange={e => setEditing(p => ({ ...p!, link_url: e.target.value }))} />
+          </Field>
+          <Field label="Texto do botão (opcional)">
+            <input className="admin-input" value={editing.link_texto ?? ''} onChange={e => setEditing(p => ({ ...p!, link_texto: e.target.value }))} />
+          </Field>
+          <Field label="Ordem">
+            <NumericInput className="admin-input" value={editing.ordem ?? 0} onChange={n => setEditing(p => ({ ...p!, ordem: n }))} />
+          </Field>
+          <Field label="Visível no feed">
+            <button className={`admin-toggle ${editing.ativo ? 'on' : 'off'}`} onClick={() => setEditing(p => ({ ...p!, ativo: !p!.ativo }))}>
+              {editing.ativo ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+              {editing.ativo ? 'Sim' : 'Não'}
+            </button>
           </Field>
           <div className="admin-modal__actions">
             <button className="admin-btn-secondary" onClick={closeModal}>Cancelar</button>
@@ -2387,6 +2529,7 @@ export default function Admin() {
           {section === 'lucro-semana' && <SectionLucroSemana showToast={showToast} />}
           {section === 'top-aposta'   && <SectionTopAposta showToast={showToast} />}
           {section === 'gamificacao'  && <SectionGamificacao showToast={showToast} />}
+          {section === 'reels'        && <SectionReels showToast={showToast} />}
           {section === 'suporte'       && <SectionSuporte showToast={showToast} />}
         </main>
       </div>

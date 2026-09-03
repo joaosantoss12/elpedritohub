@@ -1494,3 +1494,12 @@
   color: var(--gold-primary);
   font-size: 0.72rem;
 }
+
+.admin-section-hint {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-gray, #9aa7bd);
+}
