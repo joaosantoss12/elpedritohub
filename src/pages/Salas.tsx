@@ -4,6 +4,7 @@ import {
   Radio, MessageSquare, Loader2, ArrowLeft,
   RefreshCw, Square,
   Globe, Trophy, Clock, Calendar, Search, X,
+  Maximize2, BarChart3, Users, Swords, Send, Trash2,
 } from 'lucide-react';
 import { ChatFlutuante } from '../components/ChatFlutuante';
 import { Navbar } from '../components/Navbar';
@@ -1180,6 +1181,16 @@ function SalaJogo({
   });
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [vistaMeio, setVistaMeio] = useState<'campo' | 'stats'>('campo');
+  // Modo imersivo (só telemóvel): ecrã inteiro com o campo + chat e folhas
+  // deslizantes para estatísticas, escalações e confrontos.
+  const [imersivo, setImersivo] = useState(false);
+  const [folha, setFolha] = useState<'stats' | 'escala' | 'h2h' | null>(null);
+
+  useEffect(() => {
+    if (!imersivo) return;
+    document.body.classList.add('sala-imersiva-aberta');
+    return () => { document.body.classList.remove('sala-imersiva-aberta'); };
+  }, [imersivo]);
 
   // A lista e a ficha do jogo são a mesma página: ao abrir um jogo, o scroll
   // ficava onde estava na lista. Volta ao topo sempre que se abre um jogo.
@@ -1317,9 +1328,14 @@ function SalaJogo({
 
   return (
     <div className="sala-jogo">
-      <button className="sala-jogo__voltar" onClick={onVoltar}>
-        <ArrowLeft size={15} /> Todos os jogos
-      </button>
+      <div className="sala-jogo__topo-acoes">
+        <button className="sala-jogo__voltar" onClick={onVoltar}>
+          <ArrowLeft size={15} /> Todos os jogos
+        </button>
+        <button className="sala-jogo__imersivo" onClick={() => setImersivo(true)}>
+          <Maximize2 size={14} /> Modo imersivo
+        </button>
+      </div>
 
       <div className="sala-jogo__ficha">
         {/* ── Placar em faixa larga, ao estilo da ESPN ── */}
@@ -1523,6 +1539,115 @@ function SalaJogo({
         )}
         <DropWidget eventoId={jogo.id} />
       </div>
+
+      {imersivo && (
+        <div className="imersiva">
+          <div className="imersiva__barra">
+            <span className="imersiva__placar">
+              <strong>{jx.casa}</strong>
+              <span>{jx.golosCasa ?? '–'} : {jx.golosFora ?? '–'}</span>
+              <strong>{jx.fora}</strong>
+              {jx.relogio && <em>{estaAoVivo(jx) && <span className="salas-dot" />}{jx.relogio}</em>}
+            </span>
+            <button className="imersiva__fechar" onClick={() => { setImersivo(false); setFolha(null); }} aria-label="Sair do modo imersivo">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="imersiva__campo">
+            {estaAoVivo(jx) && <CampoAoVivo jogo={jx} momento={jx.momento} />}
+            {jx.estado === 'terminado' && <CampoAoVivo jogo={jx} momento={jx.momento} terminado />}
+            {jx.estado === 'agendado' && <CampoAoVivo jogo={jx} momento={null} prejogo />}
+          </div>
+
+          <div className="imersiva__acoes" role="group">
+            <button className={folha === 'stats' ? 'on' : ''} onClick={() => setFolha(f => f === 'stats' ? null : 'stats')}>
+              <BarChart3 size={15} /> Estatísticas
+            </button>
+            <button className={folha === 'escala' ? 'on' : ''} onClick={() => setFolha(f => f === 'escala' ? null : 'escala')}>
+              <Users size={15} /> Escalações
+            </button>
+            <button className={folha === 'h2h' ? 'on' : ''} onClick={() => setFolha(f => f === 'h2h' ? null : 'h2h')}>
+              <Swords size={15} /> Confrontos
+            </button>
+          </div>
+
+          <div className="imersiva__chat">
+            <div className="imersiva__msgs">
+              {!carregado ? (
+                <div className="salas-loading"><Loader2 size={20} className="salas-spin" color="var(--gold-primary)" /></div>
+              ) : mensagens.length === 0 ? (
+                <p className="sala-jogo__vazio">Ainda não há comentários. Começa tu.</p>
+              ) : (
+                mensagens.map(m => (
+                  <div key={m.id} className={m.user_id === userId ? 'msg msg--eu' : 'msg'}>
+                    <div className="msg__topo">
+                      <span className="msg__avatar msg__avatar--txt" aria-hidden="true">{(m.username.trim()[0] ?? '?').toUpperCase()}</span>
+                      <strong>{m.username}</strong>
+                      <span>{new Date(m.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</span>
+                      {(m.user_id === userId || isAdmin) && (
+                        <button className="msg__apagar" onClick={() => apagar(m.id)} aria-label="Apagar"><Trash2 size={12} /></button>
+                      )}
+                    </div>
+                    <p>{m.texto}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            {erro && <p className="sala-jogo__erro">{erro}</p>}
+            <div className="sala-jogo__barra">
+              <input
+                value={texto}
+                maxLength={500}
+                placeholder="Comentar este jogo…"
+                onChange={e => setTexto(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') void enviar(); }}
+              />
+              <button onClick={() => void enviar()} disabled={enviando || !texto.trim()}>
+                {enviando ? <Loader2 size={15} className="salas-spin" /> : <Send size={15} />}
+              </button>
+            </div>
+          </div>
+
+          {folha && (
+            <div className="imersiva__folha">
+              <div className="imersiva__folha-cab">
+                <strong>
+                  {folha === 'stats' ? 'Estatísticas' : folha === 'escala' ? 'Escalações' : 'Confrontos'}
+                </strong>
+                <button onClick={() => setFolha(null)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="imersiva__folha-corpo">
+                {folha === 'stats' && (
+                  <>
+                    <CabecalhoEquipas jogo={jx} />
+                    <ListaEstatisticas estatisticas={estatisticas} />
+                  </>
+                )}
+                {folha === 'escala' && (
+                  detalhes.escalacoes
+                    ? <EscalacoesESPN esc={detalhes.escalacoes} jogo={jx} />
+                    : <p className="jogo-detalhes__nota">Escalações ainda não disponíveis.</p>
+                )}
+                {folha === 'h2h' && (
+                  <>
+                    {detalhes.h2h && <ConfrontosH2H h2h={detalhes.h2h} />}
+                    {(detalhes.formaCasa.length > 0 || detalhes.formaFora.length > 0) && (
+                      <>
+                        <FormaRecente titulo={jx.casa} logo={jx.logoCasa} jogos={detalhes.formaCasa} />
+                        <FormaRecente titulo={jx.fora} logo={jx.logoFora} jogos={detalhes.formaFora} />
+                      </>
+                    )}
+                    {!detalhes.h2h && detalhes.formaCasa.length === 0 && detalhes.formaFora.length === 0 && (
+                      <p className="jogo-detalhes__nota">Sem histórico para este jogo.</p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <ChatFlutuante
         mensagens={mensagens}
