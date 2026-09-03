@@ -7,9 +7,14 @@
 }
 
 .casino-wrapper {
-  width: 80%;
+  width: 95%;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 3rem 0 5rem;
+}
+
+@media (max-width: 640px) {
+  .casino-wrapper { padding: 1.6rem 0 3.5rem; }
 }
 
 .casino-hero {
@@ -82,9 +87,10 @@
 .casino-hero__nome {
   margin: 1.4rem 0 0;
   line-height: 0;
+  max-width: 100%;
 }
 .casino-hero__nome img {
-  width: min(840px, 92vw);
+  width: min(840px, 100%);
   height: auto;
   filter: drop-shadow(0 6px 60px rgba(161, 124, 91, 0.55));
 }
