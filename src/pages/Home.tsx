@@ -491,7 +491,7 @@ function Home() {
             border: '1px solid rgba(34, 197, 94, 0.2)'
           }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green-success)' }}></div>
-            42.000+ MEMBROS ATIVOS
+            55.000+ MEMBROS ATIVOS
           </div>
 
           <h1 style={{ 
@@ -756,7 +756,7 @@ function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <User size={36} />
           <div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>42.000+</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', lineHeight: '1.1' }}>55.000+</h3>
             <p style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '1px' }}>MEMBROS</p>
           </div>
         </div>

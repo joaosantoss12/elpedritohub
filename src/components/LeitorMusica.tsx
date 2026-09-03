@@ -1014,16 +1014,24 @@ export function LeitorMusica() {
 
         @media (max-width: 820px) {
           .leitor-musica__corpo {
+            display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
             grid-template-areas: 'faixa botoes' 'progresso progresso';
-            gap: 0.5rem 0.8rem; padding: 0.6rem 1rem;
+            align-items: center;
+            gap: 0.4rem 0.7rem; padding: 0.55rem 0.9rem;
           }
-          .leitor-musica__faixa { grid-area: faixa; }
-          .leitor-musica__centro { grid-area: progresso; }
-          .leitor-musica__botoes { grid-area: botoes; }
-          .leitor-musica__direita { display: none; }
+          .leitor-musica__faixa { grid-area: faixa; flex: 1 1 auto; min-width: 0; }
           .leitor-musica__centro { display: contents; }
-          .leitor-musica__progresso { grid-area: progresso; }
+          .leitor-musica__botoes { grid-area: botoes; gap: 0.15rem; }
+          .leitor-musica__botoes button { width: 30px; height: 30px; }
+          .leitor-musica__play { width: 32px !important; height: 32px !important; }
+          .leitor-musica__progresso { grid-area: progresso; width: 100%; min-width: 0; gap: 0.45rem; }
+          .leitor-musica__direita { display: none; }
+        }
+        @media (max-width: 380px) {
+          .leitor-musica__botoes button { width: 27px; height: 27px; }
+          .leitor-musica__botoes button svg { width: 14px; height: 14px; }
+          .leitor-musica__play { width: 30px !important; height: 30px !important; }
         }
 
         @media (prefers-reduced-motion: reduce) {
