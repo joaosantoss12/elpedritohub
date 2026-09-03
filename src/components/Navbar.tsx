@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { User, SquareArrowRight, Menu, X, LogOut } from 'lucide-react';
@@ -288,8 +289,9 @@ export function Navbar() {
         {menuAberto ? <X size={22} /> : <Menu size={22} />}
       </button>
 
-      {/* PAINEL DE NAVEGAÇÃO MOBILE */}
-      {menuAberto && (
+      {/* PAINEL DE NAVEGAÇÃO MOBILE — em portal no body para não ser recortado
+          pelo <nav> (que cria bloco de contexto por causa do backdrop-filter) */}
+      {menuAberto && createPortal(
         <>
           <div className="epc-nav__backdrop" onClick={() => setMenuAberto(false)} />
           <div className="epc-nav__mobile">
@@ -338,7 +340,8 @@ export function Navbar() {
               )}
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
 
       <style>{`
@@ -459,7 +462,18 @@ export function Navbar() {
 
         @media (max-width: 768px) {
           .epc-nav {
-            padding: 0.8rem 5% !important;
+            padding: 0.7rem 3.5% !important;
+            gap: 0.5rem !important;
+            flex-wrap: nowrap !important;
+          }
+
+          .epc-nav-auth {
+            gap: 0.5rem !important;
+          }
+
+          .epc-nav__burger {
+            width: 40px;
+            height: 40px;
           }
 
           .epc-nav-links {
