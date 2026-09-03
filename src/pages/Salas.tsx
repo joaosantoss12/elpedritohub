@@ -1547,7 +1547,8 @@ function SalaJogo({
               <strong>{jx.casa}</strong>
               <span>{jx.golosCasa ?? '–'} : {jx.golosFora ?? '–'}</span>
               <strong>{jx.fora}</strong>
-              {jx.relogio && <em>{estaAoVivo(jx) && <span className="salas-dot" />}{jx.relogio}</em>}
+              {estaAoVivo(jx) && jx.relogio && <em><span className="salas-dot" />{jx.relogio}</em>}
+              {jx.estado === 'terminado' && <em>Terminado</em>}
             </span>
             <button className="imersiva__fechar" onClick={() => { setImersivo(false); setFolha(null); }} aria-label="Sair do modo imersivo">
               <X size={18} />

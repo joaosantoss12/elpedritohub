@@ -2149,11 +2149,13 @@ body.sala-imersiva-aberta .chat-flut__icone { display: none !important; }
   gap: 0.6rem;
 }
 .imersiva__chat .sala-jogo__barra {
+  margin: 0;
   padding: 0.6rem;
   padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border-color);
   background: var(--bg-elevated);
 }
+.imersiva__msgs .sala-jogo__vazio { margin: auto 0; text-align: center; }
 
 .imersiva__folha {
   position: absolute;
