@@ -28,21 +28,21 @@ interface Plan extends PlanoDB {
 
 const PLANS_FALLBACK: Plan[] = [
   {
-    id: 'monthly', nome: '1 Mês', preco: '12', precoOriginal: '49,19', periodo: 'pagamento único',
+    id: 'monthly', nome: '1 Mês', preco: '19,99', precoOriginal: '49,19', periodo: 'pagamento único',
     destaque: false, badge: null, poupanca: null, ordem: 0,
-    amountCents: 1200,
+    amountCents: 1999,
     funcionalidades: ['Acesso total ao grupo VIP', 'Palpites diários premium', 'Análises pré-jogo', 'Suporte por mensagem', 'Gestão de banca básica'],
   },
   {
-    id: 'quarterly', nome: '3 Meses', preco: '30', precoOriginal: '135,29', periodo: 'pagamento único',
+    id: 'quarterly', nome: '3 Meses', preco: '49,99', precoOriginal: '135,29', periodo: 'pagamento único',
     destaque: false, badge: '⚡ MAIS POPULAR', poupanca: null, ordem: 1,
-    amountCents: 3000,
+    amountCents: 4999,
     funcionalidades: ['Tudo do plano 1 Mês', 'Palpites live em tempo real', 'Análises ao vivo', 'Suporte prioritário 24/7', 'Estratégias avançadas', 'Grupo de discussão exclusivo'],
   },
   {
-    id: 'yearly', nome: '1 Ano', preco: '96', precoOriginal: '307,49', periodo: 'pagamento único',
+    id: 'yearly', nome: '1 Ano', preco: '159,99', precoOriginal: '307,49', periodo: 'pagamento único',
     destaque: true, badge: '👑 MELHOR VALOR', poupanca: null, ordem: 2,
-    amountCents: 9600,
+    amountCents: 15999,
     funcionalidades: ['Tudo do plano 3 Meses', 'Acesso durante 1 ano completo', 'Mentoria personalizada', 'Acesso antecipado a novidades', 'Badge exclusiva de fundador', 'Canal VIP dentro do VIP', 'Bónus: curso de apostas'],
   },
 ];

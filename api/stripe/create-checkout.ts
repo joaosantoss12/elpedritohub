@@ -7,17 +7,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const PLANS: Record<string, { name: string; amount: number; telegramLink: string }> = {
   monthly: {
     name: 'EL PEDRITO VIP — 1 Mês',
-    amount: 1200,
+    amount: 1999,
     telegramLink: 'https://t.me/+mgN-Uonc-g4yNjE0',
   },
   quarterly: {
     name: 'EL PEDRITO VIP — 3 Meses',
-    amount: 3000,
+    amount: 4999,
     telegramLink: 'https://t.me/+BXD7gmFf9OZjNDc0',
   },
   yearly: {
     name: 'EL PEDRITO VIP — 1 Ano',
-    amount: 9600,
+    amount: 15999,
     telegramLink: 'https://t.me/+yvMIUb8B01wzMTM8',
   },
 };
